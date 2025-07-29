@@ -20,7 +20,8 @@ spring:
     redis:
       time-to-live: 30000 # 5 minutes
 
-
+server:
+  port: 8081
 
   jpa:
       hibernate:
