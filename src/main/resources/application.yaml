@@ -28,7 +28,8 @@ spring:
                 client-secret: ${GOOGLE_CLIENT_SECRET}
                 redirect-uri: ${GOOGLE_REDIRECT_URI}
 
-
+server:
+  port: 8081
 
   jpa:
       hibernate:
