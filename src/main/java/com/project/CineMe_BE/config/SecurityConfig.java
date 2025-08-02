@@ -3,6 +3,7 @@ package com.project.CineMe_BE.config;
 
 import com.project.CineMe_BE.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,10 +20,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @RequiredArgsConstructor
- @EnableWebSecurity
+@EnableWebSecurity
+@Slf4j
 public class SecurityConfig {
     private final UserService userService;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
@@ -31,11 +32,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         request -> request
                                 .anyRequest().permitAll()
-
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/v1/auth/login/oauth2") // D biet tac dung
 
                 )
                 .formLogin(login -> login.disable())
-
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Khong luu token o phia server
                 .authenticationProvider(authenticationProvider());
 //                .addFilterBefore(filterJwtConfig, UsernamePasswordAuthenticationFilter.class);
@@ -79,4 +81,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
+
+
 }

@@ -17,16 +17,5 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 public class UserController {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final UserRequestMapper userRequestMapper;
 
-
-    @PostMapping("/signup")
-    public String signUp(@RequestBody SignUpRequest request) {
-        UserEntity entity = userRequestMapper.toEntity(request);
-        entity.setPassword(passwordEncoder.encode(request.getPassword()));
-        userRepository.save(entity);
-        return "Sign-up endpoint is under construction";
-    }
 }

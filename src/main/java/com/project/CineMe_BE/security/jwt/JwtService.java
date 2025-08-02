@@ -1,4 +1,4 @@
-package com.project.CineMe_BE.service;
+package com.project.CineMe_BE.security.jwt;
 
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -8,7 +8,7 @@ public interface JwtService {
 
     String generateToken(UserDetails userDetails);
 
-    String generateRefeshToken(UserDetails userDetails);
+    String generateRefreshToken(UserDetails userDetails);
 
     String extractUsername(String token);
 

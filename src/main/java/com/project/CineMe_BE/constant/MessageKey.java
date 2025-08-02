@@ -86,4 +86,11 @@ public class MessageKey {
 
     // Schedule
     public static final String SCHEDULE_GET_ALL_SUCCESS = "schedule.get_all_success";
+
+    // Role
+    public static final String ROLE_NOT_FOUND = "role.not_found";
+
+    // Auth
+    public static final String AUTH_LOGIN_SUCCESS = "auth.login_success";
+    public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
 }

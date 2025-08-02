@@ -7,10 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -36,6 +33,11 @@ public class UserEntity implements UserDetails {
 
     @Column(name = "phone")
     private String phone;
+
+    @Column(name = "provider")
+    private String provider;
+
+
 
     @ManyToOne
     @JoinColumn(name = "role_id")

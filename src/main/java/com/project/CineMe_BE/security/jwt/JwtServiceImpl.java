@@ -1,6 +1,6 @@
-package com.project.CineMe_BE.service.impl;
+package com.project.CineMe_BE.security.jwt;
 
-import com.project.CineMe_BE.service.JwtService;
+import com.project.CineMe_BE.security.jwt.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -73,7 +73,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateRefeshToken(UserDetails userDetails) {
+    public String generateRefreshToken(UserDetails userDetails) {
         log.info("Permission: {}", userDetails.getAuthorities());
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
