@@ -44,10 +44,10 @@ public class UserEntity implements UserDetails {
     private RoleEntity role;
 
     @Column(name = "created_at")
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
 
     @Override

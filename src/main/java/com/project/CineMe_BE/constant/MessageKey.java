@@ -89,4 +89,8 @@ public class MessageKey {
 
     // Role
     public static final String ROLE_NOT_FOUND = "role.not_found";
+
+    // Auth
+    public static final String AUTH_LOGIN_SUCCESS = "auth.login_success";
+    public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
 }

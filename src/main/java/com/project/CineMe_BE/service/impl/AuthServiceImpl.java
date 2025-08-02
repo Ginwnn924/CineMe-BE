@@ -3,12 +3,14 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.LoginRequest;
 import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
+import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.RoleEntity;
 import com.project.CineMe_BE.entity.UserEntity;
 import com.project.CineMe_BE.enums.ProviderEnum;
 import com.project.CineMe_BE.enums.RoleEnum;
 import com.project.CineMe_BE.exception.DataNotFoundException;
+import com.project.CineMe_BE.mapper.request.UserRequestMapper;
 import com.project.CineMe_BE.repository.RoleRepository;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.service.AuthService;
@@ -22,12 +24,15 @@ import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -52,6 +57,8 @@ public class AuthServiceImpl implements AuthService {
     private final LocalizationUtils localizationUtils;
     private final RoleRepository roleRepository;
     private final RestTemplate restTemplate;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRequestMapper userRequestMapper;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
@@ -79,8 +86,17 @@ public class AuthServiceImpl implements AuthService {
         return false;
     }
 
+    @Override
+    public boolean register(SignUpRequest request) {
+        UserEntity entity = userRequestMapper.toEntity(request);
+        entity.setProvider(ProviderEnum.LOCAL.name());
+        entity.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(entity);
+        return entity != null;
+    }
 
     @Override
+    @Transactional
     public AuthResponse oauth2Callback(Map<String, String> request) {
         Map<String, String> userInfo = extractUserGoogle(request);
         String email = userInfo.get("email");
@@ -92,14 +108,13 @@ public class AuthServiceImpl implements AuthService {
                     UserEntity newUser = UserEntity.builder()
                                             .email(email)
                                             .fullName(name)
-                                            .createdAt(new Date())
-                                            .updatedAt(new Date())
+                                            .createdAt(LocalDateTime.now())
+                                            .updatedAt(LocalDateTime.now())
                                             .role(role)
                                             .provider(ProviderEnum.GOOGLE.name())
                                         .build();
                     return userRepository.save(newUser);
                 });
-
         return generateToken(user);
     }
 
@@ -138,7 +153,7 @@ public class AuthServiceImpl implements AuthService {
 
     private AuthResponse generateToken(UserEntity user) {
         String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefeshToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
         return AuthResponse.builder()
                 .email(user.getEmail())
                 .accessToken(accessToken)

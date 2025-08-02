@@ -73,7 +73,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateRefeshToken(UserDetails userDetails) {
+    public String generateRefreshToken(UserDetails userDetails) {
         log.info("Permission: {}", userDetails.getAuthorities());
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())

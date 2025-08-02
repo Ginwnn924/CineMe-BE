@@ -8,7 +8,7 @@ public interface JwtService {
 
     String generateToken(UserDetails userDetails);
 
-    String generateRefeshToken(UserDetails userDetails);
+    String generateRefreshToken(UserDetails userDetails);
 
     String extractUsername(String token);
 
