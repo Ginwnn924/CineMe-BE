@@ -1,8 +1,6 @@
 package com.project.CineMe_BE.dto.request;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,8 +9,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SignUpRequest {
-
     private String email;
     private String password;
     private String fullName;
