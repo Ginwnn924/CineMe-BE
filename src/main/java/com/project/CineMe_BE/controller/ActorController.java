@@ -24,7 +24,6 @@ public class ActorController {
     private final ActorService actorService;
     private final LocalizationUtils localizationUtils;
 
-
     @GetMapping("/{id}/detail")
     public ResponseEntity<APIResponse> getActorById(@PathVariable @Nonnull UUID id) {
         return ResponseEntity.status(HttpStatus.CREATED).body(

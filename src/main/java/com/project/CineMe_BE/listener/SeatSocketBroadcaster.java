@@ -23,15 +23,15 @@ public class SeatSocketBroadcaster {
 
             if (isLocked) {
                 log.info("Seats {} for showtime {} locked successfully", seatIds, showtimeId);
-                server.getBroadcastOperations().sendEvent("seat_locked", data);
+                server.getRoomOperations(showtimeId.toString()).sendEvent("seat_locked", data);
             } else {
                 log.warn("Failed to lock seats {} for showtime {}", seatIds, showtimeId);
-                server.getBroadcastOperations().sendEvent("seat_lock_failed", data);
+                server.getRoomOperations(showtimeId.toString()).sendEvent("seat_lock_failed", data);
             }
             return isLocked;
         } catch (IllegalArgumentException e) {
             log.error("Error locking seats for showtime {}: {}", showtimeId, e.getMessage());
-            server.getBroadcastOperations().sendEvent("seat_lock_failed",
+            server.getRoomOperations(showtimeId.toString()).sendEvent("seat_lock_failed",
                     new MessageSocket(showtimeId, userId, seatIds));
             return false;
         }
