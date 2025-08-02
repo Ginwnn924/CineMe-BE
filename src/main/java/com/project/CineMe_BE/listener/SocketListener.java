@@ -24,10 +24,22 @@ public class SocketListener {
         this.server = server;
         server.addConnectListener(onConnected());
         server.addDisconnectListener(onDisconnected());
-//        server.addEventListener("send_message", MessageSocket.class, onChatReceived());
     }
     private ConnectListener onConnected() {
         return (client) -> {
+ private ConnectListener onConnected() {
+     return (client) -> {
+         String showtime = client.getHandshakeData().getSingleUrlParam("showtime");
+         if (showtime != null && !showtime.trim().isEmpty()) {
+             log.info("Showtime ID: {}", showtime);
+             client.joinRoom(showtime);
+         } else {
+             log.warn("Client[{}] connected without valid showtime parameter", client.getSessionId());
+             client.disconnect();
+         }
+         log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
+     };
+ }
             log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
         };
     }
@@ -38,20 +50,6 @@ public class SocketListener {
         };
     }
 
-//    private DataListener<MessageSocket> onChatReceived() {
-//        return (senderClient, data, ackSender) -> {
-//            log.info(data.toString());
-//            UUID userId = UUID.fromString("1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d");
-//            boolean isLocked = seatService.lockSeat(data.getShowtimeId(), data.getSeatNumber(), userId);
-//            if (isLocked) {
-//                log.info("Seat {} for showtime {} locked successfully", data.getSeatNumber(), data.getShowtimeId());
-//                senderClient.getNamespace().getBroadcastOperations().sendEvent("seat_locked", data);
-//            } else {
-//                log.warn("Failed to lock seat {} for showtime {}", data.getSeatNumber(), data.getShowtimeId());
-//                senderClient.getNamespace().getBroadcastOperations().sendEvent("seat_lock_failed", data);
-//            }
-//        };
-//    }
 
 
 }
