@@ -27,9 +27,19 @@ public class SocketListener {
     }
     private ConnectListener onConnected() {
         return (client) -> {
-            String showtime = client.getHandshakeData().getSingleUrlParam("showtime");
-            log.info("Showtime ID: {}", showtime);
-            client.joinRoom(showtime);
+ private ConnectListener onConnected() {
+     return (client) -> {
+         String showtime = client.getHandshakeData().getSingleUrlParam("showtime");
+         if (showtime != null && !showtime.trim().isEmpty()) {
+             log.info("Showtime ID: {}", showtime);
+             client.joinRoom(showtime);
+         } else {
+             log.warn("Client[{}] connected without valid showtime parameter", client.getSessionId());
+             client.disconnect();
+         }
+         log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
+     };
+ }
             log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
         };
     }
