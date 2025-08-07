@@ -25,24 +25,21 @@ public class SocketListener {
         server.addConnectListener(onConnected());
         server.addDisconnectListener(onDisconnected());
     }
-    private ConnectListener onConnected() {
-        return (client) -> {
- private ConnectListener onConnected() {
-     return (client) -> {
-         String showtime = client.getHandshakeData().getSingleUrlParam("showtime");
-         if (showtime != null && !showtime.trim().isEmpty()) {
-             log.info("Showtime ID: {}", showtime);
-             client.joinRoom(showtime);
-         } else {
-             log.warn("Client[{}] connected without valid showtime parameter", client.getSessionId());
-             client.disconnect();
-         }
-         log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
-     };
- }
-            log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
-        };
-    }
+
+     private ConnectListener onConnected() {
+         return (client) -> {
+             String showtime = client.getHandshakeData().getSingleUrlParam("showtime");
+             if (showtime != null && !showtime.trim().isEmpty()) {
+                 log.info("Showtime ID: {}", showtime);
+                 client.joinRoom(showtime);
+             } else {
+                 log.warn("Client[{}] connected without valid showtime parameter", client.getSessionId());
+                 client.disconnect();
+             }
+             log.info("Socket ID[{}]  Connected to socket", client.getSessionId().toString());
+         };
+     }
+
 
     private DisconnectListener onDisconnected() {
         return client -> {
