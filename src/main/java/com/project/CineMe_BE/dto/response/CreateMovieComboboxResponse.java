@@ -14,5 +14,5 @@ public class CreateMovieComboboxResponse {
     private List<LanguageResponse> language;
     private List<CountryResponse> country;
     private List<GenreResponse> genre;
-    private List<ActorResponse> actor;
+    private List<ActorSimpleResponse> actor;
 }
