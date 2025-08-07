@@ -11,6 +11,7 @@ import com.project.CineMe_BE.service.FormatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -42,5 +43,10 @@ public class FormatServiceImpl implements FormatService {
         FormatEntity entity = formatRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("Format not found with id: " + id));
         formatRepository.delete(entity);
+    }
+
+    @Override
+    public List<FormatResponse> getAll() {
+        return responseMapper.toListDto(formatRepository.findAll());
     }
 }

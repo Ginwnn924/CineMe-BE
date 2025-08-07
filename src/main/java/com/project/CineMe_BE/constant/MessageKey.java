@@ -16,7 +16,7 @@ public class MessageKey {
     public static final String MOVIE_UPDATE_SUCCESS = "movie.update_success";
     public static final String MOVIE_GET_ALL_SUCCESS = "movie.get_all_success";
     public static final String MOVIE_GET_DETAILS = "movie.get_details";
-
+    public static final String GET_COMBOBOX_SUCCESS = "movie.getCombobox";
 
 
 

@@ -15,6 +15,7 @@ import com.project.CineMe_BE.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -27,6 +28,10 @@ public class ActorServiceImpl implements ActorService {
     private final ActorResponseMapper actorResponseMapper;
     private final LocalizationUtils localizationUtils;
 
+    @Override
+    public List<ActorResponse> getAll() {
+        return actorResponseMapper.toListDto(actorRepository.findAll());
+    }
 
     @Override
     public ActorResponse getActorById(UUID id) {

@@ -1,5 +1,6 @@
 package com.project.CineMe_BE.service.impl;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -21,6 +22,12 @@ public class LanguageServiceImpl implements LanguageService {
     private final LanguageRepository languageRepository;
     private final LanguageResponseMapper responseMapper;
     private final LanguageRequestMapper requestMapper;
+
+    @Override
+    public List<LanguageResponse> getAll() {
+        return responseMapper.toListDto(languageRepository.findAll());
+    }
+
     @Override
     public LanguageResponse create(LanguageRequest languageRequest) {
         LanguageEntity entity = requestMapper.toEntity(languageRequest);

@@ -3,9 +3,9 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.MovieRequest;
+import com.project.CineMe_BE.dto.response.CreateMovieComboboxResponse;
 import com.project.CineMe_BE.dto.response.MovieResponse;
-import com.project.CineMe_BE.service.MinioService;
-import com.project.CineMe_BE.service.MovieService;
+import com.project.CineMe_BE.service.*;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -20,8 +20,29 @@ import java.util.UUID;
 @RequestMapping("/api/v1/movies")
 public class MovieController {
     private final MovieService movieService;
+    private final CountryService countryService;
+    private final FormatService formatService;
+    private final ActorService actorService;
+    private final GenreService genreService;
+    private final LanguageService languageService;
     private final LocalizationUtils localizationUtils;
 
+    @GetMapping("/combobox")
+    public ResponseEntity<APIResponse> getCreateMovieCombobox() {
+        CreateMovieComboboxResponse response =CreateMovieComboboxResponse.builder()
+                .country(countryService.getAll())
+                .format(formatService.getAll())
+                .actor(actorService.getAll())
+                .genre(genreService.getAll())
+                .language(languageService.getAll())
+                .build();
+
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.GET_COMBOBOX_SUCCESS))
+                .data(response)
+                .build());
+    }
 
 
 

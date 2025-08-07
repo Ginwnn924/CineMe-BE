@@ -11,6 +11,7 @@ import com.project.CineMe_BE.service.GenreService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -20,6 +21,11 @@ public class GenreServiceImpl implements GenreService {
     private final GenreRepository genreRepository;
     private final GenreResponseMapper responseMapper;
     private final GenreRequestMapper requestMapper;
+
+    @Override
+    public List<GenreResponse> getAll() {
+        return responseMapper.toListDto(genreRepository.findAll());
+    }
 
     @Override
     public GenreResponse create(GenreRequest request) {
