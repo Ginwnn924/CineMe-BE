@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/genre")
+@RequestMapping("/api/v1/genres")
 public class GenreController {
     private final GenreService genreService;
     private final LocalizationUtils localizationUtils;
@@ -24,6 +24,15 @@ public class GenreController {
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage( MessageKey.GENRE_CREATE_SUCCESS))
                 .data(genreService.create(request))
+                .build());
+    }
+
+    @GetMapping("")
+    public ResponseEntity<APIResponse> getAllGenres() {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.GENRE_GET_ALL_SUCCESS))
+                .data(genreService.getAll())
                 .build());
     }
 

@@ -6,10 +6,10 @@ public class MessageKey {
     public static final String ACTOR_DELETE_SUCCESS = "actor.delete_success";
     public static final String ACTOR_UPDATE_SUCCESS = "actor.update_success";
     public static final String ACTOR_NOT_FOUND = "actor.not_found";
+    public static final String ACTOR_GET_ALL_SUCCESS = "actor.get_all_success";
 
 
     // Movie
-
     public static final String MOVIE_CREATE_SUCCESS = "movie.create_success";
     public static final String MOVIE_NOT_FOUND = "movie.not_found";
     public static final String MOVIE_DELETE_SUCCESS = "movie.delete_success";
@@ -18,14 +18,13 @@ public class MessageKey {
     public static final String MOVIE_GET_DETAILS = "movie.get_details";
     public static final String GET_COMBOBOX_SUCCESS = "movie.getCombobox";
 
-
-
     // Genre
     public static final String GENRE_CREATE_SUCCESS = "genre.create_success";
     public static final String GENRE_UPDATE_SUCCESS = "genre.update_success";
     public static final String GENRE_DELETE_SUCCESS = "genre.delete_success";
     public static final String GENRE_NOT_FOUND = "genre.not_found";
     public static final String GENRE_GET_DETAILS = "genre.get_details";
+    public static final String GENRE_GET_ALL_SUCCESS = "genre.get_all_success";
 
     // Format
     public static final String FORMAT_CREATE_SUCCESS = "format.create_success";
@@ -33,6 +32,7 @@ public class MessageKey {
     public static final String FORMAT_DELETE_SUCCESS = "format.delete_success";
     public static final String FORMAT_NOT_FOUND = "format.not_found";
     public static final String FORMAT_GET_DETAILS = "format.get_details";
+    public static final String FORMAT_GET_ALL_SUCCESS = "format.get_all_success";
 
 
     // Limit Age
@@ -56,6 +56,7 @@ public class MessageKey {
     public static final String LANGUAGE_DELETE_SUCCESS = "language.delete_success";
     public static final String LANGUAGE_NOT_FOUND = "language.not_found";
     public static final String LANGUAGE_GET_DETAILS = "language.get_details";
+    public static final String LANGUAGE_GET_ALL_SUCCESS = "language.get_all_success";
 
 
 
@@ -93,4 +94,7 @@ public class MessageKey {
     // Auth
     public static final String AUTH_LOGIN_SUCCESS = "auth.login_success";
     public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
+
+    // Country
+    public static final String COUNTRY_GET_ALL_SUCCESS = "country.get_all_success";
 }
