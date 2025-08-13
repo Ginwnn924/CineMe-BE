@@ -4,12 +4,14 @@ import com.project.CineMe_BE.dto.request.BookingRequest;
 import com.project.CineMe_BE.dto.response.PaymentResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.UUID;
+
 public interface BookingService {
 
     String createBooking(BookingRequest bookingRequest, HttpServletRequest request);
 
-    PaymentResponse confirmBooking(HttpServletRequest request);
+    UUID confirmBooking(HttpServletRequest request);
 
-
+    PaymentResponse getBookingInfo(UUID id);
 
 }
