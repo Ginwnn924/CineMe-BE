@@ -80,6 +80,7 @@ public class MessageKey {
 
     // User
     public static final String USER_NOT_FOUND = "user.not_found";
+    public static final String USER_GET_ALL_SUCCESS = "user.get_all_success";
 
     // Payment
     public static final String PAYMENT_CREATE_URL_SUCCESS = "payment.create_url_success";

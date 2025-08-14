@@ -138,4 +138,13 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                 });
         return isConflict;
     }
+
+    @Override
+    public List<ShowtimeResponse> getAllShowtimes() {
+        List<ShowtimeEntity> showtimesList = showtimeRepository.findAllWithRooms();
+        if (showtimesList.isEmpty()) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND));
+        }
+        return showtimeResponseMapper.toListDto(showtimesList);
+    }
 }

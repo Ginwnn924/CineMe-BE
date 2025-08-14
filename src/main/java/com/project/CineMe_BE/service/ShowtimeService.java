@@ -14,5 +14,5 @@ public interface ShowtimeService {
      boolean updateShowtime(UUID id, ShowtimeRequest showtime);
 
      List<ShowtimeResponse> getShowtimesByMovieIdAndTheaterIdAndDate(UUID movie, UUID theater, LocalDate date);
-
+     List<ShowtimeResponse> getAllShowtimes();
 }

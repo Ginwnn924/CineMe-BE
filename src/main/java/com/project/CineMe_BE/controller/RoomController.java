@@ -3,7 +3,9 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.SeatRequest;
+import com.project.CineMe_BE.dto.response.RoomResponse;
 import com.project.CineMe_BE.dto.response.SeatResponse;
+import com.project.CineMe_BE.service.RoomService;
 import com.project.CineMe_BE.service.SeatService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class RoomController {
     private final SeatService seatService;
     private final LocalizationUtils localizationUtils;
+    private final RoomService roomService;
     @GetMapping("/{roomId}/seats")
     public ResponseEntity<APIResponse> getSeatsByRoomId(@PathVariable("roomId") UUID roomId) {
         List<SeatResponse> result = seatService.getSeatsByRoomId(roomId);
@@ -34,6 +37,18 @@ public class RoomController {
                                           .data(result)
                                           .build();
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("")
+    public ResponseEntity<APIResponse> getAllRooms() {
+        List<RoomResponse> rooms = roomService.getAll();
+        return ResponseEntity.ok(
+                APIResponse.builder()
+                        .statusCode(200)
+                        .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS))
+                        .data(rooms)
+                        .build()
+        );
     }
 
     @PostMapping
