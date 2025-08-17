@@ -3,10 +3,12 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.ActorRequest;
 import com.project.CineMe_BE.dto.response.ActorResponse;
+import com.project.CineMe_BE.dto.response.ActorSimpleResponse;
 import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.ActorRequestMapper;
 import com.project.CineMe_BE.mapper.response.ActorResponseMapper;
+import com.project.CineMe_BE.mapper.response.ActorSimpleResponseMapper;
 import com.project.CineMe_BE.repository.ActorRepository;
 import com.project.CineMe_BE.service.ActorService;
 import com.project.CineMe_BE.service.MinioService;
@@ -15,6 +17,7 @@ import com.project.CineMe_BE.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -25,8 +28,13 @@ public class ActorServiceImpl implements ActorService {
     private final ActorRepository actorRepository;
     private final ActorRequestMapper actorRequestMapper;
     private final ActorResponseMapper actorResponseMapper;
+    private final ActorSimpleResponseMapper actorSimpleResponseMapper;
     private final LocalizationUtils localizationUtils;
 
+    @Override
+    public List<ActorSimpleResponse> getAll() {
+        return actorSimpleResponseMapper.toListDto(actorRepository.findAll());
+    }
 
     @Override
     public ActorResponse getActorById(UUID id) {

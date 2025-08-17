@@ -4,8 +4,7 @@ import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.MovieRequest;
 import com.project.CineMe_BE.dto.response.MovieResponse;
-import com.project.CineMe_BE.service.MinioService;
-import com.project.CineMe_BE.service.MovieService;
+import com.project.CineMe_BE.service.*;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -20,9 +19,12 @@ import java.util.UUID;
 @RequestMapping("/api/v1/movies")
 public class MovieController {
     private final MovieService movieService;
+    private final CountryService countryService;
+    private final FormatService formatService;
+    private final ActorService actorService;
+    private final GenreService genreService;
+    private final LanguageService languageService;
     private final LocalizationUtils localizationUtils;
-
-
 
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})

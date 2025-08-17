@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/language")
+@RequestMapping("/api/v1/languages")
 public class LanguageController {
     private final LanguageService languageService;
     private final LocalizationUtils localizationUtils;
@@ -44,6 +44,15 @@ public class LanguageController {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.LANGUAGE_DELETE_SUCCESS))
+                .build());
+    }
+
+    @GetMapping("")
+    public ResponseEntity<APIResponse> getAllLanguages() {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.LANGUAGE_GET_ALL_SUCCESS))
+                .data(languageService.getAll())
                 .build());
     }
 }

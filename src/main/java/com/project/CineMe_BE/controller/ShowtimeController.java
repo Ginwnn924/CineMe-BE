@@ -28,6 +28,19 @@ public class ShowtimeController {
     private final SeatService seatService;
     private final LocalizationUtils localizationUtils;
     private final RedisTemplate<String, String> redisTemplate;
+
+    @GetMapping("/all")
+    public ResponseEntity<APIResponse> getAllShowtimes() {
+        List<ShowtimeResponse> listShowtimes = showtimeService.getAllShowtimes();
+        return ResponseEntity.ok(
+                APIResponse.builder()
+                        .statusCode(200)
+                        .message(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_GET_ALL_SUCCESS))
+                        .data(listShowtimes)
+                        .build()
+        );
+    }
+
     @PostMapping("")
     public ResponseEntity<APIResponse> createShowtime(@RequestBody ShowtimeRequest request) {
         showtimeService.createShowtime(request);

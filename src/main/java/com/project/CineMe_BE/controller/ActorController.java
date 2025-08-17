@@ -24,6 +24,16 @@ public class ActorController {
     private final ActorService actorService;
     private final LocalizationUtils localizationUtils;
 
+    @GetMapping("")
+    public ResponseEntity<APIResponse> getAllActors() {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_GET_ALL_SUCCESS))
+                .data(actorService.getAll())
+                .build());
+    }
+
+
     @GetMapping("/{id}/detail")
     public ResponseEntity<APIResponse> getActorById(@PathVariable @Nonnull UUID id) {
         return ResponseEntity.status(HttpStatus.CREATED).body(

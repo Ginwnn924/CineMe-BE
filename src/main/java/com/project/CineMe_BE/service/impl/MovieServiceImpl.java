@@ -104,6 +104,6 @@ public class MovieServiceImpl implements MovieService {
 
     }
 
-
+    //GetDataCombobox using for combobox in frontend , view data when create a new movie
 
 }

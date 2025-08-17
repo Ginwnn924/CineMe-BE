@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/format")
+@RequestMapping("/api/v1/formats")
 public class FormatController {
     private final FormatService formatService;
     private final LocalizationUtils localizationUtils;
@@ -45,6 +45,15 @@ public class FormatController {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_DELETE_SUCCESS))
+                .build());
+    }
+
+    @GetMapping("")
+    public ResponseEntity<APIResponse> getAllFormats() {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_GET_ALL_SUCCESS))
+                .data(formatService.getAll())
                 .build());
     }
 }
