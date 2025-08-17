@@ -80,7 +80,7 @@ public class MovieController {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_GET_DETAILS))
-                .data(movieService.getMovieDetail(id)) // Replace with actual movie detail data when implemented
+                .data(movieService.getMovieDetail(id))
                 .build());
     }
 

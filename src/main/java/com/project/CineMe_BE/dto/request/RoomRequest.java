@@ -25,6 +25,4 @@ public class RoomRequest {
     // @NotBlank(message = "Room Type không được để trống")
     private String type;
 
-    // @NotBlank(message = "Rạp Phim không được để trống")
-    private UUID theaterId;
 }

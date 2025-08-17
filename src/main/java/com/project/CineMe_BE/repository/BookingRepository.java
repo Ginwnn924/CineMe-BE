@@ -15,10 +15,12 @@ public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
     @Query(value = "SELECT \n" +
             "m.name_vn AS movieName,\n" +
             "m.time AS duration,\n" +
+            "m.image,\n" +
             "t.name_vn AS theaterName,\n" +
             "r.name AS roomName,\n" +
             "s.date || ' ' || st.start_time AS showtime,\n" +
-            "se.seat_number AS seatNumber\n" +
+            "se.seat_number AS seatNumber,\n" +
+            "b.qrcode\n" +
             "FROM bookings b\n" +
             "JOIN showtimes st ON b.showtime_id = st.id\n" +
             "JOIN schedules s ON st.schedule_id = s.id\n" +

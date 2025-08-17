@@ -19,7 +19,9 @@ import com.project.CineMe_BE.service.PaymentService;
 import com.project.CineMe_BE.service.SeatService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import com.project.CineMe_BE.utils.QrCodeUtil;
+import com.project.CineMe_BE.utils.StringUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -74,8 +76,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
+    @Transactional
     @Override
-    public PaymentResponse confirmBooking(HttpServletRequest request) {
+    public UUID confirmBooking(HttpServletRequest request) {
         String status = request.getParameter("vnp_ResponseCode");
         if(!status.equals("00")) {
             return null;
@@ -98,47 +101,68 @@ public class BookingServiceImpl implements BookingService {
             return null;
         }
 
-        BookingEntity booking = createBooking(userId, showtimeId, amount, listSeatId);
-        bookingRepository.save(booking);
+        return createBooking(userId, showtimeId, amount, listSeatId);
 
-        return createPaymentResponse(booking);
     }
 
-    private PaymentResponse createPaymentResponse(BookingEntity booking) {
-        List<PaymentProjection> paymentInfo = bookingRepository.getPaymentInfoByBookingId(booking.getId());
-
+    @Override
+    public PaymentResponse getBookingInfo(UUID id) {
+        List<PaymentProjection> paymentInfo = bookingRepository.getPaymentInfoByBookingId(id);
+        if (paymentInfo.size() == 0) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND));
+        }
         PaymentProjection info = paymentInfo.get(0);
         PaymentResponse response = PaymentResponse.builder()
                 .movieName(info.getMovieName())
                 .theaterName(info.getTheaterName())
+                .image(StringUtil.mapImg(info.getImage()))
                 .duration(info.getDuration())
                 .roomName(info.getRoomName())
                 .showtime(info.getShowtime())
+                .qrcode(StringUtil.mapImg(info.getQrcode()))
                 .seatNumbers(paymentInfo.stream()
                         .map(PaymentProjection::getSeatNumber)
                         .collect(Collectors.toList()))
                 .build();
-
-        String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
-        if (privateKey != null) {
-            MultipartFile file = null;
-            try {
-                file = QrCodeUtil.createQR(
-                        privateKey + "_" + booking.getId(),
-                        "booking_" + booking.getId()
-                );
-            } catch (WriterException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            String qrCodeUrl = minioService.upload(file);
-            response.setQrcode(qrCodeUrl);
-        }
         return response;
     }
 
-    private BookingEntity createBooking(UUID userId, UUID showtimeId, long totalPrice, List<UUID> seatIds) {
+    //    private PaymentResponse createPaymentResponse(BookingEntity booking) {
+//        List<PaymentProjection> paymentInfo = bookingRepository.getPaymentInfoByBookingId(booking.getId());
+//
+//        PaymentProjection info = paymentInfo.get(0);
+//        PaymentResponse response = PaymentResponse.builder()
+//                .movieName(info.getMovieName())
+//                .theaterName(info.getTheaterName())
+//                .duration(info.getDuration())
+//                .roomName(info.getRoomName())
+//                .showtime(info.getShowtime())
+//                .seatNumbers(paymentInfo.stream()
+//                        .map(PaymentProjection::getSeatNumber)
+//                        .collect(Collectors.toList()))
+//                .build();
+//
+//        String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
+//        if (privateKey != null) {
+//            MultipartFile file = null;
+//            try {
+//                file = QrCodeUtil.createQR(
+//                        privateKey + "_" + booking.getId(),
+//                        "booking_" + booking.getId()
+//                );
+//            } catch (WriterException e) {
+//                throw new RuntimeException(e);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//            String qrCodeUrl = minioService.upload(file);
+//            log.info("QR Code uploaded to Minio: {}", qrCodeUrl);
+//            response.setQrcode(qrCodeUrl);
+//        }
+//        return response;
+//    }
+
+    private UUID createBooking(UUID userId, UUID showtimeId, long totalPrice, List<UUID> seatIds) {
         BookingEntity booking = BookingEntity.builder()
                 .user(UserEntity.builder().id(userId).build())
                 .showtime(ShowtimeEntity.builder().id(showtimeId).build())
@@ -156,7 +180,28 @@ public class BookingServiceImpl implements BookingService {
                 .collect(Collectors.toList());
 
         booking.setBookingSeats(bookingSeats);
-        return booking;
+        booking.setId(UUID.randomUUID());
+        String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
+        if (privateKey != null) {
+            MultipartFile file = null;
+            try {
+                file = QrCodeUtil.createQR(
+                        privateKey + "_" + booking.getId(),
+                        "booking_" + booking.getId()
+                );
+            } catch (WriterException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            String qrCodeUrl = minioService.upload(file);
+            int iStart = qrCodeUrl.indexOf("/resources") + 1;
+            int iEnd = qrCodeUrl.indexOf("?X-Amz");
+            booking.setQrcode(qrCodeUrl.substring(iStart, iEnd));
+            log.info("QR Code uploaded to Minio: {}", qrCodeUrl);
+        }
+        bookingRepository.save(booking);
+        return booking.getId();
     }
 
 //    private String generateQrCode()

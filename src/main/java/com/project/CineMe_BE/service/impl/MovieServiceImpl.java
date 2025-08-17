@@ -88,13 +88,15 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Cacheable(value = CacheName.MOVIE, key = "#id")
     public MovieResponse getMovieDetail(UUID id) {
-        MovieEntity movie = movieRepository.findById(id)
+        MovieEntity movie = movieRepository.getMovieDetail(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
         return movieResponseMapper.toDto(movie);
     }
 
     @Override
+    @CacheEvict(value = CacheName.MOVIE, allEntries = true)
     public void deleteMovie(UUID id) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));

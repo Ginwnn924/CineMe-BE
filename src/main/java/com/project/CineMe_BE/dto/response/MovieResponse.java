@@ -1,20 +1,21 @@
 package com.project.CineMe_BE.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MovieResponse {
-
+public class MovieResponse implements Serializable {
     private UUID id;
     private String nameVn;
     private String nameEn;

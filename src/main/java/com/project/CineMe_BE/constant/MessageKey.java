@@ -96,6 +96,12 @@ public class MessageKey {
     public static final String AUTH_LOGIN_SUCCESS = "auth.login_success";
     public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
 
+
     // Country
     public static final String COUNTRY_GET_ALL_SUCCESS = "country.get_all_success";
+
+    // Booking
+    public static final String BOOKING_NOT_FOUND = "booking.not_found";
+    public static final String BOOKING_GET_SUCCESS = "booking.get_success";
+
 }
