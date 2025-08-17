@@ -12,6 +12,7 @@ import java.util.List;
 public class PaymentResponse {
     private String movieName;
     private String theaterName;
+    private String image;
     private String duration;
     private String roomName;
     private String showtime;

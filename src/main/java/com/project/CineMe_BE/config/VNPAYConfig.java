@@ -20,19 +20,19 @@ import java.util.stream.Collectors;
 @Configuration
 @Getter
 public class VNPAYConfig {
-    @Value("${VN_PAY_URL}")
+    @Value("${VNPAY_URL}")
     public String vnp_PayUrl;
-    @Value("${VN_PAY_RETURN_URL}")
+    @Value("${VNPAY_RETURN_URL}")
     public String vnp_ReturnUrl;
-    @Value("${VN_PAY_TMN_CODE}")
+    @Value("${VNPAY_TMN_CODE}")
     public String vnp_TmnCode;
-    @Value("${VN_PAY_SECRET_KEY}")
+    @Value("${VNPAY_SECRET_KEY}")
     public String secretKey;
-    @Value("${VN_PAY_VERSION}")
+    @Value("${VNPAY_VERSION}")
     public String vnp_Version;
-    @Value("${VN_PAY_COMMAND}")
+    @Value("${VNPAY_COMMAND}")
     public String vnp_Command;
-    @Value("${VN_PAY_ORDER_TYPE}")
+    @Value("${VNPAY_ORDER_TYPE}")
     public String orderType;
     public Map<String, String> getVNPayConfig() {
         Map<String, String> vnpParamsMap = new HashMap<>();
@@ -46,7 +46,7 @@ public class VNPAYConfig {
         vnpParamsMap.put("vnp_ReturnUrl", this.vnp_ReturnUrl);
         LocalDateTime localDateTime = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         String vnpCreateDate = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        vnpParamsMap.put("vnp_ReturnUrl", vnp_ReturnUrl + "/VnPayReturn");
+        vnpParamsMap.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnpParamsMap.put("vnp_CreateDate", vnpCreateDate);
         String vnp_ExpireDate = localDateTime.plusMinutes(10).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         vnpParamsMap.put("vnp_ExpireDate", vnp_ExpireDate);

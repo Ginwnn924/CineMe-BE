@@ -13,6 +13,7 @@ public class SocketIOConfig {
     @Value("${WEBSOCKET_PORT}")
     private Integer port;
 
+
     @Bean
     public SocketIOServer socketIOServer() {
         com.corundumstudio.socketio.Configuration config = new com.corundumstudio.socketio.Configuration();

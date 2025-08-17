@@ -32,6 +32,7 @@ public class ActorController {
                         .message(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_GET_DETAIL))
                         .data(actorService.getActorById(id))
                         .build()
+
         );
     }
 

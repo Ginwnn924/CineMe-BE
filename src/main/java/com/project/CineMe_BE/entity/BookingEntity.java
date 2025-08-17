@@ -16,7 +16,7 @@ import java.util.UUID;
 @Table(name = "bookings")
 public class BookingEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+//    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,6 +35,9 @@ public class BookingEntity {
     private Date createdAt;
     @Column(name = "updated_at")
     private Date updatedAt;
+
+    @Column(name = "qrcode")
+    private String qrcode;
 
     @OneToMany(mappedBy = "booking", cascade = {
             CascadeType.PERSIST,

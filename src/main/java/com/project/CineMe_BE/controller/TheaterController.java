@@ -62,6 +62,7 @@ public class TheaterController {
     }
 
     // Khi lay data ben admin
+    // Can fix lai endpoint
     @GetMapping("/{theaterId}/rooms/{roomId}/showtimes")
     public ResponseEntity<APIResponse> getRoomsByTheaterId(@PathVariable UUID theaterId,
                                                            @PathVariable UUID roomId,
@@ -76,12 +77,13 @@ public class TheaterController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<APIResponse> create(@RequestBody RoomRequest request) {
+    @PostMapping("/{theaterId}/rooms")
+    public ResponseEntity<APIResponse> create(@PathVariable UUID theaterId,
+                                              @RequestBody RoomRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(201)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_CREATE_SUCCESS))
-                .data(theaterService.createRoom(request))
+                .data(theaterService.createRoom(theaterId, request))
                 .build());
     }
 }

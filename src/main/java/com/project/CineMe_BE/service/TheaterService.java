@@ -16,5 +16,5 @@ public interface TheaterService {
 
     List<TheaterResponse> getAllTheatersByMovieAndDate(UUID movieId, LocalDate date);
     List<ShowtimeResponse> getShowtimesByTheaterAndRoom(UUID theaterId, UUID roomId, LocalDate date);
-    RoomResponse createRoom(RoomRequest request);
+    RoomResponse createRoom(UUID theaterId, RoomRequest request);
 }
