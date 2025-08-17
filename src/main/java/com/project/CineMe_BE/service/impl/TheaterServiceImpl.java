@@ -74,8 +74,11 @@ public class TheaterServiceImpl implements TheaterService {
     }
 
     @Override
-    public RoomResponse createRoom(RoomRequest request) {
+    public RoomResponse createRoom(UUID theaterId, RoomRequest request) {
         RoomsEntity entity = requestMapper.toEntity(request);
+        entity.setTheater(TheaterEntity.builder()
+                .id(theaterId)
+                .build());
         roomsRepository.save(entity);    
         return responseMapper.toDto(entity);
     }

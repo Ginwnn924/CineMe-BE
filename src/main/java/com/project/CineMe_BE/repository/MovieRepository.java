@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -16,4 +17,11 @@ public interface MovieRepository extends JpaRepository<MovieEntity, UUID> {
             "LEFT JOIN FETCH m.listActor " +
             "WHERE m.releaseDate <= CURRENT_DATE AND m.endDate >= CURRENT_DATE")
     List<MovieEntity> getAvailableMovies();
+
+    @Query("SELECT m FROM MovieEntity m " +
+            "LEFT JOIN FETCH m.country " +
+            "LEFT JOIN FETCH m.limitage " +
+            "LEFT JOIN FETCH m.listActor " +
+            "WHERE m.id = :id")
+    Optional<MovieEntity> getMovieDetail(UUID id);
 }
