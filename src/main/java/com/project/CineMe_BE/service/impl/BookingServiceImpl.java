@@ -172,12 +172,12 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatusEnum.CONFIRMED.name())
                 .build();
 
-        List<BokingSeatEntity> bookingSeats = seatIds.stream()
+        Set<BokingSeatEntity> bookingSeats = seatIds.stream()
                 .map(seatId -> BokingSeatEntity.builder()
                         .seat(SeatsEntity.builder().id(seatId).build())
                         .booking(booking)
                         .build())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         booking.setBookingSeats(bookingSeats);
         booking.setId(UUID.randomUUID());

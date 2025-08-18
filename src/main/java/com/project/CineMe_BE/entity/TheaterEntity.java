@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -25,9 +26,9 @@ public class TheaterEntity {
     private String nameEn;
 
     @OneToMany(mappedBy = "theater")
-    private List<RoomsEntity> listRoom;
+    private Set<RoomsEntity> listRoom;
 
-    @OneToMany(mappedBy = "theater")
-    private List<ShowtimeEntity> listShowtime;
+//    @OneToMany(mappedBy = "theater")
+//    private List<ShowtimeEntity> listShowtime;
 
 }

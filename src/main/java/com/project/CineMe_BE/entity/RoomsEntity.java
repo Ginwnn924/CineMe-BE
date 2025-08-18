@@ -2,6 +2,8 @@ package com.project.CineMe_BE.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 import java.util.UUID;
 import java.util.List;
 
@@ -29,8 +31,8 @@ public class RoomsEntity {
     private TheaterEntity theater;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<SeatsEntity> seats;
+    private Set<SeatsEntity> seats;
 
     @OneToMany(mappedBy = "room")
-    private List<ShowtimeEntity> showtimes;
+    private Set<ShowtimeEntity> showtimes;
 }

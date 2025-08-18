@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -25,9 +26,8 @@ public class ShowtimeEntity {
     @Column(name = "start_time")
     private LocalTime startTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "theater_id")
-    private TheaterEntity theater;
+    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<TicketPriceEntity> ticketPrices;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
@@ -40,6 +40,10 @@ public class ShowtimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "format_id")
     private FormatEntity format;
+
+    @OneToMany(mappedBy = "showtime")
+    private Set<BookingEntity> booking;
+
 
     @Column(name = "private_key")
     private String privateKey;

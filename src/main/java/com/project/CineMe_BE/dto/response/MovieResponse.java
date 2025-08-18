@@ -20,8 +20,8 @@ public class MovieResponse implements Serializable {
     private String nameVn;
     private String nameEn;
     private String director;
-    private String countryVn;
-    private String countryEn;
+        private String countryVn;
+        private String countryEn;
 //    private String format;
     private LocalDateTime releaseDate;
     private LocalDateTime endDate;

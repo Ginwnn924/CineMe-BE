@@ -51,7 +51,7 @@ public class ShowtimeController {
     }
 
     @GetMapping("")
-    public ResponseEntity<APIResponse> getShowtimesByTheaterId(@RequestParam UUID movieId,
+    public ResponseEntity<APIResponse> getShowtimesByMovieIdAdndTheaterIdAndDate(@RequestParam UUID movieId,
                                                                @RequestParam UUID theaterId,
                                                                @RequestParam (required = true) String date) {
         List<ShowtimeResponse> listShowtimes = showtimeService.getShowtimesByMovieIdAndTheaterIdAndDate(movieId, theaterId, DateFormatUltil.formatDate(date));

@@ -63,7 +63,7 @@ public class SeatServiceImpl implements SeatService{
     }
 
     private HashMap<String,String> generateAllSeats(int rows ,int cols,HashMap<String, String> specialSeats){
-        //specialSeats : key: VIP , value :"AH" => A to H is VIP
+        //specialSeats : key: VIP , value :"   " => A to H is VIP
         //specialSeats : key: COUPLE , value :"A" => A's row  is COUPLE
         Map<Character,String> rowTypeMap = rowToType(specialSeats);
         HashMap<String,String> allSeats = new HashMap<>();

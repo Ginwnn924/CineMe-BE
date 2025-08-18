@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface ShowtimeRequestMapper extends BaseRequestMapper<ShowtimeRequest, ShowtimeEntity> {
-    @Mapping(source = "theaterId", target = "theater", qualifiedByName = "mapToTheater")
+//    @Mapping(source = "theaterId", target = "theater", qualifiedByName = "mapToTheater")
     @Mapping(source = "roomId", target = "room", qualifiedByName = "mapToRoom")
     ShowtimeEntity toEntity(ShowtimeRequest dto);
 
