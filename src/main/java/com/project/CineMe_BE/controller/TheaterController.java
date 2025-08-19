@@ -63,19 +63,19 @@ public class TheaterController {
 
     // Khi lay data ben admin
     // Can fix lai endpoint
-    @GetMapping("/{theaterId}/rooms/{roomId}/showtimes")
-    public ResponseEntity<APIResponse> getRoomsByTheaterId(@PathVariable UUID theaterId,
-                                                           @PathVariable UUID roomId,
-                                                           @RequestParam(required = false) LocalDate date) {
-        List<ShowtimeResponse> listShowtimes = theaterService.getShowtimesByTheaterAndRoom(theaterId, roomId, date);
-        return ResponseEntity.ok(
-                APIResponse.builder()
-                        .statusCode(200)
-                        .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS))
-                        .data(listShowtimes)
-                        .build()
-        );
-    }
+//    @GetMapping("/{theaterId}/rooms/{roomId}/showtimes")
+//    public ResponseEntity<APIResponse> getRoomsByTheaterId(@PathVariable UUID theaterId,
+//                                                           @PathVariable UUID roomId,
+//                                                           @RequestParam(required = false) LocalDate date) {
+//        List<ShowtimeResponse> listShowtimes = theaterService.getShowtimesByTheaterAndRoom(theaterId, roomId, date);
+//        return ResponseEntity.ok(
+//                APIResponse.builder()
+//                        .statusCode(200)
+//                        .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS))
+//                        .data(listShowtimes)
+//                        .build()
+//        );
+//    }
 
     @PostMapping("/{theaterId}/rooms")
     public ResponseEntity<APIResponse> create(@PathVariable UUID theaterId,

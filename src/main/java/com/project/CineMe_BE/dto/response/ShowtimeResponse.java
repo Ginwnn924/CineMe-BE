@@ -14,8 +14,10 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ShowtimeResponse {
     private UUID id;
+    private UUID movieId;
     private String movieNameVn;
     private String movieNameEn;
+    private String img;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -24,6 +26,7 @@ public class ShowtimeResponse {
     private String formatVn;
     private String formatEn;
     private UUID roomId;
+    private UUID theaterId;
     private String roomName;
     private Integer totalSeats;
     private Integer availableSeats;
