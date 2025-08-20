@@ -71,7 +71,7 @@ public class BookingServiceImpl implements BookingService {
         );
 
 
-
+        // url redirect to VnPay
         return isLocked ? paymentService.createPayment(bookingRequest, request) : null;
     }
 
