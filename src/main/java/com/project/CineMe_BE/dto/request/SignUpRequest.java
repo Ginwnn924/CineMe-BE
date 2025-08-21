@@ -17,8 +17,4 @@ public class SignUpRequest {
     private String fullName;
     private String phone;
     private UUID roleId;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-
-
 }
