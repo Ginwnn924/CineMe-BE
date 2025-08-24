@@ -4,10 +4,12 @@ import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.MovieRequest;
 import com.project.CineMe_BE.dto.response.MovieResponse;
+import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.entity.MovieEntity;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.MovieRequestMapper;
 import com.project.CineMe_BE.mapper.response.MovieResponseMapper;
+import com.project.CineMe_BE.repository.ActorRepository;
 import com.project.CineMe_BE.repository.MovieRepository;
 import com.project.CineMe_BE.service.MinioService;
 import com.project.CineMe_BE.service.MovieService;
@@ -15,12 +17,14 @@ import com.project.CineMe_BE.utils.LocalizationUtils;
 import com.project.CineMe_BE.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ public class MovieServiceImpl implements MovieService {
     private final MovieResponseMapper movieResponseMapper;
     private final MovieRequestMapper movieRequestMapper;
     private final MinioService minioService;
+    private final ActorRepository actorRepository;
 
 
     @Override
@@ -42,6 +47,14 @@ public class MovieServiceImpl implements MovieService {
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
     public MovieResponse createMovie(MovieRequest request) {
         MovieEntity movie = movieRequestMapper.toEntity(request);
+        List<ActorEntity> listActor = request.getListActorId().stream()
+                .map(actorId -> {
+                    ActorEntity actor = actorRepository.findById(actorId)
+                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));;
+                    return actor;
+                })
+                .collect(Collectors.toList());
+        movie.setListActor(listActor);
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());
             movie.setImage(StringUtil.splitUrlResource(imgUrl));
@@ -56,9 +69,18 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     @Transactional
+    @CachePut(value = CacheName.MOVIE, key = "#id")
     public MovieResponse updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
+        List<ActorEntity> listActor = request.getListActorId().stream()
+                .map(actorId -> {
+                    ActorEntity actor = actorRepository.findById(actorId)
+                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
+                    return actor;
+                    })
+                .collect(Collectors.toList());
+        movie.setListActor(listActor);
         movieRequestMapper.update(movie, request);
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());

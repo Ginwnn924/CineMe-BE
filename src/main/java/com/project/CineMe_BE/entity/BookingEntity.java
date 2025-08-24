@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -23,7 +24,7 @@ public class BookingEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "showtime_id")
     private ShowtimeEntity showtime;
 
@@ -44,6 +45,6 @@ public class BookingEntity {
             CascadeType.MERGE,
             CascadeType.REMOVE,
     })
-    private List<BokingSeatEntity> bookingSeats;
+    private Set<BokingSeatEntity> bookingSeats;
 
 }

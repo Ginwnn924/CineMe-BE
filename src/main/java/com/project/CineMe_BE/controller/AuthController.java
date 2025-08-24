@@ -41,6 +41,7 @@ public class AuthController {
 
     @PostMapping("/api/v1/auth/register")
     public ResponseEntity<APIResponse> signUp(@RequestBody SignUpRequest request) {
+        authService.register(request);
         APIResponse response = APIResponse.builder()
                 .statusCode(201)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_REGISTER_SUCCESS))

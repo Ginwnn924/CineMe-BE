@@ -24,7 +24,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -110,7 +112,18 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (showtimes.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND));
         }
-        return showtimeResponseMapper.toListDto(showtimes);
+        List<ShowtimeResponse> result = showtimes.stream()
+                .map(showtime -> {
+                    ShowtimeResponse response = showtimeResponseMapper.toDto(showtime);
+                    Map<String, Long> ticketPrices = showtime.getTicketPrices().stream()
+                            .collect(Collectors.toMap(
+                                    ticketPrice -> ticketPrice.getSeatType(),
+                                    ticketPrice -> ticketPrice.getPrice()
+                            ));
+                    response.setPriceBySeatType(ticketPrices);
+                    return response;
+                }).toList();
+        return result;
     }
 
     private String generatePrivateKey() {
@@ -145,6 +158,25 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (showtimesList.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND));
         }
-        return showtimeResponseMapper.toListDto(showtimesList);
+        List<ShowtimeResponse> result = showtimesList.stream()
+                .map(showtime -> {
+                    ShowtimeResponse response = showtimeResponseMapper.toDto(showtime);
+                    int totalSeats = showtime.getRoom() == null ? 0 : showtime.getRoom().getSeats().size();
+                    int bookedSeats = 0;
+                    if (showtime.getBooking() != null) {
+                        bookedSeats = showtime.getBooking().stream()
+                                .mapToInt(booking -> booking.getBookingSeats().size())
+                                .sum();
+                    }
+                    int availableSeats = totalSeats - bookedSeats > 0 ? totalSeats - bookedSeats : 0;
+                    response.setTotalSeats(totalSeats);
+                    response.setBookedSeats(bookedSeats);
+                    response.setAvailableSeats(availableSeats);
+                    return response;
+                }).toList();
+
+
+                return result;
+//        return showtimeResponseMapper.toListDto(showtimesList);
     }
 }

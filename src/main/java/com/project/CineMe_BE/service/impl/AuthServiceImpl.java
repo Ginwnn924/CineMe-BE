@@ -87,12 +87,13 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean register(SignUpRequest request) {
+    public void register(SignUpRequest request) {
         UserEntity entity = userRequestMapper.toEntity(request);
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
         entity.setProvider(ProviderEnum.LOCAL.name());
         entity.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(entity);
-        return entity != null;
     }
 
     @Override

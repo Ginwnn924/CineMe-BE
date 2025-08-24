@@ -63,7 +63,7 @@ public class SeatServiceImpl implements SeatService{
     }
 
     private HashMap<String,String> generateAllSeats(int rows ,int cols,HashMap<String, String> specialSeats){
-        //specialSeats : key: VIP , value :"AH" => A to H is VIP
+        //specialSeats : key: VIP , value :"   " => A to H is VIP
         //specialSeats : key: COUPLE , value :"A" => A's row  is COUPLE
         Map<Character,String> rowTypeMap = rowToType(specialSeats);
         HashMap<String,String> allSeats = new HashMap<>();
@@ -151,12 +151,9 @@ public class SeatServiceImpl implements SeatService{
             return false;
         }
         String redisKey = "seat-lock:" + showtimeId + ":" + seatId;
-        if (redisTemplate.hasKey(redisKey)) {
-            return false;
-        }
-        redisTemplate.opsForValue().set(redisKey, userId.toString());
-        redisTemplate.expire(redisKey, Duration.ofMinutes(10));
-        return true;
+        Boolean success = redisTemplate.opsForValue()
+                .setIfAbsent(redisKey, userId.toString(), Duration.ofMinutes(10));
+        return Boolean.TRUE.equals(success);
     }
 
     @Override

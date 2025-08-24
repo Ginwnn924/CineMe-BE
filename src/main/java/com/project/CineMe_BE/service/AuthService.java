@@ -17,7 +17,7 @@ public interface AuthService {
 
     AuthResponse oauth2Callback(Map<String, String> request);
 
-    boolean register(SignUpRequest request);
+    void register(SignUpRequest request);
 
     boolean logout(HttpServletRequest request);
 }
