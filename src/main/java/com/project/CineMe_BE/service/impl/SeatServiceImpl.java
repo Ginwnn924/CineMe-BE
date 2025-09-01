@@ -36,8 +36,7 @@ public class SeatServiceImpl implements SeatService{
     @Cacheable(value = CacheName.SEAT, key = "#roomId")
     public List<SeatResponse> getSeatsByRoomId(UUID roomId) {
         List<SeatsEntity> entityList = seatsRepository.findByRoomId(roomId);
-        List<SeatResponse> responseList = seatResponseMapper.toListDto(entityList);
-        return responseList; 
+        return seatResponseMapper.toListDto(entityList);
     }
 
     private Map<Character,String> rowToType(HashMap<String, String> specialSeats){
@@ -62,16 +61,33 @@ public class SeatServiceImpl implements SeatService{
         return result;
     }
 
-    private HashMap<String,String> generateAllSeats(int rows ,int cols,HashMap<String, String> specialSeats){
-        //specialSeats : key: VIP , value :"   " => A to H is VIP
+    private HashMap<String,String> generateAllSeats(
+            int rows ,
+            int cols,
+            HashMap<String, String> specialSeats,
+            List<SeatRequest.Walkway> walkways
+    ){
+        //specialSeats : key: VIP , value :"AH" => A to H is VIP
         //specialSeats : key: COUPLE , value :"A" => A's row  is COUPLE
         Map<Character,String> rowTypeMap = rowToType(specialSeats);
         HashMap<String,String> allSeats = new HashMap<>();
-        
+        Set<String> walkwayPositions = new HashSet<>();
+
+        if (walkways != null) {
+            for (SeatRequest.Walkway w : walkways) {
+                char walkwayRow = (char) ('A' + w.getRowIndex());
+                int walkwayCol = w.getColumnIndex() + 1;
+                walkwayPositions.add(walkwayRow + String.valueOf(walkwayCol));
+            }
+        }
+
         for (char row = 'A' ; row <= 'A'+ ( rows - 1 ) ; row++ ) {
             for (int col = 1; col <= cols; col++) {
                 String seat = row + String.valueOf(col);
-                String seatType = rowTypeMap.getOrDefault(row,"STANDARD");
+                // Check if current seat is a walkway
+                String seatType = walkwayPositions.contains(seat)
+                        ? "EMPTY"
+                        : rowTypeMap.getOrDefault(row, "STANDARD");
                 allSeats.put(seat, seatType);
             }
         }
@@ -91,16 +107,18 @@ public class SeatServiceImpl implements SeatService{
         HashMap<String, String> specialSeats = seatRequest.getSpecialSeats();
         int row = seatRequest.getRow();
         int col = seatRequest.getCol();
-        HashMap<String, String> allSeats = generateAllSeats(row, col, specialSeats);
+        List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
+        HashMap<String, String> allSeats = generateAllSeats(row, col, specialSeats, walkways);
         List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
 
-        for (String seat : allSeats.keySet()) {
+        for (Map.Entry<String, String> entry : allSeats.entrySet()) {
+            String seat = entry.getKey();
+            String seatType = entry.getValue();
             SeatsEntity seatsEntity = SeatsEntity.builder()
                     .room(getRoomById(roomId))
                     .seatNumber(seat)
-                    .seatType(allSeats.get(seat))
+                    .seatType(seatType)
                     .isActive(true)
-                    // .status("AVAILABLE")
                     .build();
             resultEntity.add(seatsEntity);
         }
@@ -116,7 +134,7 @@ public class SeatServiceImpl implements SeatService{
     }
 
 
-    // Can` optimmize
+    // Can` optimized
     private List<SeatsEntity> getSeatsWithLockStatusByShowtimeId(UUID showtimeId) {
         List<SeatWithStatusProjection> entityList = seatsRepository.findByShowtimeId(showtimeId);
         if (entityList == null && entityList.isEmpty()) {
@@ -161,7 +179,7 @@ public class SeatServiceImpl implements SeatService{
         List<String> lockedKeys = new ArrayList<>();
 
         for (UUID seatId : seatIds) {
-            // Rollback nếu có bất kỳ ghế nào không thể lock
+            // Rollback nếu có bất kỳ ghế nào ko thể lock
             if (!lockSeat(showtimeId, seatId, userId)) {
                 redisTemplate.delete(lockedKeys);
                 throw new IllegalArgumentException("Seat " + seatId + " is not available or already locked.");
