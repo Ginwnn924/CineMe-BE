@@ -5,10 +5,13 @@ import com.project.CineMe_BE.entity.UserEntity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService {
 
     UserDetailsService userDetailsService();
 
     List<UserResponse> getAll();
+
+    UserResponse getUserInfo(UUID id);
 }

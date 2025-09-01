@@ -65,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
         try {
+
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         }
         catch (Exception e) {

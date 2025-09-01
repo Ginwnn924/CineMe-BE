@@ -38,7 +38,6 @@ public class UserEntity implements UserDetails {
     private String provider;
 
 
-
     @ManyToOne
     @JoinColumn(name = "role_id")
     private RoleEntity role;

@@ -1,6 +1,8 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.google.zxing.WriterException;
+import com.project.CineMe_BE.dto.response.BookingResponse;
+import com.project.CineMe_BE.repository.projection.BookingProjection;
 import com.project.CineMe_BE.repository.projection.PaymentProjection;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.BookingRequest;
@@ -206,4 +208,34 @@ public class BookingServiceImpl implements BookingService {
 
 //    private String generateQrCode()
 
+
+    @Override
+    public List<BookingResponse> getBookingHistory(UUID userId) {
+        List<BookingProjection> listBookingProjection = bookingRepository.getBookingByUserId(userId);
+        if (listBookingProjection.size() == 0) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND));
+        }
+        return listBookingProjection.stream()
+                .collect(Collectors.groupingBy(BookingProjection::getId))
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    BookingProjection info = entry.getValue().get(0);
+                    return BookingResponse.builder()
+                            .id(info.getId())
+                            .movieName(info.getMovieName())
+                            .movieImg(StringUtil.mapImg(info.getMovieImg()))
+                            .date(info.getDate())
+                            .startTime(info.getStartTime())
+                            .endTime(info.getEndTime())
+                            .theaterName(info.getTheaterName())
+                            .roomName(info.getRoomName())
+                            .status(info.getStatus())
+                            .listSeats(entry.getValue().stream()
+                                    .map(BookingProjection::getSeatNumber)
+                                    .collect(Collectors.toList()))
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 }
