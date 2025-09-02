@@ -71,24 +71,32 @@ public class SeatServiceImpl implements SeatService{
         //specialSeats : key: COUPLE , value :"A" => A's row  is COUPLE
         Map<Character,String> rowTypeMap = rowToType(specialSeats);
         HashMap<String,String> allSeats = new HashMap<>();
-        Set<String> walkwayPositions = new HashSet<>();
 
+        // Track walkway columns by index
+        Set<Integer> walkwayCols = new HashSet<>();
         if (walkways != null) {
             for (SeatRequest.Walkway w : walkways) {
-                char walkwayRow = (char) ('A' + w.getRowIndex());
-                int walkwayCol = w.getColumnIndex() + 1;
-                walkwayPositions.add(walkwayRow + String.valueOf(walkwayCol));
+                walkwayCols.add(w.getColumnIndex() + 1);
             }
         }
 
-        for (char row = 'A' ; row <= 'A'+ ( rows - 1 ) ; row++ ) {
+        for (char row = 'A'; row <= 'A' + (rows - 1); row++) {
+
             for (int col = 1; col <= cols; col++) {
-                String seat = row + String.valueOf(col);
-                // Check if current seat is a walkway
-                String seatType = walkwayPositions.contains(seat)
-                        ? "EMPTY"
-                        : rowTypeMap.getOrDefault(row, "STANDARD");
-                allSeats.put(seat, seatType);
+                String seatKey = row + String.valueOf(col);
+                String seatType;
+                String seatNumber= " ";
+
+                if (walkwayCols.contains(col)) {
+                    seatType = "EMPTY";
+                    seatNumber = "W_"+seatKey;
+                } else {
+                    seatType = rowTypeMap.getOrDefault(row, "STANDARD");
+                    seatNumber = seatKey;
+                }
+
+                // Store as "seatType:seatNumber"
+                allSeats.put(seatNumber, seatType );
             }
         }
         return allSeats;
