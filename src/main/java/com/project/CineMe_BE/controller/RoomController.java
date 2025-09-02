@@ -28,7 +28,7 @@ public class RoomController {
     private final SeatService seatService;
     private final LocalizationUtils localizationUtils;
     private final RoomService roomService;
-    @GetMapping("/{roomId}/seats")
+    @GetMapping("/{roomId}")
     public ResponseEntity<APIResponse> getSeatsByRoomId(@PathVariable("roomId") UUID roomId) {
         List<SeatResponse> result = seatService.getSeatsByRoomId(roomId);
          APIResponse response = APIResponse.builder()
@@ -51,9 +51,9 @@ public class RoomController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<APIResponse> createSeats(@RequestBody SeatRequest seatRequest) {
-        Boolean isCreated = seatService.create(seatRequest);
+    @PostMapping("/{roomId}/seats")
+    public ResponseEntity<APIResponse> createSeats(@RequestBody SeatRequest seatRequest,@PathVariable("roomId") UUID roomId) {
+        Boolean isCreated = seatService.create(seatRequest,roomId);
         APIResponse response = APIResponse.builder()
                                             .statusCode(201)
                                           .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_CREATE_SUCCESS))

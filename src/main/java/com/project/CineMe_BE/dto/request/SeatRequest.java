@@ -10,7 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class SeatRequest {
-    private UUID roomId;
+//    private UUID roomId;
     private int col; // 1, 2, 3, ..., 18
     private int row;// A, B, C, D, E, F, G, H
     private HashMap< String ,String> specialSeats;

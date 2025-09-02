@@ -110,8 +110,8 @@ public class SeatServiceImpl implements SeatService{
     
     @Override
     @Transactional
-    public boolean create(SeatRequest seatRequest) {
-        UUID roomId = seatRequest.getRoomId();
+    public boolean create(SeatRequest seatRequest , UUID roomId) {
+//        UUID roomId = seatRequest.getRoomId();
         HashMap<String, String> specialSeats = seatRequest.getSpecialSeats();
         int row = seatRequest.getRow();
         int col = seatRequest.getCol();
