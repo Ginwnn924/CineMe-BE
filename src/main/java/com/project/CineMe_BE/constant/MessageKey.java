@@ -104,4 +104,23 @@ public class MessageKey {
     public static final String BOOKING_NOT_FOUND = "booking.not_found";
     public static final String BOOKING_GET_SUCCESS = "booking.get_success";
 
+
+    // Product
+    public static final String PRODUCT_CREATE_SUCCESS = "product.create_success";
+    public static final String PRODUCT_UPDATE_SUCCESS = "product.update_success";
+    public static final String PRODUCT_DELETE_SUCCESS = "product.delete_success";
+    public static final String PRODUCT_NOT_FOUND = "product.not_found";
+    public static final String PRODUCT_GET_DETAILS = "product.get_details";
+    public static final String PRODUCT_GET_ALL_SUCCESS = "product.get_all_success";
+
+    // Combo
+    public static final String COMBO_CREATE_SUCCESS = "combo.create_success";
+    public static final String COMBO_UPDATE_SUCCESS = "combo.update_success";
+    public static final String COMBO_DELETE_SUCCESS = "combo.delete_success";
+    public static final String COMBO_NOT_FOUND = "combo.not_found";
+    public static final String COMBO_GET_DETAILS = "combo.get_details";
+    public static final String COMBO_GET_ALL_SUCCESS = "combo.get_all_success";
+
+    // ItemCombo
+    public static final String ITEM_COMBO_CREATE_SUCCESS = "item_combo.create_success";
 }
