@@ -1,36 +1,27 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.entity.PricingRuleEntity;
-import com.project.CineMe_BE.entity.ShowtimeEntity;
+import com.project.CineMe_BE.entity.*;
 import com.project.CineMe_BE.enums.StatusSeat;
 import com.project.CineMe_BE.exception.DataNotFoundException;
-import com.project.CineMe_BE.repository.PricingRuleRepository;
-import com.project.CineMe_BE.repository.ShowtimeRepository;
-import com.project.CineMe_BE.repository.projection.SeatWithStatusProjection;
+import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import jakarta.annotation.PostConstruct;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
-
 import com.project.CineMe_BE.dto.request.SeatRequest;
 import com.project.CineMe_BE.dto.response.SeatResponse;
 import com.project.CineMe_BE.service.SeatService;
 import com.project.CineMe_BE.mapper.response.SeatResponseMapper;
-import com.project.CineMe_BE.entity.RoomsEntity;
-import com.project.CineMe_BE.entity.SeatsEntity;
-import com.project.CineMe_BE.repository.RoomRepository;
-import com.project.CineMe_BE.repository.SeatsRepository;
 import lombok.*;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -43,46 +34,60 @@ public class SeatServiceImpl implements SeatService{
     private final RedisTemplate<String, String> redisTemplate;
     private final PricingRuleRepository pricingRuleRepository;
     private final LocalizationUtils localizationUtils;
+    private final SeatTypeRepository seatTypeRepository;
 
-    @Override
-    @Cacheable(value = CacheName.SEAT, key = "#roomId")
-    public List<SeatResponse> getSeatsByRoomId(UUID roomId) {
-        List<SeatsEntity> entityList = seatsRepository.findByRoomId(roomId);
-        return seatResponseMapper.toListDto(entityList);
+    private UUID defaultSeatTypeId;
+    private UUID coupleSeatTypeId;
+
+    @PostConstruct
+    public void init() {
+        this.defaultSeatTypeId = seatTypeRepository.findByName("Standard")
+                .orElseThrow(() -> new RuntimeException("Default seat type STANDARD not found in DB"))
+                .getId();
+        this.coupleSeatTypeId = seatTypeRepository.findByName("Couple")
+                .orElseThrow(() -> new RuntimeException("Default seat type COUPLE not found in DB"))
+                .getId();
     }
 
-    private Map<Character,String> rowToType(HashMap<String, String> specialSeats){
-        Map<Character,String> result = new HashMap<>();
+    private UUID getDefaultSeatTypeId() {
+        return defaultSeatTypeId;
+    }
 
-        for (Map.Entry<String, String> entry : specialSeats.entrySet()) {
-            String type = entry.getKey();
+    private UUID getCoupleSeatTypeId() {
+        return coupleSeatTypeId;
+    }
+
+    private Map<Character, UUID> rowToType(HashMap<UUID, String> specialSeats) {
+        Map<Character, UUID> result = new HashMap<>();
+
+        for (Map.Entry<UUID, String> entry : specialSeats.entrySet()) {
+            UUID seatTypeId = entry.getKey();
             String range = entry.getValue();
-            
-            if(range.length() ==1){
-                result.put(range.charAt(0),type);
-            }
-            else if(range.length() >= 2){
+
+            if (range.length() == 1) {
+                result.put(range.charAt(0), seatTypeId);
+            } else if (range.length() >= 2) {
                 char startRow = range.charAt(0);
                 char endRow = range.charAt(range.length() - 1);
 
                 for (char row = startRow; row <= endRow; row++) {
-                        result.put(row, type);
+                    result.put(row, seatTypeId);
                 }
             }
         }
         return result;
     }
 
-    private HashMap<String,String> generateAllSeats(
-            int rows ,
+
+    private Map<String, UUID> generateAllSeats(
+            int rows,
             int cols,
-            HashMap<String, String> specialSeats,
-            List<SeatRequest.Walkway> walkways
-    ){
-        //specialSeats : key: VIP , value :"AH" => A to H is VIP
-        //specialSeats : key: COUPLE , value :"A" => A's row  is COUPLE
-        Map<Character,String> rowTypeMap = rowToType(specialSeats);
-        HashMap<String,String> allSeats = new HashMap<>();
+            HashMap<UUID, String> specialSeats,
+            List<SeatRequest.Walkway> walkways,
+            int coupleSeatQuantity
+    ) {
+        Map<Character, UUID> rowTypeMap = rowToType(specialSeats);
+        Map<String, UUID> allSeats = new HashMap<>();
 
         // Track walkway columns by index
         Set<Integer> walkwayCols = new HashSet<>();
@@ -92,25 +97,33 @@ public class SeatServiceImpl implements SeatService{
             }
         }
 
-        for (char row = 'A'; row <= 'A' + (rows - 1); row++) {
+        //last row :
+        char lastRow = (char) ('A' + (rows - 1));
 
+        for (char row = 'A'; row < lastRow; row++) {
             for (int col = 1; col <= cols; col++) {
                 String seatKey = row + String.valueOf(col);
-                String seatType;
-                String seatNumber= " ";
 
                 if (walkwayCols.contains(col)) {
-                    seatType = "EMPTY";
-                    seatNumber = "W_"+seatKey;
+                    // walkway: lưu null hoặc UUID của loại "EMPTY"
+                    allSeats.put("W_"+seatKey, null);
                 } else {
-                    seatType = rowTypeMap.getOrDefault(row, "STANDARD");
-                    seatNumber = seatKey;
+                    UUID seatTypeId = rowTypeMap.getOrDefault(row, getDefaultSeatTypeId());
+                    allSeats.put(seatKey, seatTypeId);
                 }
-
-                // Store as "seatType:seatNumber"
-                allSeats.put(seatNumber, seatType );
             }
         }
+
+        //set couple seat for last row
+        if(coupleSeatQuantity > 0 ){
+            for (int i = 1; i <= coupleSeatQuantity * 2; i += 2) {
+                if (i + 1 <= cols) { // tránh tràn số cột
+                    String seatKey = lastRow + String.valueOf(i) + "+" + lastRow + String.valueOf(i + 1);
+                    allSeats.put(seatKey, getCoupleSeatTypeId());
+                }
+            }
+        }
+
         return allSeats;
     }
 
@@ -119,33 +132,36 @@ public class SeatServiceImpl implements SeatService{
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found with id: " + roomId));
     }
-    
+
     @Override
     @Transactional
-    public boolean create(SeatRequest seatRequest , UUID roomId) {
-//        UUID roomId = seatRequest.getRoomId();
-        HashMap<String, String> specialSeats = seatRequest.getSpecialSeats();
-        int row = seatRequest.getRow();
-        int col = seatRequest.getCol();
-        List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
-        HashMap<String, String> allSeats = generateAllSeats(row, col, specialSeats, walkways);
-        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
+    public boolean create(SeatRequest seatRequest, UUID roomId) {
+    HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
+    int row = seatRequest.getRow();
+    int col = seatRequest.getCol();
+    List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
+    int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
+    Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
+    List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
 
-        for (Map.Entry<String, String> entry : allSeats.entrySet()) {
-            String seat = entry.getKey();
-            String seatType = entry.getValue();
-            SeatsEntity seatsEntity = SeatsEntity.builder()
-                    .room(getRoomById(roomId))
-                    .seatNumber(seat)
-//                    .seatType(seatType)
-                    .isActive(true)
-                    .build();
-            resultEntity.add(seatsEntity);
-        }
+    for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
+        String seatNumber = entry.getKey();
+        UUID seatTypeId = entry.getValue();
 
-        seatsRepository.bulkInsert(resultEntity);
-        return true;
+        SeatsEntity seatsEntity = SeatsEntity.builder()
+                .room(getRoomById(roomId))
+                .seatNumber(seatNumber)
+                .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
+                .isActive(true)
+                .build();
+
+        resultEntity.add(seatsEntity);
     }
+
+    seatsRepository.bulkInsert(resultEntity);
+    return true;
+}
+
 
     @Override
     public List<SeatResponse> getSeatsByShowtime(UUID showtimeId) {
@@ -278,5 +294,12 @@ public class SeatServiceImpl implements SeatService{
         redisTemplate.delete(bookingLockKey);
 
         return true;
+    }
+
+    @Override
+    @Cacheable(value = CacheName.SEAT, key = "#roomId")
+    public List<SeatResponse> getSeatsByRoomId(UUID roomId) {
+        List<SeatsEntity> entityList = seatsRepository.findByRoomId(roomId);
+        return seatResponseMapper.toListDto(entityList);
     }
 }
