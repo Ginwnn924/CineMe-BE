@@ -51,7 +51,7 @@ public class RoomController {
         );
     }
 
-    @PostMapping
+    @PostMapping("/{roomId}/seats")
     public ResponseEntity<APIResponse> createSeats(@RequestBody SeatRequest seatRequest) {
         Boolean isCreated = seatService.create(seatRequest);
         APIResponse response = APIResponse.builder()

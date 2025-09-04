@@ -1,7 +1,14 @@
 package com.project.CineMe_BE.service.impl;
 
+import com.project.CineMe_BE.constant.MessageKey;
+import com.project.CineMe_BE.entity.PricingRuleEntity;
+import com.project.CineMe_BE.entity.ShowtimeEntity;
+import com.project.CineMe_BE.exception.DataNotFoundException;
+import com.project.CineMe_BE.repository.PricingRuleRepository;
+import com.project.CineMe_BE.repository.ShowtimeRepository;
 import com.project.CineMe_BE.repository.projection.SeatWithStatusProjection;
 import com.project.CineMe_BE.constant.CacheName;
+import com.project.CineMe_BE.utils.LocalizationUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,6 +26,7 @@ import com.project.CineMe_BE.repository.SeatsRepository;
 import lombok.*;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,7 +38,10 @@ public class SeatServiceImpl implements SeatService{
     private final RoomRepository roomRepository;
     private final SeatResponseMapper seatResponseMapper;
     private final SeatsRepository seatsRepository;
+    private final ShowtimeRepository showtimeRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final PricingRuleRepository pricingRuleRepository;
+    private final LocalizationUtils localizationUtils;
 
     @Override
     @Cacheable(value = CacheName.SEAT, key = "#roomId")
@@ -129,8 +140,29 @@ public class SeatServiceImpl implements SeatService{
 
     @Override
     public List<SeatResponse> getSeatsByShowtime(UUID showtimeId) {
+        ShowtimeEntity showtime = showtimeRepository.findById(showtimeId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+        LocalDate date = showtime.getSchedule().getDate();
         List<SeatsEntity> listSeats = getSeatsWithLockStatusByShowtimeId(showtimeId);
-        return seatResponseMapper.toListDto(listSeats);
+        int dayOfWeek = date.getDayOfWeek().getValue() + 1;
+        Map<String, Long> listRules = pricingRuleRepository.findByDayOfWeek(dayOfWeek).stream()
+                .collect(Collectors.toMap(
+                        PricingRuleEntity::getSeatType,
+                        PricingRuleEntity::getPrice
+                ));
+        return listSeats.stream()
+                .map(seat -> {
+                    SeatResponse response = seatResponseMapper.toDto(seat);
+                    long price = listRules.getOrDefault(seat.getSeatType(), 0L);
+                    response.setPrice(price);
+                    return response;
+                }).toList();
+
+    }
+
+    // Get
+    private int getDayOfWeekFormDate(LocalDate date) {
+        return date.getDayOfWeek().getValue();
     }
 
 

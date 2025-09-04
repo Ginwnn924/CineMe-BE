@@ -16,5 +16,6 @@ public class SeatResponse {
     private UUID id;
     private String seatNumber;
     private String seatType;
+    private Long price;
     private String status;
 }

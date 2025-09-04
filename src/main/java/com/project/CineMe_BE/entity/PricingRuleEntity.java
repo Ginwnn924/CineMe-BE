@@ -1,27 +1,30 @@
 package com.project.CineMe_BE.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
 
+@Table(name = "pricing_rules")
 @Entity
-@Table(name = "ticket_prices")
-@Setter
 @Getter
-public class TicketPriceEntity {
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class PricingRuleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "price")
-    private Long price;
+    @Column(name = "day_of_week")
+    private Integer dayOfWeek;
 
     @Column(name = "seat_type")
     private String seatType;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "showtime_id")
-//    private ShowtimeEntity showtime;
+    @Column(name = "price")
+    private Long price;
 }

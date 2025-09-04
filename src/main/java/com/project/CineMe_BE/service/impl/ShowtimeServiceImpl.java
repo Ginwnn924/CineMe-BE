@@ -112,18 +112,8 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (showtimes.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND));
         }
-        List<ShowtimeResponse> result = showtimes.stream()
-                .map(showtime -> {
-                    ShowtimeResponse response = showtimeResponseMapper.toDto(showtime);
-                    Map<String, Long> ticketPrices = showtime.getTicketPrices().stream()
-                            .collect(Collectors.toMap(
-                                    ticketPrice -> ticketPrice.getSeatType(),
-                                    ticketPrice -> ticketPrice.getPrice()
-                            ));
-                    response.setPriceBySeatType(ticketPrices);
-                    return response;
-                }).toList();
-        return result;
+        showtimes = filterShowtimes(showtimes);
+        return showtimeResponseMapper.toListDto(showtimes);
     }
 
     private String generatePrivateKey() {
@@ -141,7 +131,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
     private boolean isShowtimeConflict(ShowtimeRequest request) {
         List<ShowtimeEntity> existingShowtimes = showtimeRepository.findByTheaterAndRoom(
                 request.getTheaterId(), request.getRoomId(), request.getDate());
-        boolean isConflict = existingShowtimes.stream()
+        return existingShowtimes.stream()
                 .anyMatch(showtime -> {
                     LocalTime existingStart = showtime.getStartTime();
                     LocalTime existingEnd = showtime.getEndTime();
@@ -149,7 +139,6 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                     LocalTime requestEnd = request.getEndTime();
                     return requestStart.isBefore(existingEnd) && requestEnd.isAfter(existingStart);
                 });
-        return isConflict;
     }
 
     @Override
@@ -158,7 +147,8 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (showtimesList.isEmpty()) {
             throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND));
         }
-        List<ShowtimeResponse> result = showtimesList.stream()
+        showtimesList = filterShowtimes(showtimesList);
+        return showtimesList.stream()
                 .map(showtime -> {
                     ShowtimeResponse response = showtimeResponseMapper.toDto(showtime);
                     int totalSeats = showtime.getRoom() == null ? 0 : showtime.getRoom().getSeats().size();
@@ -174,9 +164,19 @@ public class ShowtimeServiceImpl implements ShowtimeService {
                     response.setAvailableSeats(availableSeats);
                     return response;
                 }).toList();
-
-
-                return result;
 //        return showtimeResponseMapper.toListDto(showtimesList);
     }
+
+    List<ShowtimeEntity> filterShowtimes(List<ShowtimeEntity> litShowtimes) {
+        return litShowtimes.stream()
+                .filter(showtime -> {
+                    LocalTime startTime = showtime.getStartTime();
+                    LocalDate date = showtime.getSchedule().getDate();
+
+                    return startTime.isAfter(LocalTime.now()) && date.isEqual(LocalDate.now())
+                            || date.isAfter(LocalDate.now());
+                }).toList();
+
+    }
+
 }
