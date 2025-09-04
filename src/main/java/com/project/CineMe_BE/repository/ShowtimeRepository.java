@@ -24,7 +24,7 @@ public interface ShowtimeRepository extends JpaRepository<ShowtimeEntity, UUID> 
 
 
     @Query("SELECT s FROM ShowtimeEntity s " +
-            "LEFT JOIN FETCH s.ticketPrices tp " +
+//            "LEFT JOIN FETCH s.ticketPrices tp " +
             "LEFT JOIN FETCH s.room r " +
             "LEFT JOIN FETCH r.seats sts " +
             "LEFT JOIN FETCH s.schedule " +

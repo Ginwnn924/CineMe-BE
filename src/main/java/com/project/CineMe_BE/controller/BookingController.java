@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.symmetric.AES;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -65,6 +66,17 @@ public class BookingController {
                         .message(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_GET_SUCCESS))
                         .build());
     }
+
+    @PreAuthorize("#userId == authentication.principal.id")
+    @GetMapping("{userId}/history")
+    public ResponseEntity<APIResponse> getBookingHistory(@PathVariable UUID userId) {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .data(bookingService.getBookingHistory(userId))
+                .message(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_GET_SUCCESS))
+                .build());
+    }
+
 
 //    @GetMapping("/encode")
 //    public String getQRCode(@RequestParam String booking,

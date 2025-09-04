@@ -25,6 +25,7 @@ public class ShowtimeResponse {
     private String languageEn;
     private String formatVn;
     private String formatEn;
+    private Boolean isAvailable;
     private UUID roomId;
     private UUID theaterId;
     private String roomName;

@@ -21,7 +21,7 @@ public class TicketPriceEntity {
     @Column(name = "seat_type")
     private String seatType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "showtime_id")
-    private ShowtimeEntity showtime;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "showtime_id")
+//    private ShowtimeEntity showtime;
 }

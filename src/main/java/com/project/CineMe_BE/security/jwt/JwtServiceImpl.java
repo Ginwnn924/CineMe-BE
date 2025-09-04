@@ -32,14 +32,14 @@ public class JwtServiceImpl implements JwtService {
 
 
     @Override
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return extractClaims(token, Claims::getSubject);
     }
 
     @Override
     public boolean isValidateToken(String token, UserDetails userDetails) {
         try {
-            String username = extractUsername(token);
+            String username = extractEmail(token);
             return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
         }
         catch (Exception e) {

@@ -1,7 +1,10 @@
 package com.project.CineMe_BE.entity;
 
+import com.project.CineMe_BE.controller.BookingSeatEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -25,8 +28,11 @@ public class SeatsEntity {
     @Column(name = "seat_number", length = 10)
     private String seatNumber;
 
-    @Column(name = "seat_type", length = 20)
-    private String seatType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private SeatTypeEntity seatType;
+
+    @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BookingSeatEntity> bookingSeats;
 
     @Column(name = "is_active")
     private Boolean isActive;

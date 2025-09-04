@@ -65,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
         try {
+
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         }
         catch (Exception e) {
@@ -156,6 +157,8 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
         return AuthResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

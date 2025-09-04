@@ -26,8 +26,8 @@ public class ShowtimeEntity {
     @Column(name = "start_time")
     private LocalTime startTime;
 
-    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)
-    Set<TicketPriceEntity> ticketPrices;
+//    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)
+//    Set<TicketPriceEntity> ticketPrices;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")

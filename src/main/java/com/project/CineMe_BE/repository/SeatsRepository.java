@@ -19,13 +19,23 @@ public interface SeatsRepository extends JpaRepository<SeatsEntity, UUID> , Seat
     @Query(value = """
     SELECT s.id as id, s.seat_number as seatNumber, s.seat_type as seatType,
            CASE 
-               WHEN bs.id IS NOT NULL THEN 'BOOKED'
+               WHEN b.id IS NOT NULL THEN 'BOOKED'
                ELSE 'AVAILABLE'
            END AS status
     FROM seats s
-    LEFT JOIN booking_seats bs ON bs.seat_id = s.id
     JOIN showtimes st ON st.room_id = s.room_id
-    WHERE st.id = :showtimeId
+    LEFT JOIN booking_seats bs ON bs.seat_id = s.id
+    LEFT JOIN bookings b ON b.id = bs.booking_id AND b.showtime_id = st.id
+    WHERE st.id = :showtimeId;
     """, nativeQuery = true)
     List<SeatWithStatusProjection> findByShowtimeId(UUID showtimeId);
+
+    @Query("SELECT s FROM SeatsEntity s " +
+            "JOIN FETCH s.room r " +
+            "JOIN FETCH r.showtimes st " +
+            "JOIN FETCH s.seatType " +
+            "LEFT JOIN FETCH s.bookingSeats bs " +
+            "LEFT JOIN bs.booking b " +
+            "WHERE st.id = :showtimeId")
+    List<SeatsEntity> findByShowtimeId1(UUID showtimeId);
 }

@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.config;
 
 
+import com.project.CineMe_BE.filter.JwtAuthenFilter;
 import com.project.CineMe_BE.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,20 +11,25 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
 @Slf4j
+@EnableMethodSecurity(prePostEnabled = true)
+
 public class SecurityConfig {
     private final UserService userService;
+    private final JwtAuthenFilter jwtAuthenFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
@@ -39,8 +45,8 @@ public class SecurityConfig {
                 )
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Khong luu token o phia server
-                .authenticationProvider(authenticationProvider());
-//                .addFilterBefore(filterJwtConfig, UsernamePasswordAuthenticationFilter.class);
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthenFilter, UsernamePasswordAuthenticationFilter.class);
 //                .exceptionHandling(ex -> ex.authenticationEntryPoint(new AuthJwtEntryPoint()));
 
 
