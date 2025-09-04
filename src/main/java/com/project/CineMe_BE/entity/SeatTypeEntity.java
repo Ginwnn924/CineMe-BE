@@ -8,23 +8,27 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@Table(name = "pricing_rules")
 @Entity
+@Table(name = "seat_types")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PricingRuleEntity {
+public class SeatTypeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "day_of_week")
-    private Integer dayOfWeek;
+    @Column(name = "name")
+    private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private SeatTypeEntity seatType;
+    @Column(name = "desc")
+    private String desc;
 
-    @Column(name = "price")
-    private Long price;
+    @Column(name = "img")
+    private String img;
+
+    @Column(name = "color")
+    private String color;
+
 }

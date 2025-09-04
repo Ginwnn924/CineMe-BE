@@ -1,5 +1,7 @@
-package com.project.CineMe_BE.entity;
+package com.project.CineMe_BE.controller;
 
+import com.project.CineMe_BE.entity.BookingEntity;
+import com.project.CineMe_BE.entity.SeatsEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,23 +10,20 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@Table(name = "pricing_rules")
+@Table(name = "booking_seats")
 @Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PricingRuleEntity {
+public class BookingSeatEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "day_of_week")
-    private Integer dayOfWeek;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private SeatsEntity seat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private SeatTypeEntity seatType;
-
-    @Column(name = "price")
-    private Long price;
+    private BookingEntity booking;
 }

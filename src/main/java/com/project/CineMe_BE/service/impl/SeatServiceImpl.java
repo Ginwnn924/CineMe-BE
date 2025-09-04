@@ -3,6 +3,7 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.entity.PricingRuleEntity;
 import com.project.CineMe_BE.entity.ShowtimeEntity;
+import com.project.CineMe_BE.enums.StatusSeat;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.repository.PricingRuleRepository;
 import com.project.CineMe_BE.repository.ShowtimeRepository;
@@ -128,7 +129,7 @@ public class SeatServiceImpl implements SeatService{
             SeatsEntity seatsEntity = SeatsEntity.builder()
                     .room(getRoomById(roomId))
                     .seatNumber(seat)
-                    .seatType(seatType)
+//                    .seatType(seatType)
                     .isActive(true)
                     .build();
             resultEntity.add(seatsEntity);
@@ -147,44 +148,40 @@ public class SeatServiceImpl implements SeatService{
         int dayOfWeek = date.getDayOfWeek().getValue() + 1;
         Map<String, Long> listRules = pricingRuleRepository.findByDayOfWeek(dayOfWeek).stream()
                 .collect(Collectors.toMap(
-                        PricingRuleEntity::getSeatType,
+                        pr -> pr.getSeatType().getName(),
                         PricingRuleEntity::getPrice
                 ));
         return listSeats.stream()
                 .map(seat -> {
                     SeatResponse response = seatResponseMapper.toDto(seat);
-                    long price = listRules.getOrDefault(seat.getSeatType(), 0L);
+                    long price = listRules.getOrDefault(seat.getSeatType().getName(), 0L);
                     response.setPrice(price);
                     return response;
                 }).toList();
 
     }
 
-    // Get
-    private int getDayOfWeekFormDate(LocalDate date) {
-        return date.getDayOfWeek().getValue();
-    }
-
 
     // Can` optimized
     private List<SeatsEntity> getSeatsWithLockStatusByShowtimeId(UUID showtimeId) {
-        List<SeatWithStatusProjection> entityList = seatsRepository.findByShowtimeId(showtimeId);
+//        List<SeatWithStatusProjection> entityList = seatsRepository.findByShowtimeId(showtimeId);
+        List<SeatsEntity> entityList = seatsRepository.findByShowtimeId1(showtimeId);
         if (entityList == null && entityList.isEmpty()) {
             return new ArrayList<>();
         }
-        List<SeatsEntity> listSeats = new ArrayList<>();
-        for (SeatWithStatusProjection projection : entityList) {
-            SeatsEntity entity = new SeatsEntity();
-            entity.setId(projection.getId());
-            entity.setSeatNumber(projection.getSeatNumber());
-            entity.setSeatType(projection.getSeatType());
-            entity.setStatus(projection.getStatus());
-            listSeats.add(entity);
-        }
+        List<SeatsEntity> listSeats = entityList.stream()
+                .map(seat -> {
+                    StatusSeat status = StatusSeat.AVAILABLE;
+                    if (seat.getBookingSeats().size() != 0) {
+                        status = StatusSeat.BOOKED;
+                    }
+                    seat.setStatus(status.name());
+                    return seat;
+                }).toList();
          List<UUID> lockedSeats = getListSeatLocked(showtimeId);
          for (SeatsEntity seat : listSeats) {
-             if (lockedSeats.contains(seat.getId()) && seat.getStatus().equals("AVAILABLE")) {
-                 seat.setStatus("LOCKED");
+             if (lockedSeats.contains(seat.getId()) && StatusSeat.AVAILABLE.name().equals(seat.getStatus())) {
+                 seat.setStatus(StatusSeat.LOCKED.name());
              }
          }
         return listSeats;
@@ -193,7 +190,7 @@ public class SeatServiceImpl implements SeatService{
 
     private boolean isAvailable(UUID showtimeId, UUID seatId) {
         return getSeatsWithLockStatusByShowtimeId(showtimeId).stream()
-                .anyMatch(seat -> seat.getId().equals(seatId) && seat.getStatus().equals("AVAILABLE"));
+                .anyMatch(seat -> seat.getId().equals(seatId) && StatusSeat.AVAILABLE.name().equals(seat.getStatus()));
     }
 
     private boolean lockSeat(UUID showtimeId, UUID seatId, UUID userId) {
