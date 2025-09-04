@@ -1,5 +1,6 @@
 package com.project.CineMe_BE.service.impl;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -44,5 +45,11 @@ public class LimitAgeServiceImpl implements LimitAgeService {
         requestMapper.update(entity, request);
         limitAgeRepository.save(entity);
         return responseMapper.toDto(entity);
+    }
+
+    @Override
+    public List<LimitAgeResponse> getAll() {
+        List<LimitageEntity> entities = limitAgeRepository.findAll();
+        return responseMapper.toListDto(entities);
     }
 }

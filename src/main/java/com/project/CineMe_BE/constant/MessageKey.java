@@ -41,6 +41,7 @@ public class MessageKey {
     public static final String LIMIT_AGE_DELETE_SUCCESS = "limit_age.delete_success";
     public static final String LIMIT_AGE_NOT_FOUND = "limit_age.not_found";
     public static final String LIMIT_AGE_GET_DETAILS = "limit_age.get_details";
+    public static final String LIMIT_AGE_GET_ALL_SUCCESS = "limit_age.get_all_success";
 
     // Seat
     public static final String SEAT_CREATE_SUCCESS = "seat.create_success";
