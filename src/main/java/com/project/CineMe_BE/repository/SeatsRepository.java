@@ -29,4 +29,13 @@ public interface SeatsRepository extends JpaRepository<SeatsEntity, UUID> , Seat
     WHERE st.id = :showtimeId;
     """, nativeQuery = true)
     List<SeatWithStatusProjection> findByShowtimeId(UUID showtimeId);
+
+    @Query("SELECT s FROM SeatsEntity s " +
+            "JOIN FETCH s.room r " +
+            "JOIN FETCH r.showtimes st " +
+            "JOIN FETCH s.seatType " +
+            "LEFT JOIN FETCH s.bookingSeats bs " +
+            "LEFT JOIN bs.booking b " +
+            "WHERE st.id = :showtimeId")
+    List<SeatsEntity> findByShowtimeId1(UUID showtimeId);
 }

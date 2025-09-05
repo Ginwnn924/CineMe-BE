@@ -19,6 +19,14 @@ public class LimitAgeController {
     private final LimitAgeService limitAgeService;
     private final LocalizationUtils localizationUtils;
 
+    @GetMapping
+    public ResponseEntity<APIResponse> getAll() {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.LIMIT_AGE_GET_ALL_SUCCESS))
+                .data(limitAgeService.getAll())
+                .build());
+    }
 
     @PostMapping
     public ResponseEntity<APIResponse> create(@RequestBody LimitAgeRequest request) {

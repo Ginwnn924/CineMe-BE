@@ -11,7 +11,7 @@ public interface SeatService {
     public List<SeatResponse> getSeatsByRoomId(UUID roomId);
 
     public List<SeatResponse> getSeatsByShowtime(UUID showtimeId);
-    public boolean create(SeatRequest seatRequest);
+    boolean create(SeatRequest seatRequest,UUID roomId);
 
     boolean lockSeats(UUID showtimeId, List<UUID> seatIds, UUID userId);
 

@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,17 @@ public class ScheduleServiceImpl implements ScheduleService {
             response.setGenreVn(generVn);
             response.setGenreEn(generEn);
 
-            response.setShowtimes(showtimeResponseMapper.toListDto(showtimesOfMovie));
+
+            List<ShowtimeResponse> listShowtimeDTO =  showtimesOfMovie.stream()
+                    .map(showtime -> {
+                        ShowtimeResponse dto = showtimeResponseMapper.toDto(showtime);
+                        boolean isAvailable = dto.getDate().isAfter(LocalDate.now()) ||
+                                (dto.getDate().isEqual(LocalDate.now()) && dto.getStartTime().isAfter(LocalTime.now()));
+                        dto.setIsAvailable(isAvailable);
+                        return dto;
+                    }).toList();
+
+            response.setShowtimes(listShowtimeDTO);
             result.add(response);
         }
 
