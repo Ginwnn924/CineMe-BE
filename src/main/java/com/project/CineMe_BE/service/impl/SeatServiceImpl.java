@@ -178,8 +178,12 @@ public class SeatServiceImpl implements SeatService{
         return listSeats.stream()
                 .map(seat -> {
                     SeatResponse response = seatResponseMapper.toDto(seat);
-                    long price = listRules.getOrDefault(seat.getSeatType().getName(), 0L);
-                    response.setPrice(price);
+                    if (seat.getSeatType() != null) {
+                        long price = listRules.getOrDefault(seat.getSeatType().getName(), 0L);
+                        response.setPrice(price);
+                        return response;
+                    }
+                    response.setPrice(0L);
                     return response;
                 }).toList();
 

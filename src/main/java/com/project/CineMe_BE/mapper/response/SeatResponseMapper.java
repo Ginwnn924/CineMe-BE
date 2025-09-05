@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface SeatResponseMapper extends BaseResponseMapper<SeatResponse , SeatsEntity > {
     @Mapping(target = "seatType", source = "seatType.name")
+    @Mapping(target = "color", source = "seatType.color")
     SeatResponse toDto(SeatsEntity entity);
 }

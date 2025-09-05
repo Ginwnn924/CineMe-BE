@@ -33,7 +33,7 @@ public interface SeatsRepository extends JpaRepository<SeatsEntity, UUID> , Seat
     @Query("SELECT s FROM SeatsEntity s " +
             "JOIN FETCH s.room r " +
             "JOIN FETCH r.showtimes st " +
-            "JOIN FETCH s.seatType " +
+            "LEFT JOIN FETCH s.seatType " +
             "LEFT JOIN FETCH s.bookingSeats bs " +
             "LEFT JOIN bs.booking b " +
             "WHERE st.id = :showtimeId")

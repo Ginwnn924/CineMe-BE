@@ -18,4 +18,5 @@ public class SeatResponse {
     private String seatType;
     private Long price;
     private String status;
+    private String color;
 }
