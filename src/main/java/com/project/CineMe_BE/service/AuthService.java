@@ -15,9 +15,11 @@ public interface AuthService {
 
     AuthResponse refreshToken(RefreshTokenRequest refreshToken);
 
-    AuthResponse oauth2Callback(Map<String, String> request);
+    String oauth2Callback(Map<String, String> request);
 
     void register(SignUpRequest request);
 
     boolean logout(HttpServletRequest request);
+
+    AuthResponse extractState(String state);
 }

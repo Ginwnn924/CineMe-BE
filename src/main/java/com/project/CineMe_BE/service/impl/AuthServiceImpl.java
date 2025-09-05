@@ -15,11 +15,14 @@ import com.project.CineMe_BE.repository.RoleRepository;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.security.jwt.JwtService;
+import com.project.CineMe_BE.service.RedisService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -36,6 +39,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -48,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     @Value("${GOOGLE_CLIENT_SECRET}")
     private String googleClientSecret;
 
+
     @Value("${GOOGLE_REDIRECT_URI}")
     private String googleRedirectUri;
 
@@ -57,8 +62,10 @@ public class AuthServiceImpl implements AuthService {
     private final LocalizationUtils localizationUtils;
     private final RoleRepository roleRepository;
     private final RestTemplate restTemplate;
+    private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final UserRequestMapper userRequestMapper;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
@@ -84,7 +91,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean logout(HttpServletRequest request) {
-        return false;
+        String authHeader = request.getHeader(com.google.common.net.HttpHeaders.AUTHORIZATION);
+        String jwt = "";
+        if (!StringUtils.isEmpty(authHeader) && StringUtils.startsWith(authHeader, "Bearer ")) {
+            jwt = authHeader.substring(7);
+        }
+        redisService.set("blacklist:" + jwt, "", 36000);
+        return true;
     }
 
     @Override
@@ -99,7 +112,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponse oauth2Callback(Map<String, String> request) {
+    public String oauth2Callback(Map<String, String> request) {
         Map<String, String> userInfo = extractUserGoogle(request);
         String email = userInfo.get("email");
         String name = userInfo.get("name");
@@ -117,8 +130,22 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                     return userRepository.save(newUser);
                 });
-        return generateToken(user);
+        AuthResponse authResponse = generateToken(user);
+        String state = generateState();
+        redisTemplate.opsForValue()
+                .set("state:" + state, authResponse, 5, TimeUnit.MINUTES);
+        return state;
     }
+
+    @Override
+    public AuthResponse extractState(String state) {
+        return (AuthResponse) redisTemplate.opsForValue().get("state:" + state);
+    }
+
+    private String generateState() {
+        return UUID.randomUUID().toString();
+    }
+
 
     private Map<String, String> extractUserGoogle(Map<String, String> requestParams) {
         String tokenUrl = "https://oauth2.googleapis.com/token";
