@@ -21,5 +21,5 @@ public interface AuthService {
 
     boolean logout(HttpServletRequest request);
 
-    AuthResponse extractState(String state);
+    Object extractState(String state);
 }

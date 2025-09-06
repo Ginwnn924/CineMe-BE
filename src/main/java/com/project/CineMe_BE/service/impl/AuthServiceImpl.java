@@ -65,7 +65,6 @@ public class AuthServiceImpl implements AuthService {
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final UserRequestMapper userRequestMapper;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
@@ -132,14 +131,17 @@ public class AuthServiceImpl implements AuthService {
                 });
         AuthResponse authResponse = generateToken(user);
         String state = generateState();
-        redisTemplate.opsForValue()
-                .set("state:" + state, authResponse, 5, TimeUnit.MINUTES);
+        redisService.set("state:" + state, authResponse, 5);
         return state;
     }
 
     @Override
-    public AuthResponse extractState(String state) {
-        return (AuthResponse) redisTemplate.opsForValue().get("state:" + state);
+    public Object extractState(String state) {
+        Object result = redisService.get("state:" + state);
+        if (result != null) {
+            redisService.delete("state:" + state);
+        }
+        return result;
     }
 
     private String generateState() {

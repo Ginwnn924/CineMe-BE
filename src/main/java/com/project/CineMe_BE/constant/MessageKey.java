@@ -96,6 +96,8 @@ public class MessageKey {
     // Auth
     public static final String AUTH_LOGIN_SUCCESS = "auth.login_success";
     public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
+    public static final String AUTH_LOGOUT_SUCCESS = "auth.logout_success";
+    public static final String AUTH_LOGIN_FAILED = "auth.login_failed";
 
 
     // Country
