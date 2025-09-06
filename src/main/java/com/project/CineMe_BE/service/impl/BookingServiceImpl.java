@@ -185,6 +185,8 @@ public class BookingServiceImpl implements BookingService {
         booking.setId(UUID.randomUUID());
         String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
         if (privateKey != null) {
+            log.info("Service generate QR");
+            long startTime = System.currentTimeMillis();
             MultipartFile file = null;
             try {
                 file = QrCodeUtil.createQR(
@@ -201,7 +203,16 @@ public class BookingServiceImpl implements BookingService {
             int iEnd = qrCodeUrl.indexOf("?X-Amz");
             booking.setQrcode(qrCodeUrl.substring(iStart, iEnd));
             log.info("QR Code uploaded to Minio: {}", qrCodeUrl);
+            log.info("Time to generate QR: {} ms", System.currentTimeMillis() - startTime);
         }
+
+        // Sau khi co link QR code thi tien hanh send mail
+        /*
+        *  Service send mail
+        *
+        *
+        *
+        */
         bookingRepository.save(booking);
         return booking.getId();
     }

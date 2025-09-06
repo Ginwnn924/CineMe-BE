@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.constant.MessageKey;
+import com.project.CineMe_BE.controller.BookingSeatEntity;
 import com.project.CineMe_BE.entity.*;
 import com.project.CineMe_BE.enums.StatusSeat;
 import com.project.CineMe_BE.exception.DataNotFoundException;
@@ -198,14 +199,15 @@ public class SeatServiceImpl implements SeatService{
             return new ArrayList<>();
         }
         List<SeatsEntity> listSeats = entityList.stream()
-                .map(seat -> {
-                    StatusSeat status = StatusSeat.AVAILABLE;
-                    if (seat.getBookingSeats().size() != 0) {
-                        status = StatusSeat.BOOKED;
-                    }
-                    seat.setStatus(status.name());
-                    return seat;
-                }).toList();
+                .peek(seat -> {
+                    boolean isBooked = seat.getBookingSeats().stream()
+                            .anyMatch(bookingSeat ->
+                                    bookingSeat.getBooking().getShowtime().getId().equals(showtimeId)
+                            );
+
+                    seat.setStatus(isBooked ? StatusSeat.BOOKED.name() : StatusSeat.AVAILABLE.name());
+                })
+                .toList();
          List<UUID> lockedSeats = getListSeatLocked(showtimeId);
          for (SeatsEntity seat : listSeats) {
              if (lockedSeats.contains(seat.getId()) && StatusSeat.AVAILABLE.name().equals(seat.getStatus())) {

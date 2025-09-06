@@ -51,3 +51,15 @@ spring:
 
 
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: cineme604@gmail.com
+    password: eurd nfuv kwxj yjeg
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
