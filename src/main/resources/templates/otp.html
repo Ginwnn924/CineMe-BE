@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Mã OTP</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+<!-- container -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8;padding:20px 0;">
+    <tr>
+        <td align="center">
+            <!-- main card -->
+            <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                <!-- header -->
+                <tr>
+                    <td style="padding:24px 24px 8px 24px;text-align:left;">
+                        <h1 style="margin:0;font-size:20px;color:#111;">Mã xác thực (OTP)</h1>
+                    </td>
+                </tr>
+
+                <!-- body -->
+                <tr>
+                    <td style="padding:8px 24px 24px 24px;color:#333;font-size:14px;line-height:1.5;">
+                        <p style="margin:0 0 12px 0;">Xin chào <strong>{{userName}}</strong>,</p>
+
+                        <p style="margin:0 0 18px 0;">Bạn vừa yêu cầu mã xác thực. Vui lòng dùng mã bên dưới trong vòng <strong>{{expiryMinutes}} phút</strong> để hoàn tất thao tác.</p>
+
+                        <!-- OTP box -->
+                        <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:18px 0;">
+                            <tr>
+                                <td align="center">
+                                    <div style="display:inline-block;padding:18px 28px;border-radius:8px;background:#f7fafc;border:1px dashed #e2e8f0;">
+                                        <p style="margin:0;font-size:28px;letter-spacing:12px;font-weight:600;color:#111;">{{otp}}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:0 0 12px 0;color:#666;font-size:13px;">Để bảo vệ tài khoản của bạn, vui lòng không chuyển tiếp email này.</p>
+
+                    </td>
+                </tr>
+
+                <!-- footer -->
+                <tr>
+                    <td style="background:#fbfdff;padding:16px 24px;color:#777;font-size:12px;text-align:left;">
+                        <p style="margin:0;">Cảm ơn bạn,<br>Đội ngũ {{brandName}}</p>
+                    </td>
+                </tr>
+            </table>
+            <!-- end main card -->
+        </td>
+    </tr>
+    <!-- small footer -->
+    <tr>
+        <td align="center" style="padding-top:12px;color:#999;font-size:12px;">
+            <p style="margin:0;">© {{year}} {{brandName}}. Mọi quyền được bảo lưu.</p>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.google.common.net.HttpHeaders;
+import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.LoginRequest;
@@ -16,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +36,8 @@ public class AuthController {
 
     @Value("${GOOGLE_REDIRECT_FE}")
     private String googleRedirectUrl;
+
+    private final RabbitTemplate rabbitTemplate;
 
     @PostMapping("/api/v1/auth/login")
     public ResponseEntity<APIResponse> login(@RequestBody LoginRequest request) {
@@ -89,5 +93,24 @@ public class AuthController {
            }
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/api/v1/auth/forgot-password")
+    public ResponseEntity<APIResponse> forgotPassword(@RequestParam final String email) {
+//        authService.forgotPassword(email);
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE,
+                RabbitConfig.RoutingKey.SEND_EMAIL,
+                email);
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.OTP_SEND_SUCCESS))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/v1/auth/verify-otp")
+    public boolean verifyOtp(@RequestParam final String email,
+                             @RequestParam final String otp) {
+        return authService.verifyOtp(email, otp);
     }
 }

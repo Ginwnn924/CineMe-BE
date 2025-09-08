@@ -22,4 +22,8 @@ public interface AuthService {
     boolean logout(HttpServletRequest request);
 
     Object extractState(String state);
+
+    void forgotPassword(String email);
+
+    boolean verifyOtp(String email, String otp);
 }

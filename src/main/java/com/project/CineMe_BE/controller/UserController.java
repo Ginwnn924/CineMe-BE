@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 
+import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.UserResponse;
@@ -11,6 +12,8 @@ import com.project.CineMe_BE.service.UserService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -29,6 +32,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
@@ -36,6 +40,7 @@ public class UserController {
     private final LocalizationUtils localizationUtils;
     private final UserService userService;
     private final JavaMailSender javaMailSender;
+    private final RabbitTemplate rabbitTemplate;
 
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllUsers() {
@@ -101,5 +106,15 @@ public class UserController {
         // Catch block to handle the exceptions
         catch (Exception e) {
         }
+    }
+
+    @GetMapping("/test")
+    public void test() throws InterruptedException {
+        log.info("Start");
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "ahihi", "test");
+        Thread.sleep(5000);
+        log.info("End");
+
+
     }
 }

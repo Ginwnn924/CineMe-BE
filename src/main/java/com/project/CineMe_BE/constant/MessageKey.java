@@ -126,4 +126,7 @@ public class MessageKey {
 
     // ItemCombo
     public static final String ITEM_COMBO_CREATE_SUCCESS = "item_combo.create_success";
+
+    // OTP
+    public static final String OTP_SEND_SUCCESS = "otp.send_success";
 }
