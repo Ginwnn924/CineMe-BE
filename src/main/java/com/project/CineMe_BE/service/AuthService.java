@@ -2,6 +2,7 @@ package com.project.CineMe_BE.service;
 
 import com.project.CineMe_BE.dto.request.LoginRequest;
 import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
+import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.UserEntity;
@@ -26,4 +27,6 @@ public interface AuthService {
     void forgotPassword(String email);
 
     boolean verifyOtp(String email, String otp);
+
+    void resetPassword(ResetPasswordRequest request);
 }

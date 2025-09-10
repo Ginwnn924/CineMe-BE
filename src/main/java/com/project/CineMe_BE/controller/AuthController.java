@@ -5,6 +5,7 @@ import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.LoginRequest;
+import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.UserEntity;
@@ -83,14 +84,14 @@ public class AuthController {
     @GetMapping("/api/v1/auth/extract")
     public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {
         if (!StringUtils.isEmpty(state)) {
-           Object response = authService.extractState(state);
-           if(response != null) {
+            Object response = authService.extractState(state);
+            if (response != null) {
                 return ResponseEntity.ok(APIResponse.builder()
                         .statusCode(200)
                         .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
                         .data(response)
                         .build());
-           }
+            }
         }
         return ResponseEntity.notFound().build();
     }
@@ -112,5 +113,15 @@ public class AuthController {
     public boolean verifyOtp(@RequestParam final String email,
                              @RequestParam final String otp) {
         return authService.verifyOtp(email, otp);
+    }
+
+    @PostMapping("/api/v1/auth/reset-password")
+    public ResponseEntity<APIResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.PASSWORD_RESET_SUCCESS))
+                .build();
+        return ResponseEntity.ok(response);
     }
 }

@@ -3,6 +3,7 @@ package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.dto.request.ChangePasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.UserResponse;
 import com.project.CineMe_BE.entity.UserEntity;
@@ -70,51 +71,20 @@ public class UserController {
         );
     }
 
-
-    @GetMapping("/send_mail")
-    public void sendMail() {
-        try {
-
-
-            String template = Files.readString(Paths.get("src/main/resources/booking.html"));
-            String html = template
-                    .replace("[[ORDER_CODE]]", "ABC123")
-                    .replace("[[MOVIE_TITLE]]", "Movie Title")
-                    .replace("[[CINEMA_NAME]]", "Cinema Name")
-                    .replace("[[SHOW_TIME]]", "2023-10-10 18:00")
-                    .replace("[[SEATS_COMMA_SEPARATED]]", "Seat1, Seat2")
-                    .replace("[[PAYMENT_METHOD]]", "Credit Card")
-                    .replace("[[AMOUNT]]", "100.000 VND")
-                    .replace("[[QR_IMAGE_URL_OR_CID]]", "https://th.bing.com/th/id/R.735ed702a83ab2b6ff968d4495bc894a?rik=hmlsJloZS%2fO%2frg&pid=ImgRaw&r=0");
-
-
-            MimeMessage message = javaMailSender.createMimeMessage();
-
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-
-            // Setting up necessary details
-            helper.setFrom("cineme604@gmail.com");
-            helper.setTo("quangdeeptry1911@gmail.com");
-            helper.setSubject("XÁC NHẬN HOÁ ĐƠN");
-            helper.setText(html, true);
-
-
-            // Sending the mail
-            javaMailSender.send(message);
+    @PostMapping("/change-password")
+    public ResponseEntity<APIResponse> changePassword(@AuthenticationPrincipal UserEntity user,
+                                                      @RequestBody ChangePasswordRequest changePasswordRequest) {
+        if (user == null)  {
+            return ResponseEntity.status(401).build();
         }
-        // Catch block to handle the exceptions
-        catch (Exception e) {
-        }
+
+        userService.changePassword(user, changePasswordRequest);
+        return ResponseEntity.ok(
+                APIResponse.builder()
+                        .statusCode(200)
+                        .message(localizationUtils.getLocalizedMessage(MessageKey.USER_CHANGE_PASSWORD_SUCCESS))
+                        .build()
+        );
     }
 
-    @GetMapping("/test")
-    public void test() throws InterruptedException {
-        log.info("Start");
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, "ahihi", "test");
-        Thread.sleep(5000);
-        log.info("End");
-
-
-    }
 }

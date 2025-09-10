@@ -3,6 +3,7 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.LoginRequest;
 import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
+import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.RoleEntity;
@@ -214,5 +215,14 @@ public class AuthServiceImpl implements AuthService {
         }
         String value = redisService.getOrDefault("otp:" + otp, "").toString();
         return email.equals(value);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        UserEntity user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 }
