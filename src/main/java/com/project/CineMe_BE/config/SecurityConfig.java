@@ -33,6 +33,7 @@ public class SecurityConfig {
     private final UserService userService;
     private final JwtAuthenFilter jwtAuthenFilter;
     private final RedisTemplate redisTemplate;
+    private final PasswordEncoder passwordEncoder;
 
 
 
@@ -75,14 +76,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public AuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         provider.setUserDetailsService(userService.userDetailsService());
         return provider;
     }
