@@ -31,7 +31,7 @@ public class MovieResponse implements Serializable {
     private String himage;
     private String trailer;
     private String status;
-    private String ratings;
+    private double ratings;
     private Long time;
     private String limitageNameVn;
     private String limitageNameEn;

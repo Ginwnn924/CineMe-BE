@@ -4,6 +4,7 @@ import com.project.CineMe_BE.dto.response.ActorResponse;
 import com.project.CineMe_BE.dto.response.MovieResponse;
 import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.entity.MovieEntity;
+import com.project.CineMe_BE.entity.ReviewEntity;
 import com.project.CineMe_BE.mapper.BaseResponseMapper;
 import com.project.CineMe_BE.utils.DomainUtil;
 import com.project.CineMe_BE.utils.StringUtil;
@@ -12,6 +13,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper(componentModel = "spring")
 public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, MovieEntity> {
@@ -20,21 +22,25 @@ public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, M
     @Mapping(target = "limitageNameEn", source = "limitage.nameEn")
     @Mapping(target = "countryVn", source = "country.nameVn")
     @Mapping(target = "countryEn", source = "country.nameEn")
-//    @Mapping(target = "format", source = "format.nameVn")
-//    @Mapping(target = "languageNameVn", source = "language.nameVn")
-//    @Mapping(target = "languageNameEn", source = "language.nameEn")
     @Mapping(target = "trailer", source = "trailer", qualifiedByName = "mapTrailer")
     @Mapping(target = "image", source = "image", qualifiedByName = "mapImage")
     @Mapping(target = "listActor", source = "listActor", qualifiedByName = "mapActor")
+    @Mapping(target = "ratings", source = "listReview", qualifiedByName = "mapRating")
     MovieResponse toDto(MovieEntity entity);
 
 
 
-
+    @Named("mapRating")
+    default double mapRating(Set<ReviewEntity> listReview) {
+        return listReview.stream()
+                .mapToDouble(rating -> rating.getRating() )
+                .average()
+                .orElse(1.0) * 100;
+    }
 
 
     @Named("mapActor")
-    default List<ActorResponse> mapActor(List<ActorEntity> listActor) {
+    default List<ActorResponse> mapActor(Set<ActorEntity> listActor) {
         if (listActor == null) {
             return null;
         }

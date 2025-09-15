@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -47,13 +48,13 @@ public class MovieServiceImpl implements MovieService {
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
     public MovieResponse createMovie(MovieRequest request) {
         MovieEntity movie = movieRequestMapper.toEntity(request);
-        List<ActorEntity> listActor = request.getListActorId().stream()
+        Set<ActorEntity> listActor = request.getListActorId().stream()
                 .map(actorId -> {
                     ActorEntity actor = actorRepository.findById(actorId)
                             .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));;
                     return actor;
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         movie.setListActor(listActor);
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());
@@ -73,13 +74,13 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponse updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
-        List<ActorEntity> listActor = request.getListActorId().stream()
+        Set<ActorEntity> listActor = request.getListActorId().stream()
                 .map(actorId -> {
                     ActorEntity actor = actorRepository.findById(actorId)
                             .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
                     return actor;
                     })
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
         movie.setListActor(listActor);
         movieRequestMapper.update(movie, request);
         if (request.getImage() != null) {
@@ -97,15 +98,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'all'")
     public List<MovieResponse> getAllMovie() {
-        List<MovieEntity> listMovie = movieRepository.findAll().stream()
-                .map(movie -> {
-//                    movie.setLanguage(null);
-                    movie.setLimitage(null);
-                    movie.setCountry(null);
-                    movie.setListActor(null);
-                    return movie;
-                })
-                .toList();
+        List<MovieEntity> listMovie = movieRepository.findAll();
         return movieResponseMapper.toListDto(listMovie);
     }
 

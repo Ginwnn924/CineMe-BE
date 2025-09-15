@@ -1,14 +1,25 @@
 package com.project.CineMe_BE.service.impl;
 
+import com.project.CineMe_BE.constant.MessageKey;
+import com.project.CineMe_BE.dto.request.RecomendScheduleRequest;
+import com.project.CineMe_BE.dto.response.RecommendScheduleResponse;
 import com.project.CineMe_BE.dto.response.ScheduleResponse;
 import com.project.CineMe_BE.dto.response.ShowtimeResponse;
 import com.project.CineMe_BE.entity.MovieEntity;
 import com.project.CineMe_BE.entity.ShowtimeEntity;
+import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.response.ShowtimeResponseMapper;
+import com.project.CineMe_BE.repository.MovieRepository;
 import com.project.CineMe_BE.repository.ShowtimeRepository;
 import com.project.CineMe_BE.service.ScheduleService;
+import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -23,6 +34,11 @@ import java.util.stream.Collectors;
 public class ScheduleServiceImpl implements ScheduleService {
     private final ShowtimeRepository showtimeRepository;
     private final ShowtimeResponseMapper showtimeResponseMapper;
+    private final MovieRepository movieRepository;
+    private final LocalizationUtils localizationUtils;
+    private final RestTemplate restTemplate;
+
+
     @Override
     public List<ScheduleResponse> findByTheaterIdAndDate(UUID theaterId, LocalDate date) {
         List<ShowtimeEntity> showtimes = showtimeRepository.findByTheaterIdAndDate(theaterId, date);
@@ -66,6 +82,19 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
 
         return result;
+
+    }
+
+    @Override
+    public List<RecommendScheduleResponse> recommendSchedules(RecomendScheduleRequest request) {
+        String url = "http://127.0.0.1:8000/convert";
+        ResponseEntity<List<RecommendScheduleResponse>> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                new HttpEntity<>(request),
+                new ParameterizedTypeReference<List<RecommendScheduleResponse>>() {}
+        );
+        return response.getBody();
 
     }
 }
