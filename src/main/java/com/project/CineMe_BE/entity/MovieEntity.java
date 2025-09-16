@@ -45,8 +45,8 @@ public class MovieEntity {
     @Column(name = "image")
     private String image;
 
-    @Column(name = "himage")
-    private String himage;
+//    @Column(name = "himage")
+//    private String himage;
 
     @Column(name = "trailer")
     private String trailer;
