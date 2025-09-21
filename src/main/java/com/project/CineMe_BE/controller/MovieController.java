@@ -84,5 +84,14 @@ public class MovieController {
                 .build());
     }
 
-
+    @GetMapping("/recommend")
+    public ResponseEntity<APIResponse> getRecommendedMovies(@RequestParam UUID movieId,
+                                                            @RequestParam int topN) {
+        List<MovieResponse> recommendedMovies = movieService.getRecommendedMovies(movieId, topN);
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message("Phim duoc de cu")
+                .data(recommendedMovies)
+                .build());
+    }
 }

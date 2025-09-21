@@ -45,17 +45,12 @@ public class MovieEntity {
     @Column(name = "image")
     private String image;
 
-//    @Column(name = "himage")
-//    private String himage;
 
     @Column(name = "trailer")
     private String trailer;
 
     @Column(name = "status")
     private String status;
-
-//    @Column(name = "ratings")
-//    private String ratings;
 
     @Column(name = "time")
     private Long time;

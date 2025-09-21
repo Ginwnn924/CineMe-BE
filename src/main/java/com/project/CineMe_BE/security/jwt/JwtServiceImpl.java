@@ -1,5 +1,6 @@
 package com.project.CineMe_BE.security.jwt;
 
+import com.project.CineMe_BE.entity.UserEntity;
 import com.project.CineMe_BE.security.jwt.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -49,7 +50,7 @@ public class JwtServiceImpl implements JwtService {
 
 
     @Override
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserEntity userDetails) {
         Map<String, Object> claims = new HashMap<>();
         List<String> permissions = userDetails.getAuthorities()
                 .stream()
@@ -57,6 +58,7 @@ public class JwtServiceImpl implements JwtService {
                 .collect(Collectors.toList());
 
         claims.put("permissions", permissions);
+        claims.put("userId", userDetails.getId());
         return generateToken(claims, userDetails);
     }
 
@@ -68,7 +70,7 @@ public class JwtServiceImpl implements JwtService {
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + (accessTokenExpire * 60 * 1000)))
-                .signWith(SignatureAlgorithm.HS256, getKey())
+                .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -79,7 +81,7 @@ public class JwtServiceImpl implements JwtService {
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + (refreshTokenExpire * 60 * 60 * 24 * 1000)))
-                .signWith(SignatureAlgorithm.HS256, getKey())
+                .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
