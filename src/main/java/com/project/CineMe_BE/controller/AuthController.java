@@ -11,6 +11,7 @@ import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.UserEntity;
 import com.project.CineMe_BE.enums.ProviderEnum;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
+import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
@@ -34,7 +35,7 @@ import java.util.UUID;
 public class AuthController {
     private final AuthService authService;
     private final LocalizationUtils localizationUtils;
-
+    private final EmailProducer emailProducer;
     @Value("${GOOGLE_REDIRECT_FE}")
     private String googleRedirectUrl;
 
@@ -99,9 +100,13 @@ public class AuthController {
     @PostMapping("/api/v1/auth/forgot-password")
     public ResponseEntity<APIResponse> forgotPassword(@RequestParam final String email) {
 //        authService.forgotPassword(email);
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE,
-                RabbitConfig.RoutingKey.SEND_EMAIL,
-                email);
+//        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE,
+//                RabbitConfig.RoutingKey.SEND_EMAIL,
+//                email, message -> {
+//                    message.getMessageProperties().setHeader("type", "forgot_password");
+//                    return message;
+//                });
+        emailProducer.sendEmailOtp(email);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.OTP_SEND_SUCCESS))

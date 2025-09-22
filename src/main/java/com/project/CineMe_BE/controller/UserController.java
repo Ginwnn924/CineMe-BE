@@ -40,8 +40,6 @@ import java.util.UUID;
 public class UserController {
     private final LocalizationUtils localizationUtils;
     private final UserService userService;
-    private final JavaMailSender javaMailSender;
-    private final RabbitTemplate rabbitTemplate;
 
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllUsers() {

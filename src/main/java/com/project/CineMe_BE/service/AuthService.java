@@ -24,7 +24,6 @@ public interface AuthService {
 
     Object extractState(String state);
 
-    void forgotPassword(String email);
 
     boolean verifyOtp(String email, String otp);
 

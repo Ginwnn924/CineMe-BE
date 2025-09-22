@@ -197,15 +197,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    @Override
-    public void forgotPassword(String email) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
-        String otp = OtpUtil.generateOtp(6);
-        redisService.set("otp:" + otp, user.getEmail(), 5);
-        log.info("Mã OTP cho email {} là: {}", email, otp);
-        emailService.sendEmailOtp(user.getEmail() , user.getFullName(), otp, "http://localhost:3000/reset-password");
-    }
 
     @Override
     public boolean verifyOtp(String email, String otp) {

@@ -51,14 +51,13 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void sendEmailOtp(String to, String username, String otp, String verifyUrl) {
+    public void sendEmailOtp(String to, String username, String otp) {
         try {
             String template = Files.readString(Paths.get("src/main/resources/templates/otp.html"));
             String html = template
                     .replace("{{userName}}", username)
                     .replace("{{otp}}", otp)
                     .replace("{{expiryMinutes}}", String.valueOf(5))
-                    .replace("{{verifyUrl}}", verifyUrl)
                     .replace("{{brandName}}", "CineMê")
                     .replace("{{year}}", String.valueOf(2025));
 
