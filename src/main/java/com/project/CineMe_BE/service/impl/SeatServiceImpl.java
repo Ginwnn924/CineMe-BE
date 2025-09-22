@@ -208,7 +208,8 @@ public class SeatServiceImpl implements SeatService{
                     seat.setStatus(isBooked ? StatusSeat.BOOKED.name() : StatusSeat.AVAILABLE.name());
                 })
                 .toList();
-         List<UUID> lockedSeats = getListSeatLocked(showtimeId);
+         Set<UUID> lockedSeats = getListSeatLocked(showtimeId);
+
          for (SeatsEntity seat : listSeats) {
              if (lockedSeats.contains(seat.getId()) && StatusSeat.AVAILABLE.name().equals(seat.getStatus())) {
                  seat.setStatus(StatusSeat.LOCKED.name());
@@ -218,19 +219,11 @@ public class SeatServiceImpl implements SeatService{
     }
 
 
-    private boolean isAvailable(UUID showtimeId, UUID seatId) {
-        return getSeatsWithLockStatusByShowtimeId(showtimeId).stream()
-                .anyMatch(seat -> seat.getId().equals(seatId) && StatusSeat.AVAILABLE.name().equals(seat.getStatus()));
-    }
-
     private boolean lockSeat(UUID showtimeId, UUID seatId, UUID userId) {
-        if (!isAvailable(showtimeId, seatId)) {
-            return false;
-        }
         String redisKey = "seat-lock:" + showtimeId + ":" + seatId;
-        Boolean success = redisTemplate.opsForValue()
+        boolean success = redisTemplate.opsForValue()
                 .setIfAbsent(redisKey, userId.toString(), Duration.ofMinutes(10));
-        return Boolean.TRUE.equals(success);
+        return success;
     }
 
     @Override
@@ -248,21 +241,17 @@ public class SeatServiceImpl implements SeatService{
                 lockedKeys.add("seat-lock:" + showtimeId + ":" + seatId);
             }
         }
-        String bookingLockKey = "booking-lock:" + userId + ":" + showtimeId;
-        redisTemplate.opsForValue().set(
-                bookingLockKey,
-                seatIds.stream().map(UUID::toString).collect(Collectors.joining(",")),
-                Duration.ofMinutes(10)
-        );
+        // insert database
+
         return true;
     }
 
 
-    private List<UUID> getListSeatLocked(UUID showtimeId) {
+    private Set<UUID> getListSeatLocked(UUID showtimeId) {
         String pattern = "seat-lock:" + showtimeId + ":*";
         ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
         Cursor<byte[]> cursor = redisTemplate.getConnectionFactory().getConnection().scan(options);
-        List<UUID> listSeatLocked = new ArrayList<>();
+        Set<UUID> listSeatLocked = new HashSet<>();
         while (cursor.hasNext()) {
             String key = new String(cursor.next());
             String seatId = key.substring(key.lastIndexOf(":") + 1);
