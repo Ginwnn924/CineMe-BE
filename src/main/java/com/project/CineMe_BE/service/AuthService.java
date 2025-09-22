@@ -28,4 +28,6 @@ public interface AuthService {
     boolean verifyOtp(String email, String otp);
 
     void resetPassword(ResetPasswordRequest request);
+
+    void forgotPassword(String email);
 }

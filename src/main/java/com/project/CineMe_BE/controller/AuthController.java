@@ -99,14 +99,7 @@ public class AuthController {
 
     @PostMapping("/api/v1/auth/forgot-password")
     public ResponseEntity<APIResponse> forgotPassword(@RequestParam final String email) {
-//        authService.forgotPassword(email);
-//        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE,
-//                RabbitConfig.RoutingKey.SEND_EMAIL,
-//                email, message -> {
-//                    message.getMessageProperties().setHeader("type", "forgot_password");
-//                    return message;
-//                });
-        emailProducer.sendEmailOtp(email);
+        authService.forgotPassword(email);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.OTP_SEND_SUCCESS))

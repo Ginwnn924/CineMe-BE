@@ -1,22 +1,33 @@
 package com.project.CineMe_BE.config;
 
 import com.project.CineMe_BE.constant.RabbitConstant;
-import lombok.Getter;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.amqp.support.converter.MessageConverter;
 
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Configuration
 public class RabbitConfig {
 
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
 
-
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(jsonMessageConverter);
+        return template;
+    }
     @Bean
     public DirectExchange emailOTPExchange() {
         return new DirectExchange(RabbitConstant.EMAIL_OTP_EXCHANGE);
@@ -42,9 +53,9 @@ public class RabbitConfig {
 //    }
 
     @Bean
-    public Binding sendEmailBiding(Queue emailQueue, DirectExchange bookingExchange) {
+    public Binding sendEmailBiding(Queue emailQueue, DirectExchange emailOTPExchange) {
         return BindingBuilder.bind(emailQueue)
-                .to(bookingExchange)
+                .to(emailOTPExchange)
                 .with(RabbitConstant.EMAIL_OTP_KEY);
     }
 }

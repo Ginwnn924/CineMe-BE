@@ -15,22 +15,19 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailConsumer {
     private final EmailService emailService;
-    private final UserRepository userRepository;
-    private final LocalizationUtils localizationUtils;
-    private final RedisService redisService;
 
     @RabbitListener(queues = RabbitConstant.EMAIL_OTP_QUEUE)
-    public void handleEmail(String email) {
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
-        String otp = OtpUtil.generateOtp(6);
-        redisService.set("otp:" + otp, user.getEmail(), 5);
-        log.info("Mã OTP cho email {} là: {}", email, otp);
-        emailService.sendEmailOtp(user.getEmail() , user.getFullName(), otp);
+    public void handleEmail(Map<String, Object> payload) {
+        String email = (String) payload.get("email");
+        String fullName = (String) payload.get("fullName");
+        String otp = (String) payload.get("otp");
+        emailService.sendEmailOtp(email, fullName, otp);
     }
 }

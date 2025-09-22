@@ -12,6 +12,7 @@ import com.project.CineMe_BE.enums.ProviderEnum;
 import com.project.CineMe_BE.enums.RoleEnum;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
+import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.RoleRepository;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.service.AuthService;
@@ -69,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRequestMapper userRequestMapper;
     private final EmailService emailService;
+    private final EmailProducer emailProducer;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
@@ -85,6 +87,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+    @Override
+    public void forgotPassword(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        emailProducer.sendEmailOtp(user);
+    }
 
     @Override
     public AuthResponse refreshToken(RefreshTokenRequest refreshToken) {
