@@ -1,6 +1,5 @@
 package com.project.CineMe_BE.entity;
 
-import com.project.CineMe_BE.controller.BookingSeatEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,7 +27,7 @@ public class SeatsEntity {
     @Column(name = "seat_number", length = 10)
     private String seatNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     private SeatTypeEntity seatType;
 
     @OneToMany(mappedBy = "seat", cascade = CascadeType.ALL, orphanRemoval = true)

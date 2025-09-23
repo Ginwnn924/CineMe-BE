@@ -3,10 +3,13 @@ package com.project.CineMe_BE.repository;
 import com.project.CineMe_BE.repository.projection.BookingProjection;
 import com.project.CineMe_BE.repository.projection.PaymentProjection;
 import com.project.CineMe_BE.entity.BookingEntity;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,5 +59,6 @@ public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
             "GROUP BY b.id, m.name_vn, m.image, s.date, st.start_time, st.end_time, t.name_vn, r.name, b.status, se.seat_number " +
             "ORDER BY s.date DESC, st.start_time DESC;", nativeQuery = true)
     List<BookingProjection> getBookingByUserId(UUID userId);
+
 
 }

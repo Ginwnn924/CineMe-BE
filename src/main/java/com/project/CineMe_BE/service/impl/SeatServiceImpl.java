@@ -1,12 +1,12 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.controller.BookingSeatEntity;
 import com.project.CineMe_BE.entity.*;
 import com.project.CineMe_BE.enums.StatusSeat;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.constant.CacheName;
+import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.annotation.PostConstruct;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,7 +33,7 @@ public class SeatServiceImpl implements SeatService{
     private final SeatsRepository seatsRepository;
     private final ShowtimeRepository showtimeRepository;
     private final RedisTemplate<String, String> redisTemplate;
-    private final PricingRuleRepository pricingRuleRepository;
+    private final PricingRuleService pricingRuleService;
     private final LocalizationUtils localizationUtils;
     private final SeatTypeRepository seatTypeRepository;
 
@@ -170,12 +170,7 @@ public class SeatServiceImpl implements SeatService{
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
         LocalDate date = showtime.getSchedule().getDate();
         List<SeatsEntity> listSeats = getSeatsWithLockStatusByShowtimeId(showtimeId);
-        int dayOfWeek = date.getDayOfWeek().getValue() + 1;
-        Map<String, Long> listRules = pricingRuleRepository.findByDayOfWeek(dayOfWeek).stream()
-                .collect(Collectors.toMap(
-                        pr -> pr.getSeatType().getName(),
-                        PricingRuleEntity::getPrice
-                ));
+        Map<String, Long> listRules = pricingRuleService.getPricingRulesByDayOfWeek(date);
         return listSeats.stream()
                 .map(seat -> {
                     SeatResponse response = seatResponseMapper.toDto(seat);
@@ -227,10 +222,11 @@ public class SeatServiceImpl implements SeatService{
     }
 
     @Override
-    public boolean lockSeats(UUID showtimeId, List<UUID> seatIds, UUID userId) {
+    public boolean lockSeats(UserEntity user, ShowtimeEntity showtime, List<UUID> selectedSeats) {
         List<String> lockedKeys = new ArrayList<>();
-
-        for (UUID seatId : seatIds) {
+        UUID userId = user.getId();
+        UUID showtimeId = showtime.getId();
+        for (UUID seatId : selectedSeats) {
             // Rollback nếu có bất kỳ ghế nào ko thể lock
             if (!lockSeat(showtimeId, seatId, userId)) {
                 redisTemplate.delete(lockedKeys);

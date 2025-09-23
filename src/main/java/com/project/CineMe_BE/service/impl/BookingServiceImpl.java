@@ -2,6 +2,8 @@ package com.project.CineMe_BE.service.impl;
 
 import com.google.zxing.WriterException;
 import com.project.CineMe_BE.dto.response.BookingResponse;
+import com.project.CineMe_BE.producer.BookingProducer;
+import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.repository.projection.BookingProjection;
 import com.project.CineMe_BE.repository.projection.PaymentProjection;
 import com.project.CineMe_BE.constant.MessageKey;
@@ -11,14 +13,7 @@ import com.project.CineMe_BE.entity.*;
 import com.project.CineMe_BE.enums.BookingStatusEnum;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.listener.SeatSocketBroadcaster;
-import com.project.CineMe_BE.repository.BookingRepository;
-import com.project.CineMe_BE.repository.SeatsRepository;
-import com.project.CineMe_BE.repository.ShowtimeRepository;
-import com.project.CineMe_BE.repository.UserRepository;
-import com.project.CineMe_BE.service.BookingService;
-import com.project.CineMe_BE.service.MinioService;
-import com.project.CineMe_BE.service.PaymentService;
-import com.project.CineMe_BE.service.SeatService;
+import com.project.CineMe_BE.service.*;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import com.project.CineMe_BE.utils.QrCodeUtil;
 import com.project.CineMe_BE.utils.StringUtil;
@@ -46,6 +41,10 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final SeatService seatService;
     private final MinioService minioService;
+    private final PricingRuleService pricingRuleService;
+    private final BookingProducer bookingProducer;
+
+
     @Override
     public String createBooking(BookingRequest bookingRequest, HttpServletRequest request) {
         UserEntity user = userRepository.findById(bookingRequest.getUserId())
@@ -54,23 +53,55 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
         Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
                 .stream()
-                .collect(Collectors.toMap(SeatsEntity::getId, SeatsEntity::getSeatNumber));
-
+                .filter(s -> s.getSeatType() != null)
+                .collect(Collectors.toMap(
+                        SeatsEntity::getId,
+                        s -> s.getSeatType().getName()
+                ));
         List<UUID> selectedSeats = bookingRequest.getListSeatId();
 
         // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
         for (UUID seatId : selectedSeats) {
             if (!listSeats.containsKey(seatId)) {
-                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND, seatId));
+                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
             }
         }
 
         // Lock seats
         boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
-                showtime.getId(),
-                selectedSeats,
-                user.getId()
+                user,
+                showtime,
+                selectedSeats
         );
+        if (!isLocked) {
+            log.error("Failed to lock seats {} for user {} and showtime {}", selectedSeats, user.getId(), showtime.getId());
+            return null;
+        }
+
+        BookingEntity booking = BookingEntity.builder()
+                .user(user)
+                .showtime(showtime)
+                .totalPrice(bookingRequest.getAmount())
+                .createdAt(new Date())
+                .updatedAt(new Date())
+                .status(BookingStatusEnum.PENDING.name())
+                .build();
+
+        Map<String, Long> pricingMap = pricingRuleService.getPricingRulesByDayOfWeek(showtime.getSchedule().getDate());
+
+        Set<BookingSeatEntity> listBookingSeats = selectedSeats.stream()
+                .map(seatId -> BookingSeatEntity.builder()
+                        .seat(SeatsEntity.builder()
+                                .id(seatId)
+                                .build())
+                        .booking(booking)
+                        .price(pricingMap.getOrDefault(listSeats.get(seatId), 0L))
+                        .build())
+                .collect(Collectors.toSet());
+        booking.setBookingSeats(listBookingSeats);
+        bookingRepository.save(booking);
+
+        bookingProducer.sendBookingDelay(booking.getId());
 
 
         // url redirect to VnPay
@@ -129,40 +160,6 @@ public class BookingServiceImpl implements BookingService {
         return response;
     }
 
-    //    private PaymentResponse createPaymentResponse(BookingEntity booking) {
-//        List<PaymentProjection> paymentInfo = bookingRepository.getPaymentInfoByBookingId(booking.getId());
-//
-//        PaymentProjection info = paymentInfo.get(0);
-//        PaymentResponse response = PaymentResponse.builder()
-//                .movieName(info.getMovieName())
-//                .theaterName(info.getTheaterName())
-//                .duration(info.getDuration())
-//                .roomName(info.getRoomName())
-//                .showtime(info.getShowtime())
-//                .seatNumbers(paymentInfo.stream()
-//                        .map(PaymentProjection::getSeatNumber)
-//                        .collect(Collectors.toList()))
-//                .build();
-//
-//        String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
-//        if (privateKey != null) {
-//            MultipartFile file = null;
-//            try {
-//                file = QrCodeUtil.createQR(
-//                        privateKey + "_" + booking.getId(),
-//                        "booking_" + booking.getId()
-//                );
-//            } catch (WriterException e) {
-//                throw new RuntimeException(e);
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            String qrCodeUrl = minioService.upload(file);
-//            log.info("QR Code uploaded to Minio: {}", qrCodeUrl);
-//            response.setQrcode(qrCodeUrl);
-//        }
-//        return response;
-//    }
 
     private UUID createBooking(UUID userId, UUID showtimeId, long totalPrice, List<UUID> seatIds) {
         BookingEntity booking = BookingEntity.builder()
@@ -174,8 +171,8 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatusEnum.CONFIRMED.name())
                 .build();
 
-        Set<BokingSeatEntity> bookingSeats = seatIds.stream()
-                .map(seatId -> BokingSeatEntity.builder()
+        Set<BookingSeatEntity> bookingSeats = seatIds.stream()
+                .map(seatId -> BookingSeatEntity.builder()
                         .seat(SeatsEntity.builder().id(seatId).build())
                         .booking(booking)
                         .build())
@@ -248,5 +245,18 @@ public class BookingServiceImpl implements BookingService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Override
+    public void cancelBooking(UUID bookingId) {
+        BookingEntity booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+        if (BookingStatusEnum.PENDING.name().equals(booking.getStatus())) {
+            booking.setStatus(BookingStatusEnum.EXPIRED.name());
+            booking.setUpdatedAt(new Date());
+            bookingRepository.save(booking);
+//            seatSocketBroadcaster.unlockSeatAndBroadcast(booking);
+        }
     }
 }
