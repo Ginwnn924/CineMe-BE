@@ -9,6 +9,7 @@ import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,10 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SeatServiceImpl implements SeatService{
     private final RoomRepository roomRepository;
     private final SeatResponseMapper seatResponseMapper;
     private final SeatsRepository seatsRepository;
+    private final BookingRepository bookingRepository;
     private final ShowtimeRepository showtimeRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final PricingRuleService pricingRuleService;
@@ -223,19 +226,20 @@ public class SeatServiceImpl implements SeatService{
 
     @Override
     public boolean lockSeats(UserEntity user, ShowtimeEntity showtime, List<UUID> selectedSeats) {
-        List<String> lockedKeys = new ArrayList<>();
         UUID userId = user.getId();
         UUID showtimeId = showtime.getId();
+        Set<UUID> listSeatIdLocked = bookingRepository.getSeatsLockedByShowtime(showtimeId);
         for (UUID seatId : selectedSeats) {
             // Rollback nếu có bất kỳ ghế nào ko thể lock
-            if (!lockSeat(showtimeId, seatId, userId)) {
-                redisTemplate.delete(lockedKeys);
+            boolean isLocked = lockSeat(showtimeId, seatId, userId);
+            log.info("isLocked seat {}: {}", seatId, isLocked);
+            if (isLocked && listSeatIdLocked.contains(seatId)) {
+                boolean isDeleted = redisTemplate.delete("seat-lock:" + showtimeId + ":" + seatId);
+                log.info("Rollback seat {}: {}", seatId, isDeleted);
                 throw new IllegalArgumentException("Seat " + seatId + " is not available or already locked.");
             }
-            else {
-                // Nếu lock thành công thì lưu key lại để rollback nếu cần
-                lockedKeys.add("seat-lock:" + showtimeId + ":" + seatId);
-            }
+            else if (isLocked == false)
+                return false;
         }
         // insert database
 

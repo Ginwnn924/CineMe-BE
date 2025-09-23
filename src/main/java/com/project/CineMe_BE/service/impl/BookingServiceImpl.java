@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.google.zxing.WriterException;
+import com.project.CineMe_BE.config.VNPAYConfig;
 import com.project.CineMe_BE.dto.response.BookingResponse;
 import com.project.CineMe_BE.producer.BookingProducer;
 import com.project.CineMe_BE.repository.*;
@@ -21,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,6 +45,7 @@ public class BookingServiceImpl implements BookingService {
     private final MinioService minioService;
     private final PricingRuleService pricingRuleService;
     private final BookingProducer bookingProducer;
+    private final VNPAYConfig vnPayConfig;
 
 
     @Override
@@ -105,37 +108,62 @@ public class BookingServiceImpl implements BookingService {
 
 
         // url redirect to VnPay
-        return isLocked ? paymentService.createPayment(bookingRequest, request) : null;
+        return isLocked ? paymentService.createPayment(booking, request) : null;
     }
 
 
     @Transactional
     @Override
     public UUID confirmBooking(HttpServletRequest request) {
+        if(isValidParams(request) == false) {
+            log.error("Invalid parameters in VnPay callback");
+            return null;
+        }
+        UUID bookingId = UUID.fromString(request.getParameter("vnp_OrderInfo"));
+        BookingEntity booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+        if (BookingStatusEnum.PENDING.name().equals(booking.getStatus())) {
+            booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+            booking.setUpdatedAt(new Date());
+            String qrCode = generateQRCode(booking);
+            booking.setQrcode(qrCode);
+            bookingRepository.save(booking);
+        }
+        else {
+            log.error("Booking {} is not in PENDING status", bookingId);
+            return null;
+        }
+        return bookingId;
+
+    }
+
+    private boolean isValidParams(HttpServletRequest request) {
         String status = request.getParameter("vnp_ResponseCode");
         if(!status.equals("00")) {
-            return null;
+            return false;
         }
-        String orderInfo = request.getParameter("vnp_OrderInfo");
-        String[] orderParts = orderInfo.split("_");
-        UUID showtimeId = UUID.fromString(orderParts[0]);
-        UUID userId = UUID.fromString(orderParts[1]);
-        long amount = Long.parseLong(request.getParameter("vnp_Amount")) / 100L;
-        String transactionId = request.getParameter("vnp_TransactionNo");
-        log.info("VnPayReturn: showtimeId: {}, userId: {}, amount: {}, transactionId: {}",
-                showtimeId, userId, amount, transactionId);
-        // Get list  seatId in Redis
-        List<UUID> listSeatId = seatService.getListSeatRedis(showtimeId, userId);
-
-        // Remove in redis
-        boolean isDeleted = seatService.deleteBookingLockRedis(showtimeId, userId);
-        if (!isDeleted) {
-            log.error("Failed to delete booking lock for userId: {} and showtimeId: {}", userId, showtimeId);
-            return null;
+        Enumeration<String> listParam = request.getParameterNames();
+        Map<String, String> params = new HashMap<>();
+        while (listParam.hasMoreElements()) {
+            String paramName = listParam.nextElement();
+            String value = request.getParameter(paramName);
+            if (!StringUtils.isEmpty(paramName) && !StringUtils.isEmpty(value)) {
+                if ("vnp_SecureHash".equals(paramName) || "vnp_SecureHashType".equals(paramName)) {
+                    continue;
+                }
+                params.put(paramName, value);
+            }
         }
+        String hashData = vnPayConfig.getPaymentURL(params, false);
+        String vnpSecureHash = vnPayConfig.hmacSHA512(vnPayConfig.getSecretKey(), hashData);
 
-        return createBooking(userId, showtimeId, amount, listSeatId);
+        String vnpSecureHashFromParams = request.getParameter("vnp_SecureHash");
 
+        boolean isSuccess = false;
+        if (vnpSecureHash.equals(vnpSecureHashFromParams)) {
+            isSuccess = true;
+        }
+        return isSuccess;
     }
 
     @Override
@@ -161,25 +189,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
-    private UUID createBooking(UUID userId, UUID showtimeId, long totalPrice, List<UUID> seatIds) {
-        BookingEntity booking = BookingEntity.builder()
-                .user(UserEntity.builder().id(userId).build())
-                .showtime(ShowtimeEntity.builder().id(showtimeId).build())
-                .totalPrice(totalPrice)
-                .createdAt(new Date())
-                .updatedAt(new Date())
-                .status(BookingStatusEnum.CONFIRMED.name())
-                .build();
-
-        Set<BookingSeatEntity> bookingSeats = seatIds.stream()
-                .map(seatId -> BookingSeatEntity.builder()
-                        .seat(SeatsEntity.builder().id(seatId).build())
-                        .booking(booking)
-                        .build())
-                .collect(Collectors.toSet());
-
-        booking.setBookingSeats(bookingSeats);
-        booking.setId(UUID.randomUUID());
+    private String generateQRCode(BookingEntity booking) {
         String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
         if (privateKey != null) {
             log.info("Service generate QR");
@@ -198,9 +208,7 @@ public class BookingServiceImpl implements BookingService {
             String qrCodeUrl = minioService.upload(file);
             int iStart = qrCodeUrl.indexOf("/resources") + 1;
             int iEnd = qrCodeUrl.indexOf("?X-Amz");
-            booking.setQrcode(qrCodeUrl.substring(iStart, iEnd));
-            log.info("QR Code uploaded to Minio: {}", qrCodeUrl);
-            log.info("Time to generate QR: {} ms", System.currentTimeMillis() - startTime);
+            return qrCodeUrl.substring(iStart, iEnd);
         }
 
         // Sau khi co link QR code thi tien hanh send mail
@@ -210,8 +218,7 @@ public class BookingServiceImpl implements BookingService {
         *
         *
         */
-        bookingRepository.save(booking);
-        return booking.getId();
+        return null;
     }
 
 //    private String generateQrCode()

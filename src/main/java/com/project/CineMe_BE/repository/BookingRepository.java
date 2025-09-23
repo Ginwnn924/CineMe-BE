@@ -11,10 +11,17 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
+
+
+    @Query(value = "SELECT bs.seat_id FROM bookings b " +
+            "JOIN booking_seats bs ON bs.booking_id = b.id " +
+            "WHERE b.showtime_id = :showtimeId AND b.status IN ('PENDING', 'CONFIRMED')", nativeQuery = true)
+    Set<UUID> getSeatsLockedByShowtime(UUID showtimeId);
 
     @Query(value = "SELECT " +
             "m.name_vn AS movieName, " +

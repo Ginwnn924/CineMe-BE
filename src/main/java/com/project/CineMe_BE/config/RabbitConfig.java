@@ -55,7 +55,7 @@ public class RabbitConfig {
     @Bean
     public Queue delayCancelBookingQueue() {
         Map<String, Object> args = new HashMap<>();
-        args.put("x-message-ttl", 15 * 1000); // TTL = 15 giây
+        args.put("x-message-ttl", 10 * 60 * 1000); // 10 mins
         args.put("x-dead-letter-exchange", RabbitConstant.ORDER_CANCEL_EXCHANGE);
         args.put("x-dead-letter-routing-key", RabbitConstant.ORDER_CANCEL_KEY);
         return new Queue(RabbitConstant.ORDER_CANCEL_TTL_QUEUE, true, false, false, args);
