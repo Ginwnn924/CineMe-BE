@@ -159,6 +159,7 @@ public class BookingServiceImpl implements BookingService {
             return false;
         }
 
+        // Check response code
         String status = request.getParameter("vnp_ResponseCode");
         if(status.equals("00")) {
             // Thanh toan thanh cong

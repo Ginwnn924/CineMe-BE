@@ -1,9 +1,14 @@
 package com.project.CineMe_BE.listener;
 
 import com.corundumstudio.socketio.SocketIOServer;
+import com.project.CineMe_BE.entity.BookingEntity;
+import com.project.CineMe_BE.entity.SeatsEntity;
 import com.project.CineMe_BE.entity.ShowtimeEntity;
 import com.project.CineMe_BE.entity.UserEntity;
+import com.project.CineMe_BE.repository.BookingRepository;
+import com.project.CineMe_BE.repository.SeatsRepository;
 import com.project.CineMe_BE.service.SeatService;
+import com.project.CineMe_BE.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -39,5 +44,19 @@ public class SeatSocketBroadcaster {
                     new MessageSocket(showtimeId, userId, selectedSeats));
             return false;
         }
+    }
+
+    public void unlockSeatAndBroadcast(UUID bookingId) {
+        // showtimeId and listSeatIds
+        Map<UUID, List<UUID>> listSeats = seatService.getSeatsByBookingId(bookingId);
+        if (listSeats.isEmpty()) {
+            log.warn("No seats found for booking {} to unlock", bookingId);
+            return;
+        }
+        UUID showtimeId = UUID.fromString(listSeats.keySet().iterator().next().toString());
+        MessageSocket data = new MessageSocket(showtimeId, null, listSeats.get(showtimeId));
+
+        server.getRoomOperations(showtimeId.toString()).sendEvent("seat_unlock", data);
+
     }
 }

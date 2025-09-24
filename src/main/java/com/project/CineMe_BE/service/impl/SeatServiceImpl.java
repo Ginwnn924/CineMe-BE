@@ -141,32 +141,43 @@ public class SeatServiceImpl implements SeatService{
     @Override
     @Transactional
     public boolean create(SeatRequest seatRequest, UUID roomId) {
-    HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
-    int row = seatRequest.getRow();
-    int col = seatRequest.getCol();
-    List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
-    int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
-    Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
-    List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
+        HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
+        int row = seatRequest.getRow();
+        int col = seatRequest.getCol();
+        List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
+        int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
+        Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
+        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
 
-    for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
-        String seatNumber = entry.getKey();
-        UUID seatTypeId = entry.getValue();
+        for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
+            String seatNumber = entry.getKey();
+            UUID seatTypeId = entry.getValue();
 
-        SeatsEntity seatsEntity = SeatsEntity.builder()
-                .room(getRoomById(roomId))
-                .seatNumber(seatNumber)
-                .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
-                .isActive(true)
-                .build();
+            SeatsEntity seatsEntity = SeatsEntity.builder()
+                    .room(getRoomById(roomId))
+                    .seatNumber(seatNumber)
+                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
+                    .isActive(true)
+                    .build();
 
-        resultEntity.add(seatsEntity);
+            resultEntity.add(seatsEntity);
+        }
+
+        seatsRepository.bulkInsert(resultEntity);
+        return true;
     }
 
-    seatsRepository.bulkInsert(resultEntity);
-    return true;
-}
-
+    @Override
+    public Map<UUID, List<UUID>> getSeatsByBookingId(UUID bookingId) {
+        BookingEntity booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+        List<UUID> listSeatId = seatsRepository.findByBookingId(bookingId).stream()
+                .map(SeatsEntity::getId)
+                .toList();
+        Map<UUID, List<UUID>> result = new HashMap<>();
+        result.put(booking.getShowtime().getId(), listSeatId);
+        return result;
+    }
 
     @Override
     public List<SeatResponse> getSeatsByShowtime(UUID showtimeId) {
@@ -199,7 +210,7 @@ public class SeatServiceImpl implements SeatService{
     private boolean lockSeat(UUID showtimeId, UUID seatId, UUID userId) {
         String redisKey = "seat-lock:" + showtimeId + ":" + seatId;
         boolean success = redisTemplate.opsForValue()
-                .setIfAbsent(redisKey, userId.toString(), Duration.ofMinutes(10));
+                .setIfAbsent(redisKey, userId.toString(), Duration.ofMinutes(2));
         return success;
     }
 
@@ -226,49 +237,7 @@ public class SeatServiceImpl implements SeatService{
     }
 
 
-    private Set<UUID> getListSeatLocked(UUID showtimeId) {
-        String pattern = "seat-lock:" + showtimeId + ":*";
-        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
-        Cursor<byte[]> cursor = redisTemplate.getConnectionFactory().getConnection().scan(options);
-        Set<UUID> listSeatLocked = new HashSet<>();
-        while (cursor.hasNext()) {
-            String key = new String(cursor.next());
-            String seatId = key.substring(key.lastIndexOf(":") + 1);
-            listSeatLocked.add(UUID.fromString(seatId));
-        }
 
-        return listSeatLocked;
-    }
-
-    @Override
-    public List<UUID> getListSeatRedis(UUID showtimeId, UUID userId) {
-        String bookingLockKey = "booking-lock:" + userId + ":" + showtimeId;
-        String seatIdsStr = redisTemplate.opsForValue().get(bookingLockKey);
-        if (seatIdsStr == null || seatIdsStr.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(seatIdsStr.split(","))
-                .map(UUID::fromString)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean deleteBookingLockRedis(UUID showtimeId, UUID userId) {
-        List<UUID> listSeatId = getListSeatRedis(showtimeId, userId);
-        if (listSeatId.isEmpty()) {
-            return false;
-        }
-        // Xóa từng ghế đã lock
-        for (UUID seatId : listSeatId) {
-            String seatLockKey = "seat-lock:" + showtimeId + ":" + seatId;
-            redisTemplate.delete(seatLockKey);
-        }
-        // Xoá booking
-        String bookingLockKey = "booking-lock:" + userId + ":" + showtimeId;
-        redisTemplate.delete(bookingLockKey);
-
-        return true;
-    }
 
     @Override
     @Cacheable(value = CacheName.SEAT, key = "#roomId")

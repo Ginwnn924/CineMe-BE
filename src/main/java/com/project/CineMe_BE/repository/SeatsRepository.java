@@ -25,4 +25,13 @@ public interface SeatsRepository extends JpaRepository<SeatsEntity, UUID> , Seat
             "LEFT JOIN FETCH bs.booking b " +
             "WHERE st.id = :showtimeId")
     List<SeatsEntity> findByShowtimeId(UUID showtimeId);
+
+    @Query("SELECT s FROM SeatsEntity s " +
+            "LEFT JOIN FETCH s.seatType " +
+            "LEFT JOIN FETCH s.bookingSeats bs " +
+            "LEFT JOIN FETCH bs.booking b " +
+            "WHERE b.id = :bookingId")
+    List<SeatsEntity> findByBookingId(UUID bookingId);
+
+
 }
