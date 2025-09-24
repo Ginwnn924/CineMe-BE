@@ -2,6 +2,7 @@ package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.entity.*;
+import com.project.CineMe_BE.enums.BookingStatusEnum;
 import com.project.CineMe_BE.enums.StatusSeat;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.repository.*;
@@ -172,7 +173,7 @@ public class SeatServiceImpl implements SeatService{
         ShowtimeEntity showtime = showtimeRepository.findById(showtimeId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
         LocalDate date = showtime.getSchedule().getDate();
-        List<SeatsEntity> listSeats = getSeatsWithLockStatusByShowtimeId(showtimeId);
+        List<SeatsEntity> listSeats = seatsRepository.findByShowtimeId(showtimeId);
         Map<String, Long> listRules = pricingRuleService.getPricingRulesByDayOfWeek(date);
         return listSeats.stream()
                 .map(seat -> {
@@ -180,41 +181,19 @@ public class SeatServiceImpl implements SeatService{
                     if (seat.getSeatType() != null) {
                         long price = listRules.getOrDefault(seat.getSeatType().getName(), 0L);
                         response.setPrice(price);
+
+                        boolean isBooked = seat.getBookingSeats().stream()
+                                .anyMatch(bs -> bs.getBooking().getShowtime().getId().equals(showtimeId)
+                                        && (BookingStatusEnum.CONFIRMED.name().equals(bs.getBooking().getStatus()) || BookingStatusEnum.PENDING.name().equals(bs.getBooking().getStatus())));
+                        response.setStatus(isBooked ? StatusSeat.BOOKED.name() : StatusSeat.AVAILABLE.name());
                         return response;
                     }
                     response.setPrice(0L);
                     return response;
                 }).toList();
-
     }
 
 
-    // Can` optimized
-    private List<SeatsEntity> getSeatsWithLockStatusByShowtimeId(UUID showtimeId) {
-//        List<SeatWithStatusProjection> entityList = seatsRepository.findByShowtimeId(showtimeId);
-        List<SeatsEntity> entityList = seatsRepository.findByShowtimeId1(showtimeId);
-        if (entityList == null && entityList.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<SeatsEntity> listSeats = entityList.stream()
-                .peek(seat -> {
-                    boolean isBooked = seat.getBookingSeats().stream()
-                            .anyMatch(bookingSeat ->
-                                    bookingSeat.getBooking().getShowtime().getId().equals(showtimeId)
-                            );
-
-                    seat.setStatus(isBooked ? StatusSeat.BOOKED.name() : StatusSeat.AVAILABLE.name());
-                })
-                .toList();
-         Set<UUID> lockedSeats = getListSeatLocked(showtimeId);
-
-         for (SeatsEntity seat : listSeats) {
-             if (lockedSeats.contains(seat.getId()) && StatusSeat.AVAILABLE.name().equals(seat.getStatus())) {
-                 seat.setStatus(StatusSeat.LOCKED.name());
-             }
-         }
-        return listSeats;
-    }
 
 
     private boolean lockSeat(UUID showtimeId, UUID seatId, UUID userId) {

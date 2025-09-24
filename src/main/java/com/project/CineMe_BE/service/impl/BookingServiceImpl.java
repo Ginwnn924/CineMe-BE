@@ -138,10 +138,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private boolean isValidParams(HttpServletRequest request) {
-        String status = request.getParameter("vnp_ResponseCode");
-        if(!status.equals("00")) {
-            return false;
-        }
+        // Veriy hash
         Enumeration<String> listParam = request.getParameterNames();
         Map<String, String> params = new HashMap<>();
         while (listParam.hasMoreElements()) {
@@ -156,14 +153,22 @@ public class BookingServiceImpl implements BookingService {
         }
         String hashData = vnPayConfig.getPaymentURL(params, false);
         String vnpSecureHash = vnPayConfig.hmacSHA512(vnPayConfig.getSecretKey(), hashData);
-
         String vnpSecureHashFromParams = request.getParameter("vnp_SecureHash");
 
-        boolean isSuccess = false;
-        if (vnpSecureHash.equals(vnpSecureHashFromParams)) {
-            isSuccess = true;
+        if (!vnpSecureHash.equals(vnpSecureHashFromParams)) {
+            return false;
         }
-        return isSuccess;
+
+        String status = request.getParameter("vnp_ResponseCode");
+        if(status.equals("00")) {
+            // Thanh toan thanh cong
+            return true;
+        }
+        else {
+            // Thanh toan khong thanh cong
+            return false;
+        }
+
     }
 
     @Override

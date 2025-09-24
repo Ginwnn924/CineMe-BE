@@ -37,8 +37,4 @@ public class SeatsEntity {
     private Boolean isActive;
 
 
-    // @Column(name = "status", length = 255)
-    @Transient
-    private String status;
-
 }
