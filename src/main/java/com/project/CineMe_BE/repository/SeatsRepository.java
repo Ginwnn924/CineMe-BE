@@ -14,6 +14,9 @@ import java.util.List;
 @Repository
 public interface SeatsRepository extends JpaRepository<SeatsEntity, UUID> , SeatsCustomRepository {
 
+    @Query("SELECT s FROM SeatsEntity s " +
+            "LEFT JOIN FETCH s.seatType " +
+            "WHERE s.room.id = :roomId")
     List<SeatsEntity> findByRoomId(UUID roomId);
 
 

@@ -8,7 +8,7 @@ import java.util.UUID;
 @Data
 @Builder
 public class ItemComboResponse {
-    private UUID productId;
-    private UUID comboId;
+    private UUID itemId;
+    private String itemName;
     private Integer quantity;
 }

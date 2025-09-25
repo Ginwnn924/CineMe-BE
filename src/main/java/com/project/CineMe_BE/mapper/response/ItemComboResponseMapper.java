@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface ItemComboResponseMapper extends BaseResponseMapper<ItemComboResponse,ItemComboEntity> {
-    @Mapping(target = "comboId", source = "id.combo")
-    @Mapping(target = "productId", source = "id.product")
+    @Mapping(target = "itemId", source = "item.id")
+    @Mapping(target = "itemName", source = "item.name")
     ItemComboResponse toDto(ItemComboEntity entity);
 }

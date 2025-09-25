@@ -13,14 +13,14 @@ import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface ItemComboRequestMapper extends BaseRequestMapper<ItemComboRequest, ItemComboEntity> {
-    @Mapping(target = "id", source = ".", qualifiedByName = "toItemComboId")
-    ItemComboEntity toEntity(ItemComboRequest request);
-
-    @Named("toItemComboId")
-    default ItemComboId toItemComboId(ItemComboRequest request) {
-        ItemComboId id = new ItemComboId();
-        id.setCombo(request.getComboId());
-        id.setProduct(request.getProductId());
-        return id;
-    }
+//    @Mapping(target = "id", source = ".", qualifiedByName = "toItemComboId")
+//    ItemComboEntity toEntity(ItemComboRequest request);
+//
+//    @Named("toItemComboId")
+//    default ItemComboId toItemComboId(ItemComboRequest request) {
+//        ItemComboId id = new ItemComboId();
+//        id.setCombo(request.getComboId());
+//        id.setProduct(request.getProductId());
+//        return id;
+//    }
 }

@@ -7,24 +7,25 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 
 @Entity
 @Getter
 @Setter
 @Table(name = "item_combo")
 public class ItemComboEntity {
-    @EmbeddedId
-    private ItemComboId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne
-    @MapsId("combo")
     @JoinColumn(name = "combo_id")
     private ComboEntity combo;
 
     @ManyToOne
-    @MapsId("product")
-    @JoinColumn(name = "product_id")
-    private ProductEntity product;
+    @JoinColumn(name = "item_id")
+    private ItemEntity item;
 
     @Column(name = "quantity")
     private Integer quantity;
