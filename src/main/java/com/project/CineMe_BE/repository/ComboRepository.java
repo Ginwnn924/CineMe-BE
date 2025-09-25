@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface ComboRepository extends JpaRepository<ComboEntity, UUID> {
@@ -13,5 +14,12 @@ public interface ComboRepository extends JpaRepository<ComboEntity, UUID> {
             " JOIN FETCH c.listItems itm " +
             " JOIN FETCH itm.item it ")
     List<ComboEntity> findAll();
+
+
+    @Query("SELECT c FROM ComboEntity c " +
+            " JOIN FETCH c.listItems itm " +
+            " JOIN FETCH itm.item it " +
+            " WHERE c.id IN :listId")
+    List<ComboEntity> findAllById(Set<UUID> listId);
 }
 

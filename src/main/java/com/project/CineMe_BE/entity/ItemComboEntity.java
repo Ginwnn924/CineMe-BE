@@ -29,4 +29,5 @@ public class ItemComboEntity {
 
     @Column(name = "quantity")
     private Integer quantity;
+
 }

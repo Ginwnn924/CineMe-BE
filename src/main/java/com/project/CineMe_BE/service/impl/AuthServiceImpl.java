@@ -128,14 +128,14 @@ public class AuthServiceImpl implements AuthService {
         String name = userInfo.get("name");
         UserEntity user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
-                    RoleEntity role = roleRepository.findByName(RoleEnum.USER.name())
-                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROLE_NOT_FOUND)));
+//                    RoleEntity role = roleRepository.findByName(RoleEnum.USER.name())
+//                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROLE_NOT_FOUND)));
                     UserEntity newUser = UserEntity.builder()
                                             .email(email)
                                             .fullName(name)
                                             .createdAt(LocalDateTime.now())
                                             .updatedAt(LocalDateTime.now())
-                                            .role(role)
+//                                            .role(role)
                                             .provider(ProviderEnum.GOOGLE.name())
                                         .build();
                     return userRepository.save(newUser);

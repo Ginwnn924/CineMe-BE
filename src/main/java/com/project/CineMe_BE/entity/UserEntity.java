@@ -38,9 +38,9 @@ public class UserEntity implements UserDetails {
     private String provider;
 
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private RoleEntity role;
+//    @ManyToOne
+//    @JoinColumn(name = "role_id")
+//    private RoleEntity role;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -57,9 +57,9 @@ public class UserEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> listAuthorities = new ArrayList<>();
-        this.role.getListPermissions().forEach(permission -> {
-            listAuthorities.add(new SimpleGrantedAuthority(permission.getKey()));
-        });
+//        this.role.getListPermissions().forEach(permission -> {
+//            listAuthorities.add(new SimpleGrantedAuthority(permission.getKey()));
+//        });
         return listAuthorities;
     }
 

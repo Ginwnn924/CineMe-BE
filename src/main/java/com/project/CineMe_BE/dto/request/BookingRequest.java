@@ -11,6 +11,7 @@ import java.util.UUID;
 @Setter
 public class BookingRequest {
     private UUID userId;
+    private UUID employeeId;
     private UUID showtimeId;
     private List<UUID> listSeatId;
     private HashMap<UUID, Integer> listCombo;

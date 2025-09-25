@@ -28,12 +28,6 @@ public class ComboServiceImpl implements ComboService {
     private final ComboResponseMapper comboResponseMapper;
 
 
-    @Override
-    public Map<UUID, Long> getAllById(Set<UUID> listID) {
-        Map<UUID, Long> result = comboRepository.findAllById(listID).stream()
-                .collect(Collectors.toMap(e -> e.getId(), e -> e.getPrice()));
-        return result;
-    }
 
     @Override
     public List<ComboResponse> getAllCombos() {

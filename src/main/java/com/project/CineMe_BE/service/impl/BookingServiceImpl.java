@@ -41,7 +41,9 @@ public class BookingServiceImpl implements BookingService {
     private final SeatSocketBroadcaster seatSocketBroadcaster;
     private final PaymentService paymentService;
     private final BookingRepository bookingRepository;
-    private final ComboService comboService;
+    private final PaymentRepository paymentRepository;
+    private final ComboRepository comboRepository;
+    private final EmployeeRepository employeeRepository;
     private final MinioService minioService;
     private final PricingRuleService pricingRuleService;
     private final BookingProducer bookingProducer;
@@ -50,6 +52,11 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public String createBooking(BookingRequest bookingRequest, HttpServletRequest request) {
+        EmployeeEntity employee = null;
+        if (bookingRequest.getEmployeeId() != null) {
+            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
+        }
         UserEntity user = userRepository.findById(bookingRequest.getUserId())
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
         ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
@@ -83,6 +90,7 @@ public class BookingServiceImpl implements BookingService {
 
         BookingEntity booking = BookingEntity.builder()
                 .user(user)
+                .employee(employee)
                 .showtime(showtime)
                 .createdAt(new Date())
                 .updatedAt(new Date())
@@ -104,15 +112,22 @@ public class BookingServiceImpl implements BookingService {
                 .mapToLong(BookingSeatEntity::getPrice)
                 .sum();
 
-        Map<UUID, Long> listCombo = comboService.getAllById(bookingRequest.getListCombo().keySet());
+        List<BookingCombo> listBookingCombos = new ArrayList<>();
+        List<ComboEntity> listCombo = comboRepository.findAllById(bookingRequest.getListCombo().keySet());
+        for (ComboEntity combo : listCombo) {
+            int quantity = bookingRequest.getListCombo().getOrDefault(combo.getId(), 0);
+            price +=  quantity * combo.getPrice();
 
-        for (Map.Entry <UUID, Integer> entry : bookingRequest.getListCombo().entrySet()) {
-            if (listCombo.containsKey(entry.getKey())) {
-                price += listCombo.get(entry.getKey()) * entry.getValue();
-            }
+            BookingCombo bookingCombo = BookingCombo.builder()
+                    .booking(booking)
+                    .combo(combo)
+                    .quantity(quantity)
+                    .price(combo.getPrice())
+                    .build();
+            listBookingCombos.add(bookingCombo);
         }
 
-
+        booking.setListCombo(listBookingCombos);
         booking.setTotalPrice(price);
         booking.setBookingSeats(listBookingSeats);
         bookingRepository.save(booking);
@@ -128,25 +143,45 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Override
     public UUID confirmBooking(HttpServletRequest request) {
-        if(isValidParams(request) == false) {
+        if(!isValidParams(request)) {
             log.error("Invalid parameters in VnPay callback");
             return null;
         }
-        UUID bookingId = UUID.fromString(request.getParameter("vnp_OrderInfo"));
-        BookingEntity booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
-        if (BookingStatusEnum.PENDING.name().equals(booking.getStatus())) {
-            booking.setStatus(BookingStatusEnum.CONFIRMED.name());
-            booking.setUpdatedAt(new Date());
-            String qrCode = generateQRCode(booking);
-            booking.setQrcode(qrCode);
-            bookingRepository.save(booking);
+
+        // Check response code
+        String status = request.getParameter("vnp_ResponseCode");
+        if("00".equals(status)) {
+            UUID bookingId = UUID.fromString(request.getParameter("vnp_OrderInfo"));
+            BookingEntity booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+
+            if (BookingStatusEnum.PENDING.name().equals(booking.getStatus())) {
+                booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+                booking.setUpdatedAt(new Date());
+                String qrCode = generateQRCode(booking);
+                booking.setQrcode(qrCode);
+                bookingRepository.save(booking);
+            }
+            else {
+                log.error("Booking {} is not in PENDING status", bookingId);
+                return null;
+            }
+            // insert payment
+            PaymentEntity payment = PaymentEntity.builder()
+                    .booking(booking)
+                    .amount(Long.parseLong(request.getParameter("vnp_Amount")) / 100)
+                    .createdAt(new Date())
+                    .method("VNPAY")
+                    .status("SUCCESS")
+                    .transactionId(request.getParameter("vnp_TransactionNo"))
+                    .build();
+            paymentRepository.save(payment);
+            return bookingId;
         }
-        else {
-            log.error("Booking {} is not in PENDING status", bookingId);
-            return null;
-        }
-        return bookingId;
+        return null;
+
+
+
 
     }
 
@@ -171,17 +206,8 @@ public class BookingServiceImpl implements BookingService {
         if (!vnpSecureHash.equals(vnpSecureHashFromParams)) {
             return false;
         }
+        return true;
 
-        // Check response code
-        String status = request.getParameter("vnp_ResponseCode");
-        if(status.equals("00")) {
-            // Thanh toan thanh cong
-            return true;
-        }
-        else {
-            // Thanh toan khong thanh cong
-            return false;
-        }
 
     }
 
@@ -212,7 +238,6 @@ public class BookingServiceImpl implements BookingService {
         String privateKey = showtimeRepository.getPriveKey(booking.getShowtime().getId());
         if (privateKey != null) {
             log.info("Service generate QR");
-            long startTime = System.currentTimeMillis();
             MultipartFile file = null;
             try {
                 file = QrCodeUtil.createQR(

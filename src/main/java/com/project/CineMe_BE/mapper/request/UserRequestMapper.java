@@ -10,7 +10,7 @@ import org.mapstruct.Mapping;
 import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface UserRequestMapper extends BaseRequestMapper<SignUpRequest, UserEntity> {
-    @Mapping(target = "role", source = "roleId")
+//    @Mapping(target = "role", source = "roleId")
     UserEntity toEntity(SignUpRequest dto);
 
     default RoleEntity mapRole(UUID roleId) {

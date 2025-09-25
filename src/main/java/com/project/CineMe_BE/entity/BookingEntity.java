@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,6 +23,18 @@ public class BookingEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id")
+    private EmployeeEntity employee;
+
+    @OneToMany(mappedBy = "booking", cascade = {
+            CascadeType.PERSIST,
+            CascadeType.REMOVE,
+            CascadeType.DETACH
+    })
+    private List<BookingCombo> listCombo;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "showtime_id")

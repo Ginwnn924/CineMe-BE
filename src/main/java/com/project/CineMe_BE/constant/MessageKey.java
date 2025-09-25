@@ -135,4 +135,8 @@ public class MessageKey {
     // Password
     public static final String PASSWORD_RESET_SUCCESS = "password.reset_success";
     public static final String PASSWORD_CHANGE_SUCCESS = "password.change_success";
+
+
+    // Employee
+    public static final String EMPLOYEE_NOT_FOUND = "employee.not_found";
 }

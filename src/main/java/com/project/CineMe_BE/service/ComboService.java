@@ -9,10 +9,8 @@ import java.util.UUID;
 
 public interface ComboService {
     List<ComboResponse> getAllCombos();
+
     ComboResponse getComboById(UUID id);
-
-    Map<UUID, Long> getAllById(Set<UUID> listID);
-
     ComboResponse createCombo(ComboRequest request);
     ComboResponse updateCombo(UUID id, ComboRequest request);
     boolean deleteCombo(UUID id);
