@@ -1,14 +1,17 @@
 package com.project.CineMe_BE.controller;
 
 import com.google.common.net.HttpHeaders;
+import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.LoginRequest;
+import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.UserEntity;
 import com.project.CineMe_BE.enums.ProviderEnum;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
+import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
@@ -16,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,9 +35,11 @@ import java.util.UUID;
 public class AuthController {
     private final AuthService authService;
     private final LocalizationUtils localizationUtils;
-
+    private final EmailProducer emailProducer;
     @Value("${GOOGLE_REDIRECT_FE}")
     private String googleRedirectUrl;
+
+    private final RabbitTemplate rabbitTemplate;
 
     @PostMapping("/api/v1/auth/login")
     public ResponseEntity<APIResponse> login(@RequestBody LoginRequest request) {
@@ -79,15 +85,41 @@ public class AuthController {
     @GetMapping("/api/v1/auth/extract")
     public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {
         if (!StringUtils.isEmpty(state)) {
-           Object response = authService.extractState(state);
-           if(response != null) {
+            Object response = authService.extractState(state);
+            if (response != null) {
                 return ResponseEntity.ok(APIResponse.builder()
                         .statusCode(200)
                         .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
                         .data(response)
                         .build());
-           }
+            }
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/api/v1/auth/forgot-password")
+    public ResponseEntity<APIResponse> forgotPassword(@RequestParam final String email) {
+        authService.forgotPassword(email);
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.OTP_SEND_SUCCESS))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/api/v1/auth/verify-otp")
+    public boolean verifyOtp(@RequestParam final String email,
+                             @RequestParam final String otp) {
+        return authService.verifyOtp(email, otp);
+    }
+
+    @PostMapping("/api/v1/auth/reset-password")
+    public ResponseEntity<APIResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.PASSWORD_RESET_SUCCESS))
+                .build();
+        return ResponseEntity.ok(response);
     }
 }

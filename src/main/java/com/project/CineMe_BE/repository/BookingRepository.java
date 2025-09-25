@@ -3,15 +3,25 @@ package com.project.CineMe_BE.repository;
 import com.project.CineMe_BE.repository.projection.BookingProjection;
 import com.project.CineMe_BE.repository.projection.PaymentProjection;
 import com.project.CineMe_BE.entity.BookingEntity;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
+
+
+    @Query(value = "SELECT bs.seat_id FROM bookings b " +
+            "JOIN booking_seats bs ON bs.booking_id = b.id " +
+            "WHERE b.showtime_id = :showtimeId AND b.status IN ('PENDING', 'CONFIRMED')", nativeQuery = true)
+    Set<UUID> getSeatsLockedByShowtime(UUID showtimeId);
 
     @Query(value = "SELECT " +
             "m.name_vn AS movieName, " +
@@ -56,5 +66,6 @@ public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
             "GROUP BY b.id, m.name_vn, m.image, s.date, st.start_time, st.end_time, t.name_vn, r.name, b.status, se.seat_number " +
             "ORDER BY s.date DESC, st.start_time DESC;", nativeQuery = true)
     List<BookingProjection> getBookingByUserId(UUID userId);
+
 
 }

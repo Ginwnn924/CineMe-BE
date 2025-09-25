@@ -82,6 +82,8 @@ public class MessageKey {
     // User
     public static final String USER_NOT_FOUND = "user.not_found";
     public static final String USER_GET_ALL_SUCCESS = "user.get_all_success";
+    public static final String USER_INCORRECT_PASSWORD = "user.incorrect_password";
+    public static final String USER_CHANGE_PASSWORD_SUCCESS = "user.change_password_success";
 
     // Payment
     public static final String PAYMENT_CREATE_URL_SUCCESS = "payment.create_url_success";
@@ -126,4 +128,11 @@ public class MessageKey {
 
     // ItemCombo
     public static final String ITEM_COMBO_CREATE_SUCCESS = "item_combo.create_success";
+
+    // OTP
+    public static final String OTP_SEND_SUCCESS = "otp.send_success";
+
+    // Password
+    public static final String PASSWORD_RESET_SUCCESS = "password.reset_success";
+    public static final String PASSWORD_CHANGE_SUCCESS = "password.change_success";
 }

@@ -48,7 +48,7 @@ public class VNPAYConfig {
         String vnpCreateDate = localDateTime.format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         vnpParamsMap.put("vnp_ReturnUrl", vnp_ReturnUrl);
         vnpParamsMap.put("vnp_CreateDate", vnpCreateDate);
-        String vnp_ExpireDate = localDateTime.plusMinutes(10).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String vnp_ExpireDate = localDateTime.plusMinutes(2).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         vnpParamsMap.put("vnp_ExpireDate", vnp_ExpireDate);
         return vnpParamsMap;
     }

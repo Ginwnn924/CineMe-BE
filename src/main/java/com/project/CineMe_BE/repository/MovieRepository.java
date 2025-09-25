@@ -11,6 +11,16 @@ import java.util.UUID;
 
 @Repository
 public interface MovieRepository extends JpaRepository<MovieEntity, UUID> {
+
+    @Query("SELECT m FROM MovieEntity m " +
+            "LEFT JOIN FETCH m.country " +
+            "LEFT JOIN FETCH m.limitage " +
+            "LEFT JOIN FETCH m.listActor " +
+            "LEFT JOIN FETCH m.listGenre " +
+            "LEFT JOIN FETCH m.listReview")
+    List<MovieEntity> findAll();
+
+
     @Query("SELECT m FROM MovieEntity m  " +
             "LEFT JOIN FETCH m.country " +
             "LEFT JOIN FETCH m.limitage " +

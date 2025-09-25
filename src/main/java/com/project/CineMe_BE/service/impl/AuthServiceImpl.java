@@ -3,6 +3,7 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.LoginRequest;
 import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
+import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.RoleEntity;
@@ -11,12 +12,15 @@ import com.project.CineMe_BE.enums.ProviderEnum;
 import com.project.CineMe_BE.enums.RoleEnum;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
+import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.RoleRepository;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.security.jwt.JwtService;
+import com.project.CineMe_BE.service.EmailService;
 import com.project.CineMe_BE.service.RedisService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import com.project.CineMe_BE.utils.OtpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,13 +69,14 @@ public class AuthServiceImpl implements AuthService {
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final UserRequestMapper userRequestMapper;
+    private final EmailService emailService;
+    private final EmailProducer emailProducer;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
         UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
         try {
-
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         }
         catch (Exception e) {
@@ -82,6 +87,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
+    @Override
+    public void forgotPassword(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        emailProducer.sendEmailOtp(user);
+    }
 
     @Override
     public AuthResponse refreshToken(RefreshTokenRequest refreshToken) {
@@ -192,5 +203,24 @@ public class AuthServiceImpl implements AuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+
+    @Override
+    public boolean verifyOtp(String email, String otp) {
+        if (StringUtils.isEmpty(email) || StringUtils.isEmpty(otp)) {
+            return false;
+        }
+        String value = redisService.getOrDefault("otp:" + otp, "").toString();
+        return email.equals(value);
+    }
+
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        UserEntity user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
     }
 }

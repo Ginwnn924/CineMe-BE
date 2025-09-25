@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -44,17 +45,12 @@ public class MovieEntity {
     @Column(name = "image")
     private String image;
 
-    @Column(name = "himage")
-    private String himage;
 
     @Column(name = "trailer")
     private String trailer;
 
     @Column(name = "status")
     private String status;
-
-    @Column(name = "ratings")
-    private String ratings;
 
     @Column(name = "time")
     private Long time;
@@ -78,7 +74,7 @@ public class MovieEntity {
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "actor_id")
     )
-    private List<ActorEntity> listActor;
+    private Set<ActorEntity> listActor;
 
     @ManyToMany
     @JoinTable(
@@ -86,5 +82,8 @@ public class MovieEntity {
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
-    private List<GenreEntity> listGenre;
+    private Set<GenreEntity> listGenre;
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ReviewEntity> listReview;
 }

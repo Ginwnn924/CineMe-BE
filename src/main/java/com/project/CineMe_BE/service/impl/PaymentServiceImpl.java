@@ -2,6 +2,7 @@ package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.config.VNPAYConfig;
 import com.project.CineMe_BE.dto.request.BookingRequest;
+import com.project.CineMe_BE.entity.BookingEntity;
 import com.project.CineMe_BE.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,9 @@ import java.util.Map;
 public class PaymentServiceImpl implements PaymentService {
     private final VNPAYConfig vnPayConfig;
     @Override
-    public String createPayment(BookingRequest bookingRequest, HttpServletRequest request) {
-        long amount = (bookingRequest.getAmount()) * 100;
-        String userId = bookingRequest.getUserId().toString();
-        String showtimeId = bookingRequest.getShowtimeId().toString();
+    public String createPayment(BookingEntity booking, HttpServletRequest request) {
+        long amount = (booking.getTotalPrice()) * 100;
+
         String vnpayRef = vnPayConfig.getRandomNumber(8);
 //        String bankCode = "";
         Map<String, String> vnpParamsMap = vnPayConfig.getVNPayConfig();
@@ -26,7 +26,7 @@ public class PaymentServiceImpl implements PaymentService {
         vnpParamsMap.put("vnp_Amount", String.valueOf(amount));
         vnpParamsMap.put("vnp_IpAddr", vnPayConfig.getIpAddress(request));
         //
-        vnpParamsMap.put("vnp_OrderInfo", showtimeId + "_" + userId);
+        vnpParamsMap.put("vnp_OrderInfo", booking.getId().toString());
         vnpParamsMap.put("vnp_TxnRef", vnpayRef);
         //
         String queryUrl = vnPayConfig.getPaymentURL(vnpParamsMap, true);

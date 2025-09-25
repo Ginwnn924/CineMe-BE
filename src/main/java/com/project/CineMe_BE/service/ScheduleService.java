@@ -1,5 +1,7 @@
 package com.project.CineMe_BE.service;
 
+import com.project.CineMe_BE.dto.request.RecomendScheduleRequest;
+import com.project.CineMe_BE.dto.response.RecommendScheduleResponse;
 import com.project.CineMe_BE.dto.response.ScheduleResponse;
 
 import java.time.LocalDate;
@@ -9,4 +11,6 @@ import java.util.UUID;
 public interface ScheduleService {
 
     List<ScheduleResponse> findByTheaterIdAndDate(UUID theaterId, LocalDate date);
+
+    List<RecommendScheduleResponse> recommendSchedules(RecomendScheduleRequest request);
 }

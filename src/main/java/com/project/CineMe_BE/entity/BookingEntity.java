@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,7 +16,7 @@ import java.util.UUID;
 @Table(name = "bookings")
 public class BookingEntity {
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,9 +41,9 @@ public class BookingEntity {
 
     @OneToMany(mappedBy = "booking", cascade = {
             CascadeType.PERSIST,
-            CascadeType.MERGE,
             CascadeType.REMOVE,
+            CascadeType.DETACH
     })
-    private Set<BokingSeatEntity> bookingSeats;
+    private Set<BookingSeatEntity> bookingSeats;
 
 }

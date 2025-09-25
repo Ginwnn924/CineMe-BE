@@ -2,12 +2,15 @@ package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.entity.*;
+import com.project.CineMe_BE.enums.BookingStatusEnum;
 import com.project.CineMe_BE.enums.StatusSeat;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.constant.CacheName;
+import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,13 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SeatServiceImpl implements SeatService{
     private final RoomRepository roomRepository;
     private final SeatResponseMapper seatResponseMapper;
     private final SeatsRepository seatsRepository;
+    private final BookingRepository bookingRepository;
     private final ShowtimeRepository showtimeRepository;
     private final RedisTemplate<String, String> redisTemplate;
-    private final PricingRuleRepository pricingRuleRepository;
+    private final PricingRuleService pricingRuleService;
     private final LocalizationUtils localizationUtils;
     private final SeatTypeRepository seatTypeRepository;
 
@@ -136,169 +141,103 @@ public class SeatServiceImpl implements SeatService{
     @Override
     @Transactional
     public boolean create(SeatRequest seatRequest, UUID roomId) {
-    HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
-    int row = seatRequest.getRow();
-    int col = seatRequest.getCol();
-    List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
-    int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
-    Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
-    List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
+        HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
+        int row = seatRequest.getRow();
+        int col = seatRequest.getCol();
+        List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
+        int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
+        Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
+        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
 
-    for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
-        String seatNumber = entry.getKey();
-        UUID seatTypeId = entry.getValue();
+        for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
+            String seatNumber = entry.getKey();
+            UUID seatTypeId = entry.getValue();
 
-        SeatsEntity seatsEntity = SeatsEntity.builder()
-                .room(getRoomById(roomId))
-                .seatNumber(seatNumber)
-                .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
-                .isActive(true)
-                .build();
+            SeatsEntity seatsEntity = SeatsEntity.builder()
+                    .room(getRoomById(roomId))
+                    .seatNumber(seatNumber)
+                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
+                    .isActive(true)
+                    .build();
 
-        resultEntity.add(seatsEntity);
+            resultEntity.add(seatsEntity);
+        }
+
+        seatsRepository.bulkInsert(resultEntity);
+        return true;
     }
 
-    seatsRepository.bulkInsert(resultEntity);
-    return true;
-}
-
+    @Override
+    public Map<UUID, List<UUID>> getSeatsByBookingId(UUID bookingId) {
+        BookingEntity booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+        List<UUID> listSeatId = seatsRepository.findByBookingId(bookingId).stream()
+                .map(SeatsEntity::getId)
+                .toList();
+        Map<UUID, List<UUID>> result = new HashMap<>();
+        result.put(booking.getShowtime().getId(), listSeatId);
+        return result;
+    }
 
     @Override
     public List<SeatResponse> getSeatsByShowtime(UUID showtimeId) {
         ShowtimeEntity showtime = showtimeRepository.findById(showtimeId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
         LocalDate date = showtime.getSchedule().getDate();
-        List<SeatsEntity> listSeats = getSeatsWithLockStatusByShowtimeId(showtimeId);
-        int dayOfWeek = date.getDayOfWeek().getValue() + 1;
-        Map<String, Long> listRules = pricingRuleRepository.findByDayOfWeek(dayOfWeek).stream()
-                .collect(Collectors.toMap(
-                        pr -> pr.getSeatType().getName(),
-                        PricingRuleEntity::getPrice
-                ));
+        List<SeatsEntity> listSeats = seatsRepository.findByShowtimeId(showtimeId);
+        Map<String, Long> listRules = pricingRuleService.getPricingRulesByDayOfWeek(date);
         return listSeats.stream()
                 .map(seat -> {
                     SeatResponse response = seatResponseMapper.toDto(seat);
                     if (seat.getSeatType() != null) {
                         long price = listRules.getOrDefault(seat.getSeatType().getName(), 0L);
                         response.setPrice(price);
+
+                        boolean isBooked = seat.getBookingSeats().stream()
+                                .anyMatch(bs -> bs.getBooking().getShowtime().getId().equals(showtimeId)
+                                        && (BookingStatusEnum.CONFIRMED.name().equals(bs.getBooking().getStatus()) || BookingStatusEnum.PENDING.name().equals(bs.getBooking().getStatus())));
+                        response.setStatus(isBooked ? StatusSeat.BOOKED.name() : StatusSeat.AVAILABLE.name());
                         return response;
                     }
                     response.setPrice(0L);
                     return response;
                 }).toList();
-
     }
 
 
-    // Can` optimized
-    private List<SeatsEntity> getSeatsWithLockStatusByShowtimeId(UUID showtimeId) {
-//        List<SeatWithStatusProjection> entityList = seatsRepository.findByShowtimeId(showtimeId);
-        List<SeatsEntity> entityList = seatsRepository.findByShowtimeId1(showtimeId);
-        if (entityList == null && entityList.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<SeatsEntity> listSeats = entityList.stream()
-                .map(seat -> {
-                    StatusSeat status = StatusSeat.AVAILABLE;
-                    if (seat.getBookingSeats().size() != 0) {
-                        status = StatusSeat.BOOKED;
-                    }
-                    seat.setStatus(status.name());
-                    return seat;
-                }).toList();
-         List<UUID> lockedSeats = getListSeatLocked(showtimeId);
-         for (SeatsEntity seat : listSeats) {
-             if (lockedSeats.contains(seat.getId()) && StatusSeat.AVAILABLE.name().equals(seat.getStatus())) {
-                 seat.setStatus(StatusSeat.LOCKED.name());
-             }
-         }
-        return listSeats;
-    }
 
-
-    private boolean isAvailable(UUID showtimeId, UUID seatId) {
-        return getSeatsWithLockStatusByShowtimeId(showtimeId).stream()
-                .anyMatch(seat -> seat.getId().equals(seatId) && StatusSeat.AVAILABLE.name().equals(seat.getStatus()));
-    }
 
     private boolean lockSeat(UUID showtimeId, UUID seatId, UUID userId) {
-        if (!isAvailable(showtimeId, seatId)) {
-            return false;
-        }
         String redisKey = "seat-lock:" + showtimeId + ":" + seatId;
-        Boolean success = redisTemplate.opsForValue()
-                .setIfAbsent(redisKey, userId.toString(), Duration.ofMinutes(10));
-        return Boolean.TRUE.equals(success);
+        boolean success = redisTemplate.opsForValue()
+                .setIfAbsent(redisKey, userId.toString(), Duration.ofMinutes(2));
+        return success;
     }
 
     @Override
-    public boolean lockSeats(UUID showtimeId, List<UUID> seatIds, UUID userId) {
-        List<String> lockedKeys = new ArrayList<>();
-
-        for (UUID seatId : seatIds) {
+    public boolean lockSeats(UserEntity user, ShowtimeEntity showtime, List<UUID> selectedSeats) {
+        UUID userId = user.getId();
+        UUID showtimeId = showtime.getId();
+        Set<UUID> listSeatIdLocked = bookingRepository.getSeatsLockedByShowtime(showtimeId);
+        for (UUID seatId : selectedSeats) {
             // Rollback nếu có bất kỳ ghế nào ko thể lock
-            if (!lockSeat(showtimeId, seatId, userId)) {
-                redisTemplate.delete(lockedKeys);
+            boolean isLocked = lockSeat(showtimeId, seatId, userId);
+            log.info("isLocked seat {}: {}", seatId, isLocked);
+            if (isLocked && listSeatIdLocked.contains(seatId)) {
+                boolean isDeleted = redisTemplate.delete("seat-lock:" + showtimeId + ":" + seatId);
+                log.info("Rollback seat {}: {}", seatId, isDeleted);
                 throw new IllegalArgumentException("Seat " + seatId + " is not available or already locked.");
             }
-            else {
-                // Nếu lock thành công thì lưu key lại để rollback nếu cần
-                lockedKeys.add("seat-lock:" + showtimeId + ":" + seatId);
-            }
+            else if (isLocked == false)
+                return false;
         }
-        String bookingLockKey = "booking-lock:" + userId + ":" + showtimeId;
-        redisTemplate.opsForValue().set(
-                bookingLockKey,
-                seatIds.stream().map(UUID::toString).collect(Collectors.joining(",")),
-                Duration.ofMinutes(10)
-        );
+        // insert database
+
         return true;
     }
 
 
-    private List<UUID> getListSeatLocked(UUID showtimeId) {
-        String pattern = "seat-lock:" + showtimeId + ":*";
-        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
-        Cursor<byte[]> cursor = redisTemplate.getConnectionFactory().getConnection().scan(options);
-        List<UUID> listSeatLocked = new ArrayList<>();
-        while (cursor.hasNext()) {
-            String key = new String(cursor.next());
-            String seatId = key.substring(key.lastIndexOf(":") + 1);
-            listSeatLocked.add(UUID.fromString(seatId));
-        }
 
-        return listSeatLocked;
-    }
-
-    @Override
-    public List<UUID> getListSeatRedis(UUID showtimeId, UUID userId) {
-        String bookingLockKey = "booking-lock:" + userId + ":" + showtimeId;
-        String seatIdsStr = redisTemplate.opsForValue().get(bookingLockKey);
-        if (seatIdsStr == null || seatIdsStr.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(seatIdsStr.split(","))
-                .map(UUID::fromString)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean deleteBookingLockRedis(UUID showtimeId, UUID userId) {
-        List<UUID> listSeatId = getListSeatRedis(showtimeId, userId);
-        if (listSeatId.isEmpty()) {
-            return false;
-        }
-        // Xóa từng ghế đã lock
-        for (UUID seatId : listSeatId) {
-            String seatLockKey = "seat-lock:" + showtimeId + ":" + seatId;
-            redisTemplate.delete(seatLockKey);
-        }
-        // Xoá booking
-        String bookingLockKey = "booking-lock:" + userId + ":" + showtimeId;
-        redisTemplate.delete(bookingLockKey);
-
-        return true;
-    }
 
     @Override
     @Cacheable(value = CacheName.SEAT, key = "#roomId")

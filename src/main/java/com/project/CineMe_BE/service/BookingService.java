@@ -17,4 +17,6 @@ public interface BookingService {
     PaymentResponse getBookingInfo(UUID id);
 
     List<BookingResponse> getBookingHistory(UUID userId);
+
+    void cancelBooking(UUID bookingId);
 }

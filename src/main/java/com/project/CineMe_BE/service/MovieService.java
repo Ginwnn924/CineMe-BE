@@ -17,4 +17,5 @@ public interface MovieService {
     public MovieResponse updateMovie(UUID id, MovieRequest request);
     public List<MovieResponse> getAvailableMovies();
 
+    List<MovieResponse> getRecommendedMovies(UUID movieId, int topN);
 }
