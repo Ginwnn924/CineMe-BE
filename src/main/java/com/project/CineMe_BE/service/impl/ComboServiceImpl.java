@@ -14,7 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,14 @@ public class ComboServiceImpl implements ComboService {
     private final MinioService minioService;
     private final ComboRequestMapper comboRequestMapper;
     private final ComboResponseMapper comboResponseMapper;
+
+
+    @Override
+    public Map<UUID, Long> getAllById(Set<UUID> listID) {
+        Map<UUID, Long> result = comboRepository.findAllById(listID).stream()
+                .collect(Collectors.toMap(e -> e.getId(), e -> e.getPrice()));
+        return result;
+    }
 
     @Override
     public List<ComboResponse> getAllCombos() {

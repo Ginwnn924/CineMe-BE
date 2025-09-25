@@ -26,24 +26,25 @@ public class ItemComboServiceImpl implements ItemComboService {
     private final ProductRepository productRepository;
     @Override
     public ItemComboResponse create(ItemComboRequest request) {
-        ProductEntity product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new DataNotFoundException("Product not found"));
-        ComboEntity combo = comboRepository.findById(request.getComboId())
-                .orElseThrow(() -> new DataNotFoundException("Combo not found"));
-
-        // Tạo id tổng hợp
-        ItemComboId id = new ItemComboId();
-        id.setProduct(product.getId());
-        id.setCombo(combo.getId());
-
-
-        ItemComboEntity entity = new ItemComboEntity();
-        entity.setCombo(combo);
-        entity.setProduct(product);
-        entity.setId(id);
-        entity.setQuantity(request.getQuantity());
-
-        repository.save(entity);
-        return responseMapper.toDto(entity);
+//        ProductEntity product = productRepository.findById(request.getProductId())
+//                .orElseThrow(() -> new DataNotFoundException("Product not found"));
+//        ComboEntity combo = comboRepository.findById(request.getComboId())
+//                .orElseThrow(() -> new DataNotFoundException("Combo not found"));
+//
+//        // Tạo id tổng hợp
+//        ItemComboId id = new ItemComboId();
+//        id.setProduct(product.getId());
+//        id.setCombo(combo.getId());
+//
+//
+//        ItemComboEntity entity = new ItemComboEntity();
+//        entity.setCombo(combo);
+//        entity.setProduct(product);
+//        entity.setId(id);
+//        entity.setQuantity(request.getQuantity());
+//
+//        repository.save(entity);
+//        return responseMapper.toDto(entity);
+        return null;
     }
 }

@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,7 +18,6 @@ import java.util.UUID;
 public class ComboEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
     private UUID id;
 
     @Column(name = "name")
@@ -29,6 +29,8 @@ public class ComboEntity {
     @Column(name = "img")
     private String img;
 
+    @OneToMany(mappedBy = "combo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ItemComboEntity> listItems;
 
 }
 

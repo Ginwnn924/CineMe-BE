@@ -41,7 +41,7 @@ public class BookingServiceImpl implements BookingService {
     private final SeatSocketBroadcaster seatSocketBroadcaster;
     private final PaymentService paymentService;
     private final BookingRepository bookingRepository;
-    private final SeatService seatService;
+    private final ComboService comboService;
     private final MinioService minioService;
     private final PricingRuleService pricingRuleService;
     private final BookingProducer bookingProducer;
@@ -84,7 +84,6 @@ public class BookingServiceImpl implements BookingService {
         BookingEntity booking = BookingEntity.builder()
                 .user(user)
                 .showtime(showtime)
-                .totalPrice(bookingRequest.getAmount())
                 .createdAt(new Date())
                 .updatedAt(new Date())
                 .status(BookingStatusEnum.PENDING.name())
@@ -101,6 +100,20 @@ public class BookingServiceImpl implements BookingService {
                         .price(pricingMap.getOrDefault(listSeats.get(seatId), 0L))
                         .build())
                 .collect(Collectors.toSet());
+        long price = listBookingSeats.stream()
+                .mapToLong(BookingSeatEntity::getPrice)
+                .sum();
+
+        Map<UUID, Long> listCombo = comboService.getAllById(bookingRequest.getListCombo().keySet());
+
+        for (Map.Entry <UUID, Integer> entry : bookingRequest.getListCombo().entrySet()) {
+            if (listCombo.containsKey(entry.getKey())) {
+                price += listCombo.get(entry.getKey()) * entry.getValue();
+            }
+        }
+
+
+        booking.setTotalPrice(price);
         booking.setBookingSeats(listBookingSeats);
         bookingRepository.save(booking);
 
