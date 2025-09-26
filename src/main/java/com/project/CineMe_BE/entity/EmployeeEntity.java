@@ -34,5 +34,10 @@ public class EmployeeEntity {
     @ManyToOne
     @JoinColumn(name = "theater_id")
     private TheaterEntity theater;
-    
+
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private RoleEntity role;
+
 }

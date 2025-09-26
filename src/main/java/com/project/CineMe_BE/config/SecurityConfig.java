@@ -2,6 +2,7 @@ package com.project.CineMe_BE.config;
 
 
 import com.project.CineMe_BE.filter.JwtAuthenFilter;
+import com.project.CineMe_BE.security.CustomDetailsService;
 import com.project.CineMe_BE.service.RedisService;
 import com.project.CineMe_BE.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableMethodSecurity(prePostEnabled = true)
 
 public class SecurityConfig {
-    private final UserService userService;
+    private final CustomDetailsService userDetailsService;
     private final JwtAuthenFilter jwtAuthenFilter;
     private final RedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
@@ -79,7 +80,7 @@ public class SecurityConfig {
     public AuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setPasswordEncoder(passwordEncoder);
-        provider.setUserDetailsService(userService.userDetailsService());
+        provider.setUserDetailsService(userDetailsService);
         return provider;
     }
 

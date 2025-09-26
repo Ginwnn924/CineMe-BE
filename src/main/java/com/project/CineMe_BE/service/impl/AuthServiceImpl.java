@@ -6,44 +6,43 @@ import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
 import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
 import com.project.CineMe_BE.dto.response.AuthResponse;
-import com.project.CineMe_BE.entity.RoleEntity;
+import com.project.CineMe_BE.entity.EmployeeEntity;
 import com.project.CineMe_BE.entity.UserEntity;
 import com.project.CineMe_BE.enums.ProviderEnum;
-import com.project.CineMe_BE.enums.RoleEnum;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
 import com.project.CineMe_BE.producer.EmailProducer;
+import com.project.CineMe_BE.repository.EmployeeRepository;
 import com.project.CineMe_BE.repository.RoleRepository;
 import com.project.CineMe_BE.repository.UserRepository;
+import com.project.CineMe_BE.security.CustomEmployeeDetails;
+import com.project.CineMe_BE.security.CustomUserDetails;
 import com.project.CineMe_BE.service.AuthService;
-import com.project.CineMe_BE.security.jwt.JwtService;
+import com.project.CineMe_BE.security.JwtService;
 import com.project.CineMe_BE.service.EmailService;
 import com.project.CineMe_BE.service.RedisService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
-import com.project.CineMe_BE.utils.OtpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -65,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final LocalizationUtils localizationUtils;
     private final RoleRepository roleRepository;
+    private final EmployeeRepository employeeRepository;
     private final RestTemplate restTemplate;
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
@@ -74,17 +74,31 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
-        UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
+        if (StringUtils.isEmpty(loginRequest.getEmail()) || StringUtils.isEmpty(loginRequest.getPassword())) {
+            throw new BadCredentialsException("Tài khoản hoặc mật khẩu không được để trống");
+        }
+        UserDetails userDetails;
+        if (loginRequest.isEmployee()) {
+            EmployeeEntity employee = employeeRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new DataNotFoundException("Employee not found with email: " + loginRequest.getEmail()));
+            userDetails = new CustomEmployeeDetails(employee, employee.getRole().getListPermissions());
+        }
+        else {
+            UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
+            userDetails = new CustomUserDetails(user);
+        }
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         }
         catch (Exception e) {
-            log.info("Error: {}", e.getMessage());
+            log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return generateToken(user);
+        return generateToken(userDetails);
     }
+
+
 
 
     @Override
@@ -140,7 +154,8 @@ public class AuthServiceImpl implements AuthService {
                                         .build();
                     return userRepository.save(newUser);
                 });
-        AuthResponse authResponse = generateToken(user);
+        UserDetails userDetails = new CustomUserDetails(user);
+        AuthResponse authResponse = generateToken(userDetails);
         String state = generateState();
         redisService.set("state:" + state, authResponse, 5);
         return state;
@@ -193,13 +208,22 @@ public class AuthServiceImpl implements AuthService {
     }
 
 
-    private AuthResponse generateToken(UserEntity user) {
+    private AuthResponse generateToken(UserDetails user) {
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
+        UUID userId = null;
+        String fullName = null;
+        if (user instanceof CustomUserDetails) {
+            userId = ((CustomUserDetails) user).getUserEntity().getId();
+            fullName = ((CustomUserDetails) user).getUserEntity().getFullName();
+        } else if (user instanceof CustomEmployeeDetails) {
+            userId = ((CustomEmployeeDetails) user).getEmployee().getId();
+            fullName = ((CustomEmployeeDetails) user).getEmployee().getFullName();
+        }
         return AuthResponse.builder()
-                .id(user.getId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
+                .id(userId)
+                .fullName(fullName)
+                .email(user.getUsername())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();

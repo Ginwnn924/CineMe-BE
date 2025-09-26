@@ -1,7 +1,6 @@
-package com.project.CineMe_BE.security.jwt;
+package com.project.CineMe_BE.security;
 
 import com.project.CineMe_BE.entity.UserEntity;
-import com.project.CineMe_BE.security.jwt.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -50,7 +49,7 @@ public class JwtServiceImpl implements JwtService {
 
 
     @Override
-    public String generateToken(UserEntity userDetails) {
+    public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         List<String> permissions = userDetails.getAuthorities()
                 .stream()
@@ -58,7 +57,7 @@ public class JwtServiceImpl implements JwtService {
                 .collect(Collectors.toList());
 
         claims.put("permissions", permissions);
-        claims.put("userId", userDetails.getId());
+//        claims.put("userId", userDetails.getId());
         return generateToken(claims, userDetails);
     }
 

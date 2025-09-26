@@ -14,6 +14,7 @@ public interface AuthService {
 
     AuthResponse login(LoginRequest loginRequest);
 
+
     AuthResponse refreshToken(RefreshTokenRequest refreshToken);
 
     String oauth2Callback(Map<String, String> request);
