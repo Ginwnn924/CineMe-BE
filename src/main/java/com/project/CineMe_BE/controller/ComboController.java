@@ -22,16 +22,22 @@ public class ComboController {
     private final ComboService comboService;
     private final LocalizationUtils localizationUtils;
     @GetMapping
-    public ResponseEntity<List<ComboResponse>> getAllCombos() {
-        return ResponseEntity.ok(comboService.getAllCombos());
+    public ResponseEntity<APIResponse> getAllCombos() {
+
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_ALL_SUCCESS))
+                .data(comboService.getAllCombos())
+                .build());
+
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<APIResponse> getComboById(@PathVariable UUID id) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_ALL_SUCCESS))
-                .data(comboService.getAllCombos())
+                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_DETAILS))
+                .data(comboService.getComboById(id))
                 .build());
     }
 
@@ -45,7 +51,7 @@ public class ComboController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> updateCombo(@PathVariable UUID id, @RequestBody ComboRequest request) {
+    public ResponseEntity<APIResponse> updateCombo(@PathVariable UUID id,@Valid @ModelAttribute ComboRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS))
