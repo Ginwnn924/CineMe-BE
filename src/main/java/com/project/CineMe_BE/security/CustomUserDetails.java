@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -18,6 +19,9 @@ import java.util.List;
 public class CustomUserDetails implements UserDetails {
     private UserEntity userEntity;
 
+    public UUID getId() {
+        return userEntity.getId();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

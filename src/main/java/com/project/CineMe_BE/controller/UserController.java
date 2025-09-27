@@ -53,7 +53,7 @@ public class UserController {
         );
     }
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#id == authentication.principal.getId()")
     @GetMapping("/{id}/info")
     public ResponseEntity<APIResponse> getUserInfo(@PathVariable UUID id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

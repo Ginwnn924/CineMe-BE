@@ -241,8 +241,8 @@ public class BookingServiceImpl implements BookingService {
             MultipartFile file = null;
             try {
                 file = QrCodeUtil.createQR(
-                        privateKey + "_" + booking.getId(),
-                        "booking_" + booking.getId()
+                        booking.getId().toString(),
+                        "TICKET_" + booking.getId()
                 );
             } catch (WriterException e) {
                 throw new RuntimeException(e);

@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -29,6 +30,10 @@ public class CustomEmployeeDetails implements UserDetails  {
             listAuthorities.add(new SimpleGrantedAuthority(permission.getKey()));
         });
         return listAuthorities;
+    }
+
+    public UUID getId() {
+        return employee.getId();
     }
 
     @Override

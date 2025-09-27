@@ -6,7 +6,6 @@ import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.entity.MovieEntity;
 import com.project.CineMe_BE.entity.ReviewEntity;
 import com.project.CineMe_BE.mapper.BaseResponseMapper;
-import com.project.CineMe_BE.utils.DomainUtil;
 import com.project.CineMe_BE.utils.StringUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
