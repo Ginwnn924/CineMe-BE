@@ -9,6 +9,7 @@ import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,6 +57,7 @@ public class MovieController {
                 .build());
     }
 
+
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllMovie() {
         return ResponseEntity.ok(APIResponse.builder()
@@ -65,6 +67,7 @@ public class MovieController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('movie.view')")
     @GetMapping("/available")
     public ResponseEntity<APIResponse> getAvailableMovies() {
         List<MovieResponse> availableMovies = movieService.getAvailableMovies();

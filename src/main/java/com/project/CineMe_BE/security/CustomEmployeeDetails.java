@@ -2,6 +2,7 @@ package com.project.CineMe_BE.security;
 
 import com.project.CineMe_BE.entity.EmployeeEntity;
 import com.project.CineMe_BE.entity.PermissionEntity;
+import com.project.CineMe_BE.entity.RoleEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,11 +22,11 @@ import java.util.UUID;
 @NoArgsConstructor
 public class CustomEmployeeDetails implements UserDetails  {
     private EmployeeEntity employee;
-    private List<PermissionEntity> listPermission;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> listAuthorities = new ArrayList<>();
+        List<PermissionEntity>  listPermission = employee.getRole().getListPermissions();
         listPermission.forEach(permission -> {
             listAuthorities.add(new SimpleGrantedAuthority(permission.getKey()));
         });

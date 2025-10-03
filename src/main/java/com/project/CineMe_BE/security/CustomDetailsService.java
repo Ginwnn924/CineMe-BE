@@ -25,7 +25,7 @@ public class CustomDetailsService implements UserDetailsService  {
         Optional<EmployeeEntity> emp = employeeRepository.findByEmail(username);
         if(emp.isPresent()) {
             EmployeeEntity entity = emp.get();
-            return new CustomEmployeeDetails(entity, entity.getRole().getListPermissions());
+            return new CustomEmployeeDetails(entity);
         }
 
         // check user

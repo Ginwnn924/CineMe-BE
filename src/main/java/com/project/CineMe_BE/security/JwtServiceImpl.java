@@ -49,14 +49,19 @@ public class JwtServiceImpl implements JwtService {
 
 
     @Override
+    public Long getTokenExpire(String token) {
+        return extractClaims(token, Claims::getExpiration).getTime();
+    }
+
+    @Override
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        List<String> permissions = userDetails.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        claims.put("permissions", permissions);
+//        List<String> permissions = userDetails.getAuthorities()
+//                .stream()
+//                .map(GrantedAuthority::getAuthority)
+//                .collect(Collectors.toList());
+//
+//        claims.put("permissions", permissions);
 //        claims.put("userId", userDetails.getId());
         return generateToken(claims, userDetails);
     }
@@ -75,7 +80,6 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateRefreshToken(UserDetails userDetails) {
-        log.info("Permission: {}", userDetails.getAuthorities());
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))

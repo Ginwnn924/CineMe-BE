@@ -1,10 +1,7 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.request.LoginRequest;
-import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
-import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
-import com.project.CineMe_BE.dto.request.SignUpRequest;
+import com.project.CineMe_BE.dto.request.*;
 import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.EmployeeEntity;
 import com.project.CineMe_BE.entity.UserEntity;
@@ -22,7 +19,6 @@ import com.project.CineMe_BE.security.JwtService;
 import com.project.CineMe_BE.service.EmailService;
 import com.project.CineMe_BE.service.RedisService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +36,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -73,23 +68,15 @@ public class AuthServiceImpl implements AuthService {
     private final EmailProducer emailProducer;
 
     @Override
-    public AuthResponse login(LoginRequest loginRequest) {
-        if (StringUtils.isEmpty(loginRequest.getEmail()) || StringUtils.isEmpty(loginRequest.getPassword())) {
+    public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
+        if (StringUtils.isEmpty(loginClientRequest.getEmail()) || StringUtils.isEmpty(loginClientRequest.getPassword())) {
             throw new BadCredentialsException("Tài khoản hoặc mật khẩu không được để trống");
         }
-        UserDetails userDetails;
-        if (loginRequest.isEmployee()) {
-            EmployeeEntity employee = employeeRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new DataNotFoundException("Employee not found with email: " + loginRequest.getEmail()));
-            userDetails = new CustomEmployeeDetails(employee, employee.getRole().getListPermissions());
-        }
-        else {
-            UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
-                    .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
-            userDetails = new CustomUserDetails(user);
-        }
+        UserEntity user = userRepository.findByEmail(loginClientRequest.getEmail())
+                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginClientRequest.getEmail()));
+        UserDetails userDetails = new CustomUserDetails(user);
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginClientRequest.getEmail(), loginClientRequest.getPassword()));
         }
         catch (Exception e) {
             log.error("Error: {}", e.getMessage());
@@ -98,7 +85,29 @@ public class AuthServiceImpl implements AuthService {
         return generateToken(userDetails);
     }
 
+    @Override
+    public AuthResponse loginAdmin(LoginAdminRequest request) {
+        if (StringUtils.isEmpty(request.getEmail()) || StringUtils.isEmpty(request.getPassword())) {
+            throw new BadCredentialsException("Tài khoản hoặc mật khẩu không được để trống");
+        }
+        EmployeeEntity employee = employeeRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + request.getEmail()));
+        UserDetails userDetails = new CustomEmployeeDetails(employee);
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        }
+        catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+            throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
+        }
+        return generateToken(userDetails);
+    }
 
+    @Override
+    public boolean logout(String token, Long ttl) {
+        redisService.set("blacklist:" + token, "", ttl);
+        return true;
+    }
 
 
     @Override
@@ -113,16 +122,6 @@ public class AuthServiceImpl implements AuthService {
         return null;
     }
 
-    @Override
-    public boolean logout(HttpServletRequest request) {
-        String authHeader = request.getHeader(com.google.common.net.HttpHeaders.AUTHORIZATION);
-        String jwt = "";
-        if (!StringUtils.isEmpty(authHeader) && StringUtils.startsWith(authHeader, "Bearer ")) {
-            jwt = authHeader.substring(7);
-        }
-        redisService.set("blacklist:" + jwt, "", 36000);
-        return true;
-    }
 
     @Override
     public void register(SignUpRequest request) {

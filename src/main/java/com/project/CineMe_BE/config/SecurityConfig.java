@@ -47,10 +47,10 @@ public class SecurityConfig {
                         request -> request
                                 .anyRequest().permitAll()
                 )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/api/v1/auth/login/oauth2") // D biet tac dung
-
-                )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .loginPage("/api/v1/auth/login/oauth2") // D biet tac dung
+//
+//                )
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Khong luu token o phia server
                 .authenticationProvider(authenticationProvider())
