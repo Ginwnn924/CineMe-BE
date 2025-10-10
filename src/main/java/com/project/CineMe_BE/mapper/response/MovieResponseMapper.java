@@ -31,10 +31,10 @@ public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, M
 
     @Named("mapRating")
     default int mapRating(Set<ReviewEntity> listReview) {
-        return (int) listReview.stream()
+        return (int) (listReview.stream()
                 .mapToDouble(rating -> rating.getRating())
                 .average()
-                .orElse(1) / 10 * 100;
+                .orElse(1) / 10 * 100);
     }
 
 
