@@ -3,8 +3,7 @@ package com.project.CineMe_BE.config;
 
 import com.project.CineMe_BE.filter.JwtAuthenFilter;
 import com.project.CineMe_BE.security.CustomDetailsService;
-import com.project.CineMe_BE.service.RedisService;
-import com.project.CineMe_BE.service.UserService;
+import com.project.CineMe_BE.security.OAuthLoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +17,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -35,8 +33,7 @@ public class SecurityConfig {
     private final JwtAuthenFilter jwtAuthenFilter;
     private final RedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
-
-
+    private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
@@ -47,10 +44,10 @@ public class SecurityConfig {
                         request -> request
                                 .anyRequest().permitAll()
                 )
-//                .oauth2Login(oauth2 -> oauth2
-//                        .loginPage("/api/v1/auth/login/oauth2") // D biet tac dung
-//
-//                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/api/v1/auth/login/oauth2") // D biet tac dung
+                        .successHandler(oAuthLoginSuccessHandler)
+                )
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Khong luu token o phia server
                 .authenticationProvider(authenticationProvider())

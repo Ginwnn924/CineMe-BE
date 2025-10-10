@@ -96,14 +96,14 @@ public class AuthController {
                 .body(response);
     }
 
-
-    @GetMapping("/oauth2/callback")
-    public void handleGoogleCallback(@RequestParam Map<String, String> request, HttpServletResponse response) throws IOException {
-        String state = authService.oauth2Callback(request);
-        String redirectUrl = googleRedirectUrl
-                + "?state=" + state;
-        response.sendRedirect(redirectUrl);
-    }
+//
+//    @GetMapping("/oauth2/callback")
+//    public void handleGoogleCallback(@RequestParam Map<String, String> request, HttpServletResponse response) throws IOException {
+//        String state = authService.oauth2Callback(request);
+//        String redirectUrl = googleRedirectUrl
+//                + "?state=" + state;
+//        response.sendRedirect(redirectUrl);
+//    }
 
     @GetMapping("/api/v1/auth/extract")
     public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {

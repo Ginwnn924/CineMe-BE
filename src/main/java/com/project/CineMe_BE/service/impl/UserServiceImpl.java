@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAll() {
-        List<UserEntity> users = userRepository.findAllWithRole();
+        List<UserEntity> users = userRepository.findAll();
         return responseMapper.toListDto(users);
     }
 

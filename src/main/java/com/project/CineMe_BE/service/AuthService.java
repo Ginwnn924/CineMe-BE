@@ -2,6 +2,7 @@ package com.project.CineMe_BE.service;
 
 import com.project.CineMe_BE.dto.request.*;
 import com.project.CineMe_BE.dto.response.AuthResponse;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public interface AuthService {
 
     AuthResponse refreshToken(RefreshTokenRequest refreshToken);
 
-    String oauth2Callback(Map<String, String> request);
+//    String oauth2Callback(Map<String, String> request);
 
     void register(SignUpRequest request);
 

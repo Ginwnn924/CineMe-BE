@@ -67,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final EmailProducer emailProducer;
 
+
     @Override
     public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
         if (StringUtils.isEmpty(loginClientRequest.getEmail()) || StringUtils.isEmpty(loginClientRequest.getPassword())) {
@@ -82,7 +83,7 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return generateToken(userDetails);
+        return jwtService.generateToken(userDetails);
     }
 
     @Override
@@ -100,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return generateToken(userDetails);
+        return jwtService.generateToken(userDetails);
     }
 
     @Override
@@ -133,32 +134,32 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(entity);
     }
 
-    @Override
-    @Transactional
-    public String oauth2Callback(Map<String, String> request) {
-        Map<String, String> userInfo = extractUserGoogle(request);
-        String email = userInfo.get("email");
-        String name = userInfo.get("name");
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-//                    RoleEntity role = roleRepository.findByName(RoleEnum.USER.name())
-//                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROLE_NOT_FOUND)));
-                    UserEntity newUser = UserEntity.builder()
-                                            .email(email)
-                                            .fullName(name)
-                                            .createdAt(LocalDateTime.now())
-                                            .updatedAt(LocalDateTime.now())
-//                                            .role(role)
-                                            .provider(ProviderEnum.GOOGLE.name())
-                                        .build();
-                    return userRepository.save(newUser);
-                });
-        UserDetails userDetails = new CustomUserDetails(user);
-        AuthResponse authResponse = generateToken(userDetails);
-        String state = generateState();
-        redisService.set("state:" + state, authResponse, 5);
-        return state;
-    }
+//    @Override
+//    @Transactional
+//    public String oauth2Callback(Map<String, String> request) {
+//        Map<String, String> userInfo = extractUserGoogle(request);
+//        String email = userInfo.get("email");
+//        String name = userInfo.get("name");
+//        UserEntity user = userRepository.findByEmail(email)
+//                .orElseGet(() -> {
+////                    RoleEntity role = roleRepository.findByName(RoleEnum.USER.name())
+////                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROLE_NOT_FOUND)));
+//                    UserEntity newUser = UserEntity.builder()
+//                                            .email(email)
+//                                            .fullName(name)
+//                                            .createdAt(LocalDateTime.now())
+//                                            .updatedAt(LocalDateTime.now())
+////                                            .role(role)
+//                                            .provider(ProviderEnum.GOOGLE.name())
+//                                        .build();
+//                    return userRepository.save(newUser);
+//                });
+//        UserDetails userDetails = new CustomUserDetails(user);
+//        AuthResponse authResponse = generateToken(userDetails);
+//        String state = generateState();
+//        redisService.set("state:" + state, authResponse, 5);
+//        return state;
+//    }
 
     @Override
     public Object extractState(String state) {
@@ -169,64 +170,43 @@ public class AuthServiceImpl implements AuthService {
         return result;
     }
 
-    private String generateState() {
-        return UUID.randomUUID().toString();
-    }
+//    private String generateState() {
+//        return UUID.randomUUID().toString();
+//    }
 
 
-    private Map<String, String> extractUserGoogle(Map<String, String> requestParams) {
-        String tokenUrl = "https://oauth2.googleapis.com/token";
+//    private Map<String, String> extractUserGoogle(Map<String, String> requestParams) {
+//        String tokenUrl = "https://oauth2.googleapis.com/token";
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+//
+//        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+//        body.add("code", requestParams.get("code").toString());
+//        body.add("client_id", googleClientId);
+//        body.add("client_secret", googleClientSecret);
+//        body.add("redirect_uri", googleRedirectUri);
+//        body.add("grant_type", "authorization_code");
+//
+//        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+//
+//        ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl, request, Map.class);
+//        String accessToken = (String) tokenResponse.getBody().get("access_token");
+//
+//        // Call google api lấy thông tin người dùng
+//        HttpHeaders userInfoHeaders = new HttpHeaders();
+//        userInfoHeaders.setBearerAuth(accessToken);
+//        HttpEntity<Void> userInfoRequest = new HttpEntity<>(userInfoHeaders);
+//
+//        ResponseEntity<Map> userInfoResponse = restTemplate.exchange(
+//                "https://www.googleapis.com/oauth2/v2/userinfo",
+//                HttpMethod.GET,
+//                userInfoRequest,
+//                Map.class
+//        );
+//        return userInfoResponse.getBody();
+//    }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("code", requestParams.get("code").toString());
-        body.add("client_id", googleClientId);
-        body.add("client_secret", googleClientSecret);
-        body.add("redirect_uri", googleRedirectUri);
-        body.add("grant_type", "authorization_code");
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-
-        ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl, request, Map.class);
-        String accessToken = (String) tokenResponse.getBody().get("access_token");
-
-        // Call google api lấy thông tin người dùng
-        HttpHeaders userInfoHeaders = new HttpHeaders();
-        userInfoHeaders.setBearerAuth(accessToken);
-        HttpEntity<Void> userInfoRequest = new HttpEntity<>(userInfoHeaders);
-
-        ResponseEntity<Map> userInfoResponse = restTemplate.exchange(
-                "https://www.googleapis.com/oauth2/v2/userinfo",
-                HttpMethod.GET,
-                userInfoRequest,
-                Map.class
-        );
-        return userInfoResponse.getBody();
-    }
-
-
-    private AuthResponse generateToken(UserDetails user) {
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-        UUID userId = null;
-        String fullName = null;
-        if (user instanceof CustomUserDetails) {
-            userId = ((CustomUserDetails) user).getUserEntity().getId();
-            fullName = ((CustomUserDetails) user).getUserEntity().getFullName();
-        } else if (user instanceof CustomEmployeeDetails) {
-            userId = ((CustomEmployeeDetails) user).getEmployee().getId();
-            fullName = ((CustomEmployeeDetails) user).getEmployee().getFullName();
-        }
-        return AuthResponse.builder()
-                .id(userId)
-                .fullName(fullName)
-                .email(user.getUsername())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
 
 
     @Override
