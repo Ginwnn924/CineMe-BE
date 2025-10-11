@@ -26,6 +26,7 @@ public class MovieController {
     private final GenreService genreService;
     private final LanguageService languageService;
     private final LocalizationUtils localizationUtils;
+    private final ReviewService reviewService;
 
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -95,6 +96,14 @@ public class MovieController {
                 .statusCode(200)
                 .message("Phim duoc de cu")
                 .data(recommendedMovies)
+                .build());
+    }
+
+    @GetMapping("{id}/reviews")
+    public ResponseEntity<APIResponse> getMovieReviews(@PathVariable UUID id) {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .data(reviewService.getReviewsByMovieId(id))
                 .build());
     }
 }
