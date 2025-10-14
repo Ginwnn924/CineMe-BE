@@ -10,7 +10,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ValidCoupleSeat(message = "Couple seat quantity exceeds half of total columns")
+//@ValidCoupleSeat(message = "Couple seat quantity exceeds half of total columns")
 public class SeatRequest {
 //    private UUID roomId;
     private int col; // 1, 2, 3, ..., 18
@@ -19,7 +19,7 @@ public class SeatRequest {
     //UUID : SeatTypeId , String : "A", "BC"
     private List<Walkway> walkways;
 
-    private int coupleSeatQuantity;
+    private HashMap<UUID,Integer> MultipleSeats;
 
     @Data
     public static class Walkway{

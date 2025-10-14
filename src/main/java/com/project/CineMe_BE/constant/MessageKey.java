@@ -51,6 +51,14 @@ public class MessageKey {
     public static final String SEAT_GET_DETAILS = "seat.get_details";
     public static final String SEAT_GET_LIST = "seat.get_all";
 
+    // SeatType
+    public static final String SEAT_TYPE_CREATE_SUCCESS = "seat_type.create_success";
+    public static final String SEAT_TYPE_UPDATE_SUCCESS = "seat_type.update_success";
+    public static final String SEAT_TYPE_DELETE_SUCCESS = "seat_type.delete_success";
+    public static final String SEAT_TYPE_NOT_FOUND = "seat_type.not_found";
+    public static final String SEAT_TYPE_GET_DETAILS = "seat_type.get_details";
+    public static final String SEAT_TYPE_GET_ALL_SUCCESS = "seat_type.get_all_success";
+
     // Language
     public static final String LANGUAGE_CREATE_SUCCESS = "language.create_success";
     public static final String LANGUAGE_UPDATE_SUCCESS = "language.update_success";

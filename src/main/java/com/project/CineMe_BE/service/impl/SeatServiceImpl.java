@@ -9,6 +9,7 @@ import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import com.project.CineMe_BE.utils.SeatGeneratorUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -89,7 +90,7 @@ public class SeatServiceImpl implements SeatService{
             int cols,
             HashMap<UUID, String> specialSeats,
             List<SeatRequest.Walkway> walkways,
-            int coupleSeatQuantity
+            HashMap<UUID,Integer> MultipleSeats
     ) {
         Map<Character, UUID> rowTypeMap = rowToType(specialSeats);
         Map<String, UUID> allSeats = new HashMap<>();
@@ -119,15 +120,15 @@ public class SeatServiceImpl implements SeatService{
             }
         }
 
-        //set couple seat for last row
-        if(coupleSeatQuantity > 0 ){
-            for (int i = 1; i <= coupleSeatQuantity * 2; i += 2) {
-                if (i + 1 <= cols) { // tránh tràn số cột
-                    String seatKey = lastRow + String.valueOf(i) + "+" + lastRow + String.valueOf(i + 1);
-                    allSeats.put(seatKey, getCoupleSeatTypeId());
-                }
-            }
-        }
+//        //set MutipleSeats
+//        if(MultipleSeats. > 0 ){
+//            for (int i = 1; i <= MultipleSeats * 2; i += 2) {
+//                if (i + 1 <= cols) { // tránh tràn số cột
+//                    String seatKey = lastRow + String.valueOf(i) + "+" + lastRow + String.valueOf(i + 1);
+//                    allSeats.put(seatKey, getCoupleSeatTypeId());
+//                }
+//            }
+//        }
 
         return allSeats;
     }
@@ -145,10 +146,19 @@ public class SeatServiceImpl implements SeatService{
         int row = seatRequest.getRow();
         int col = seatRequest.getCol();
         List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
-        int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
-        Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
-        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
+        HashMap<UUID, Integer> multipleSeats = seatRequest.getMultipleSeats();
 
+        // ✅ Gọi util sinh toàn bộ ghế
+        Map<String, UUID> allSeats = SeatGeneratorUtil.generateAllSeats(
+                row,
+                col,
+                specialSeats,
+                walkways,
+                multipleSeats
+        );
+
+        // ✅ Build entity list để lưu DB
+        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
         for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
             String seatNumber = entry.getKey();
             UUID seatTypeId = entry.getValue();
@@ -156,13 +166,14 @@ public class SeatServiceImpl implements SeatService{
             SeatsEntity seatsEntity = SeatsEntity.builder()
                     .room(getRoomById(roomId))
                     .seatNumber(seatNumber)
-                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
+                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))
                     .isActive(true)
                     .build();
 
             resultEntity.add(seatsEntity);
         }
 
+        // ✅ Lưu batch để nhanh hơn
         seatsRepository.bulkInsert(resultEntity);
         return true;
     }

@@ -22,7 +22,7 @@ public class SeatTypeEntity {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "desc")
+    @Column(name = "description")
     private String desc;
 
     @Column(name = "img")
@@ -30,5 +30,8 @@ public class SeatTypeEntity {
 
     @Column(name = "color")
     private String color;
+
+    @Column(name = "capacity")
+    private Integer capacity;
 
 }
