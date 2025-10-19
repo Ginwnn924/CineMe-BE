@@ -1,86 +1,104 @@
 package com.project.CineMe_BE.utils;
 
 import com.project.CineMe_BE.dto.request.SeatRequest;
+import com.project.CineMe_BE.entity.SeatTypeEntity;
+import com.project.CineMe_BE.repository.SeatTypeRepository;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SeatGeneratorUtil {
 
     /**
      * Sinh danh sách ghế đầy đủ (bao gồm walkway, special seat, multiple seat)
+     * @param seatTypesMap Một Map chứa các SeatTypeEntity đã được lấy từ DB để tránh N+1 query
      */
     public static Map<String, UUID> generateAllSeats(
             int rows,
             int cols,
+            UUID defaultSeatTypeId,
             HashMap<UUID, String> specialSeats,
             List<SeatRequest.Walkway> walkways,
-            HashMap<UUID, Integer> multipleSeats
+            HashMap<UUID, Integer> multipleSeats,
+            Map<UUID, SeatTypeEntity> seatTypesMap // REFACTOR: Truyền vào Map thay vì repository
     ) {
-        Map<Character, UUID> rowTypeMap = rowToType(specialSeats);
+        Map<Character, UUID> rowToTypeMap = rowToType(specialSeats);
         Map<String, UUID> allSeats = new LinkedHashMap<>();
 
-        // ✅ Track walkway columns (đường đi)
-        Set<Integer> walkwayCols = new HashSet<>();
+        // REFACTOR: Tạo một Set các tọa độ walkway để kiểm tra nhanh hơn (O(1))
+        // và hỗ trợ walkway cho từng ô riêng lẻ.
+        Set<String> walkwayCoordinates = new HashSet<>();
         if (walkways != null) {
             for (SeatRequest.Walkway w : walkways) {
-                walkwayCols.add(w.getColumnIndex() + 1);
+                char walkwayRow = (char) ('A' + w.getRowIndex());
+                int walkwayCol = w.getColumnIndex() + 1;
+                walkwayCoordinates.add(walkwayRow + String.valueOf(walkwayCol));
             }
         }
 
-        // ✅ Tính lại lastRow dựa trên số hàng
-        char lastRow = (char) ('A' + (rows - 1));
+        int multipleSeatsRowCount = (multipleSeats != null) ? multipleSeats.size() : 0;
+        char lastRowNormal = (char) ('A' + (rows - multipleSeatsRowCount - 1));
 
-        // ✅ Sinh tất cả ghế bình thường
-        for (char row = 'A'; row <= lastRow; row++) {
+        // ✅ 1. Sinh tất cả ghế bình thường và lối đi
+        for (char row = 'A'; row < 'A' + rows; row++) {
             for (int col = 1; col <= cols; col++) {
                 String seatKey = row + String.valueOf(col);
-
-                if (walkwayCols.contains(col)) {
+                if (walkwayCoordinates.contains(seatKey)) {
+                    // Đây là walkway tại một ô cụ thể
                     allSeats.put("W_" + seatKey, null);
                 } else {
-                    UUID seatTypeId = rowTypeMap.getOrDefault(row, null);
+                    // Gán seat type nếu hàng này là special, ngược lại là null (ghế thường)
+                    UUID seatTypeId = rowToTypeMap.getOrDefault(row, defaultSeatTypeId);
                     allSeats.put(seatKey, seatTypeId);
                 }
             }
         }
 
-        // ✅ Sinh ghế nhiều người (multiple seats)
+        // ✅ 2. Xử lý ghế nhiều người (multiple seats) - Ghi đè lên các ghế đã tạo ở bước 1
         if (multipleSeats != null && !multipleSeats.isEmpty()) {
-            int assignRowOffset = 0; // bắt đầu từ hàng dưới cùng rồi đi lên
+            int assignRowIndex = 0;
+
             for (Map.Entry<UUID, Integer> entry : multipleSeats.entrySet()) {
                 UUID seatTypeId = entry.getKey();
-                int quantity = entry.getValue(); // số ghế loại này (mỗi ghế có capacity khác nhau)
+                int quantity = entry.getValue();
 
-                // tính row đặt loại ghế này (từ dưới lên)
-                char targetRow = (char) (lastRow - assignRowOffset);
+                // Lấy hàng mục tiêu để đặt ghế (từ dưới lên)
+                char targetRow = (char) (lastRowNormal + 1 + assignRowIndex);
 
-                int capacity = getSeatCapacityFromTypeId(seatTypeId); // bạn có thể tự lấy từ repository nếu cần
-                int totalWidth = capacity; // ví dụ couple = 2, triple = 3
+                // FIX: Lấy capacity từ Map đã query trước đó, tránh N+1
+                // Dòng code mới, đã sửa lỗi
+                int capacity = Optional.ofNullable(seatTypesMap.get(seatTypeId))
+                        .map(SeatTypeEntity::getCapacity)
+                        .orElse(1); // Mặc định là 1 nếu không tìm thấy
+                // Xóa tất cả ghế thường đã được tạo ở hàng này để chuẩn bị chỗ
+                for (int col = 1; col <= cols; col++) {
+                    allSeats.remove(targetRow + String.valueOf(col));
+                }
 
-                int seatIndex = 1;
+                int currentPosition = 1; // Vị trí bắt đầu đặt ghế trong hàng
                 for (int i = 0; i < quantity; i++) {
-                    if (seatIndex + totalWidth - 1 > cols) break; // tránh tràn cột
+                    // Kiểm tra xem có đủ chỗ không
+                    if (currentPosition + capacity - 1 > cols) {
+                        break; // Không đủ chỗ cho ghế tiếp theo
+                    }
 
                     StringBuilder seatKeyBuilder = new StringBuilder();
-                    for (int c = 0; c < totalWidth; c++) {
+                    for (int c = 0; c < capacity; c++) {
                         if (c > 0) seatKeyBuilder.append("+");
-                        seatKeyBuilder.append(targetRow).append(seatIndex + c);
+                        seatKeyBuilder.append(targetRow).append(currentPosition + c);
                     }
 
                     allSeats.put(seatKeyBuilder.toString(), seatTypeId);
-                    seatIndex += totalWidth + 1;
+                    currentPosition += capacity + 1; // Di chuyển đến vị trí tiếp theo, +1 để có khoảng cách
                 }
 
-                assignRowOffset++; // hàng tiếp theo
+                assignRowIndex++;
             }
         }
 
         return allSeats;
     }
 
-    /**
-     * Tạo mapping từ ký tự hàng (A, B, C, ...) sang loại ghế đặc biệt
-     */
     private static Map<Character, UUID> rowToType(HashMap<UUID, String> specialSeats) {
         Map<Character, UUID> result = new HashMap<>();
         if (specialSeats == null || specialSeats.isEmpty()) return result;
@@ -89,26 +107,22 @@ public class SeatGeneratorUtil {
             UUID seatTypeId = entry.getKey();
             String range = entry.getValue();
 
-            if (range.length() == 1) {
-                result.put(range.charAt(0), seatTypeId);
-            } else {
-                char start = range.charAt(0);
-                char end = range.charAt(range.length() - 1);
-                for (char r = start; r <= end; r++) {
-                    result.put(r, seatTypeId);
+            // Hỗ trợ cả range "A-C" và từng ký tự "A,B,C"
+            for (String part : range.split(",")) {
+                part = part.trim();
+                if (part.contains("-") && part.length() > 1) {
+                    char start = part.charAt(0);
+                    char end = part.charAt(part.length() - 1);
+                    for (char r = start; r <= end; r++) {
+                        result.put(r, seatTypeId);
+                    }
+                } else {
+                    for (char c : part.toCharArray()) {
+                        result.put(c, seatTypeId);
+                    }
                 }
             }
         }
         return result;
-    }
-
-    /**
-     * Hàm giả lập — bạn có thể lấy capacity từ DB trong service thay vì hardcode
-     */
-    private static int getSeatCapacityFromTypeId(UUID seatTypeId) {
-        // TODO: thay bằng repository.findById(seatTypeId).getCapacity()
-        // Ở đây mình tạm return 2 cho ví dụ
-
-        return 2;
     }
 }
