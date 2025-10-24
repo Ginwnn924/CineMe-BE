@@ -48,6 +48,7 @@ public class BookingServiceImpl implements BookingService {
     private final PricingRuleService pricingRuleService;
     private final BookingProducer bookingProducer;
     private final VNPAYConfig vnPayConfig;
+    private final UserRankService userRankService;
 
 
     @Override
@@ -108,6 +109,7 @@ public class BookingServiceImpl implements BookingService {
                         .price(pricingMap.getOrDefault(listSeats.get(seatId), 0L))
                         .build())
                 .collect(Collectors.toSet());
+
         long price = listBookingSeats.stream()
                 .mapToLong(BookingSeatEntity::getPrice)
                 .sum();
@@ -126,6 +128,9 @@ public class BookingServiceImpl implements BookingService {
                     .build();
             listBookingCombos.add(bookingCombo);
         }
+
+        // Apply user rank discount
+        price = priceAfterDiscount(price, user.getId());
 
         booking.setListCombo(listBookingCombos);
         booking.setTotalPrice(price);
@@ -175,6 +180,16 @@ public class BookingServiceImpl implements BookingService {
                     .status("SUCCESS")
                     .transactionId(request.getParameter("vnp_TransactionNo"))
                     .build();
+
+            // Update user rank after successful payment
+            try {
+                userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+                log.info("User rank updated successfully for userId: {}", booking.getUser().getId());
+            } catch (Exception e) {
+                log.error("Failed to update user rank for userId: {}", booking.getUser().getId(), e);
+                // Don't throw exception to avoid payment confirmation failure
+            }
+
             paymentRepository.save(payment);
             return bookingId;
         }
@@ -309,5 +324,10 @@ public class BookingServiceImpl implements BookingService {
             bookingRepository.save(booking);
 //            seatSocketBroadcaster.unlockSeatAndBroadcast(booking);
         }
+    }
+
+    private Long priceAfterDiscount(Long totalPrice , UUID userID){
+        Double discount = userRankService.getUserDiscountPercentage(userID);
+        return totalPrice - Math.round(totalPrice * (discount / 100));
     }
 }

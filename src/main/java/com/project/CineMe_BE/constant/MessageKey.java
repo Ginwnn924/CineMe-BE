@@ -147,4 +147,12 @@ public class MessageKey {
 
     // Employee
     public static final String EMPLOYEE_NOT_FOUND = "employee.not_found";
+
+    // Rank
+    public static final String RANK_NOT_FOUND = "rank.not_found";
+    public static final String RANK_CREATE_SUCCESS = "rank.create_success";
+    public static final String RANK_UPDATE_SUCCESS = "rank.update_success";
+    public static final String RANK_DELETE_SUCCESS = "rank.delete_success";
+    public static final String RANK_GET_DETAILS = "rank.get_details";
+    public static final String RANK_GET_ALL_SUCCESS = "rank.get_all_success";
 }
