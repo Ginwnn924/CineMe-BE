@@ -17,4 +17,6 @@ public interface UserService {
     UserResponse getUserInfo(UUID id);
 
     void changePassword(UserEntity user, ChangePasswordRequest changePasswordRequest);
+
+    void updateUserLockStatus(UUID id, boolean isLocked);
 }

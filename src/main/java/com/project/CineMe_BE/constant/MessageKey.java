@@ -92,7 +92,9 @@ public class MessageKey {
     public static final String USER_GET_ALL_SUCCESS = "user.get_all_success";
     public static final String USER_INCORRECT_PASSWORD = "user.incorrect_password";
     public static final String USER_CHANGE_PASSWORD_SUCCESS = "user.change_password_success";
-
+    public static final String USER_UPDATE_SUCCESS = "user.update_success";
+    public static final String USER_LOCK_SUCCESS = "user.lock_success";
+    public static final String USER_UNLOCK_SUCCESS = "user.unlock_success";
     // Payment
     public static final String PAYMENT_CREATE_URL_SUCCESS = "payment.create_url_success";
     public static final String PAYMENT_CREATE_URL_FAILED = "payment.create_url_failed";

@@ -8,5 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface RoomResponseMapper extends BaseResponseMapper<RoomResponse, RoomsEntity> {
-
+    @Mapping(source = "theater.id", target = "theaterId")
+    @Mapping(source = "theater.nameVn", target = "theaterName")
+    RoomResponse toDto(RoomsEntity entity);
 }

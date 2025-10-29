@@ -37,6 +37,8 @@ public class UserEntity implements UserDetails {
     @Column(name = "provider")
     private String provider;
 
+    @Column(name = "is_locked")
+    private Boolean isLocked;
 
 //    @ManyToOne
 //    @JoinColumn(name = "role_id")

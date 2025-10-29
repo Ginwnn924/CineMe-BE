@@ -76,6 +76,10 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(LoginRequest loginRequest) {
         UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
+        //Kiểm tra user có bị locked khum
+        if (user.getIsLocked() != null && user.getIsLocked()) {
+            throw new BadCredentialsException("Tài khoản đã bị khóa");
+        }
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         }

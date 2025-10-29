@@ -19,7 +19,7 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     public List<RoomResponse> getAll() {
-        List<RoomsEntity> rooms = Repository.findAll();
+        List<RoomsEntity> rooms = Repository.findAllWithTheater();
         return responseMapper.toListDto(rooms);
     }
 }
