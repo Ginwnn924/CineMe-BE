@@ -116,8 +116,8 @@ public class SeatServiceImpl implements SeatService{
 
             resultEntity.add(seatsEntity);
         }
-
-        seatsRepository.saveAll(resultEntity); // saveAll thường là đủ, không cần custom bulkInsert
+        seatsRepository.bulkInsert(resultEntity);
+//        seatsRepository.saveAll(resultEntity); // saveAll thường là đủ, không cần custom bulkInsert
         return true;
     }
 

@@ -66,7 +66,8 @@ public class RoleServiceImpl implements RoleService {
         getRoleEntityRaw(roleId);
 
         // delete existing role_permission rows for this role
-        rolePermissionRepository.deleteAllByRoleId(roleId);
+//        rolePermissionRepository.deleteAllByRoleId(roleId);
+        rolePermissionRepository.bulkDeleteByRoleId(roleId);
 
         List<String> keys = request.getKeys();
         if (keys == null || keys.isEmpty()){
@@ -94,8 +95,8 @@ public class RoleServiceImpl implements RoleService {
                     .build();
             rpList.add(rp);
         }
-        rolePermissionRepository.saveAll(rpList);
-
+//        rolePermissionRepository.saveAll(rpList);
+        rolePermissionRepository.bulkInsert(rpList);
         // re-fetch and return role (JPA will join using role_permissions table)
         RoleEntity role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role not found with id: " + roleId));
