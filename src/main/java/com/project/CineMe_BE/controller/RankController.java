@@ -28,7 +28,7 @@ public class RankController {
     private final LocalizationUtils localizationUtils;
     private final RoomService roomService;
 
-    @PreAuthorize("#id == authentication.principal.id")
+    @PreAuthorize("#userId == authentication.principal.id")
     @GetMapping("/{userId}")
     public ResponseEntity<APIResponse> getUserRankByUserId(@PathVariable("userId") UUID userId) {
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
