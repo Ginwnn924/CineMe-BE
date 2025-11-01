@@ -14,5 +14,7 @@ public interface RankRepository extends JpaRepository<RankEntity, UUID> {
     List<RankEntity> findEligibleRanks(Long totalSpent);
 
     Optional<RankEntity> findTopByOrderByMinAmountAsc();
+
+    Optional<RankEntity> findFirstByMinAmountGreaterThanOrderByMinAmountAsc(Long currentMinAmount);
 }
 
