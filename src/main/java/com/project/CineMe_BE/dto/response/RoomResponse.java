@@ -11,4 +11,6 @@ public class RoomResponse {
     private UUID id;
     private String name;
     private String type;
+    private UUID theaterId;
+    private String theaterName;
 }

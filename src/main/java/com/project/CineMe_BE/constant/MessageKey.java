@@ -51,6 +51,14 @@ public class MessageKey {
     public static final String SEAT_GET_DETAILS = "seat.get_details";
     public static final String SEAT_GET_LIST = "seat.get_all";
 
+    // SeatType
+    public static final String SEAT_TYPE_CREATE_SUCCESS = "seat_type.create_success";
+    public static final String SEAT_TYPE_UPDATE_SUCCESS = "seat_type.update_success";
+    public static final String SEAT_TYPE_DELETE_SUCCESS = "seat_type.delete_success";
+    public static final String SEAT_TYPE_NOT_FOUND = "seat_type.not_found";
+    public static final String SEAT_TYPE_GET_DETAILS = "seat_type.get_details";
+    public static final String SEAT_TYPE_GET_ALL_SUCCESS = "seat_type.get_all_success";
+
     // Language
     public static final String LANGUAGE_CREATE_SUCCESS = "language.create_success";
     public static final String LANGUAGE_UPDATE_SUCCESS = "language.update_success";
@@ -84,7 +92,9 @@ public class MessageKey {
     public static final String USER_GET_ALL_SUCCESS = "user.get_all_success";
     public static final String USER_INCORRECT_PASSWORD = "user.incorrect_password";
     public static final String USER_CHANGE_PASSWORD_SUCCESS = "user.change_password_success";
-
+    public static final String USER_UPDATE_SUCCESS = "user.update_success";
+    public static final String USER_LOCK_SUCCESS = "user.lock_success";
+    public static final String USER_UNLOCK_SUCCESS = "user.unlock_success";
     // Payment
     public static final String PAYMENT_CREATE_URL_SUCCESS = "payment.create_url_success";
     public static final String PAYMENT_CREATE_URL_FAILED = "payment.create_url_failed";
@@ -139,4 +149,12 @@ public class MessageKey {
 
     // Employee
     public static final String EMPLOYEE_NOT_FOUND = "employee.not_found";
+
+    // Rank
+    public static final String RANK_NOT_FOUND = "rank.not_found";
+    public static final String RANK_CREATE_SUCCESS = "rank.create_success";
+    public static final String RANK_UPDATE_SUCCESS = "rank.update_success";
+    public static final String RANK_DELETE_SUCCESS = "rank.delete_success";
+    public static final String RANK_GET_DETAILS = "rank.get_details";
+    public static final String RANK_GET_ALL_SUCCESS = "rank.get_all_success";
 }

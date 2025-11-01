@@ -9,12 +9,11 @@ import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import com.project.CineMe_BE.utils.SeatGeneratorUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import com.project.CineMe_BE.dto.request.SeatRequest;
 import com.project.CineMe_BE.dto.response.SeatResponse;
@@ -42,95 +41,21 @@ public class SeatServiceImpl implements SeatService{
     private final SeatTypeRepository seatTypeRepository;
 
     private UUID defaultSeatTypeId;
-    private UUID coupleSeatTypeId;
 
     @PostConstruct
     public void init() {
         this.defaultSeatTypeId = seatTypeRepository.findByName("Standard")
                 .orElseThrow(() -> new RuntimeException("Default seat type STANDARD not found in DB"))
                 .getId();
-        this.coupleSeatTypeId = seatTypeRepository.findByName("Couple")
-                .orElseThrow(() -> new RuntimeException("Default seat type COUPLE not found in DB"))
-                .getId();
+//        this.coupleSeatTypeId = seatTypeRepository.findByName("Couple")
+//                .orElseThrow(() -> new RuntimeException("Default seat type COUPLE not found in DB"))
+//                .getId();
     }
 
     private UUID getDefaultSeatTypeId() {
         return defaultSeatTypeId;
     }
 
-    private UUID getCoupleSeatTypeId() {
-        return coupleSeatTypeId;
-    }
-
-    private Map<Character, UUID> rowToType(HashMap<UUID, String> specialSeats) {
-        Map<Character, UUID> result = new HashMap<>();
-
-        for (Map.Entry<UUID, String> entry : specialSeats.entrySet()) {
-            UUID seatTypeId = entry.getKey();
-            String range = entry.getValue();
-
-            if (range.length() == 1) {
-                result.put(range.charAt(0), seatTypeId);
-            } else if (range.length() >= 2) {
-                char startRow = range.charAt(0);
-                char endRow = range.charAt(range.length() - 1);
-
-                for (char row = startRow; row <= endRow; row++) {
-                    result.put(row, seatTypeId);
-                }
-            }
-        }
-        return result;
-    }
-
-
-    private Map<String, UUID> generateAllSeats(
-            int rows,
-            int cols,
-            HashMap<UUID, String> specialSeats,
-            List<SeatRequest.Walkway> walkways,
-            int coupleSeatQuantity
-    ) {
-        Map<Character, UUID> rowTypeMap = rowToType(specialSeats);
-        Map<String, UUID> allSeats = new HashMap<>();
-
-        // Track walkway columns by index
-        Set<Integer> walkwayCols = new HashSet<>();
-        if (walkways != null) {
-            for (SeatRequest.Walkway w : walkways) {
-                walkwayCols.add(w.getColumnIndex() + 1);
-            }
-        }
-
-        //last row :
-        char lastRow = (char) ('A' + (rows - 1));
-
-        for (char row = 'A'; row < lastRow; row++) {
-            for (int col = 1; col <= cols; col++) {
-                String seatKey = row + String.valueOf(col);
-
-                if (walkwayCols.contains(col)) {
-                    // walkway: lưu null hoặc UUID của loại "EMPTY"
-                    allSeats.put("W_"+seatKey, null);
-                } else {
-                    UUID seatTypeId = rowTypeMap.getOrDefault(row, getDefaultSeatTypeId());
-                    allSeats.put(seatKey, seatTypeId);
-                }
-            }
-        }
-
-        //set couple seat for last row
-        if(coupleSeatQuantity > 0 ){
-            for (int i = 1; i <= coupleSeatQuantity * 2; i += 2) {
-                if (i + 1 <= cols) { // tránh tràn số cột
-                    String seatKey = lastRow + String.valueOf(i) + "+" + lastRow + String.valueOf(i + 1);
-                    allSeats.put(seatKey, getCoupleSeatTypeId());
-                }
-            }
-        }
-
-        return allSeats;
-    }
 
     //getRoom Entity by roomId
     private RoomsEntity getRoomById(UUID roomId) {
@@ -141,14 +66,43 @@ public class SeatServiceImpl implements SeatService{
     @Override
     @Transactional
     public boolean create(SeatRequest seatRequest, UUID roomId) {
-        HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
         int row = seatRequest.getRow();
         int col = seatRequest.getCol();
+        HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
         List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
-        int coupleSeatQuantity = seatRequest.getCoupleSeatQuantity();
-        Map<String, UUID> allSeats = generateAllSeats(row, col, specialSeats, walkways, coupleSeatQuantity);
-        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
+        HashMap<UUID, Integer> multipleSeats = seatRequest.getMultipleSeats();
 
+        // ✅ FIX: Giải quyết N+1 Query Problem
+        // Lấy tất cả các UUID của seat type cần dùng từ request
+        Set<UUID> requiredSeatTypeIds = new HashSet<>();
+        if (specialSeats != null) {
+            requiredSeatTypeIds.addAll(specialSeats.keySet());
+        }
+        if (multipleSeats != null) {
+            requiredSeatTypeIds.addAll(multipleSeats.keySet());
+        }
+
+        // Query DB một lần duy nhất để lấy thông tin capacity
+        Map<UUID, SeatTypeEntity> seatTypesMap = new HashMap<>();
+        if (!requiredSeatTypeIds.isEmpty()) {
+            seatTypesMap = seatTypeRepository.findAllById(requiredSeatTypeIds).stream()
+                    .collect(Collectors.toMap(SeatTypeEntity::getId, entity -> entity));
+        }
+
+        // ✅ Gọi util đã được refactor
+        UUID defaultSeatTypeId = getDefaultSeatTypeId();
+        Map<String, UUID> allSeats = SeatGeneratorUtil.generateAllSeats(
+                row,
+                col,
+                defaultSeatTypeId,
+                specialSeats,
+                walkways,
+                multipleSeats,
+                seatTypesMap// Truyền Map vào
+        );
+
+        // ✅ Build entity list để lưu DB (giữ nguyên)
+        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
         for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
             String seatNumber = entry.getKey();
             UUID seatTypeId = entry.getValue();
@@ -156,14 +110,14 @@ public class SeatServiceImpl implements SeatService{
             SeatsEntity seatsEntity = SeatsEntity.builder()
                     .room(getRoomById(roomId))
                     .seatNumber(seatNumber)
-                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))   // bây giờ là entity
+                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))
                     .isActive(true)
                     .build();
 
             resultEntity.add(seatsEntity);
         }
-
         seatsRepository.bulkInsert(resultEntity);
+//        seatsRepository.saveAll(resultEntity); // saveAll thường là đủ, không cần custom bulkInsert
         return true;
     }
 

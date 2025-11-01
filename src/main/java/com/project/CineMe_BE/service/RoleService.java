@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.service;
 
 import com.project.CineMe_BE.dto.request.RoleRequest;
+import com.project.CineMe_BE.dto.request.RolePermissionRequest;
 import com.project.CineMe_BE.dto.response.RoleResponse;
 
 import java.util.List;
@@ -10,5 +11,6 @@ public interface RoleService {
     List<RoleResponse> getAllRoles();
     RoleResponse getRoleById(UUID id);
     RoleResponse createRole(RoleRequest request);
+    RoleResponse updateRolePermission(RolePermissionRequest request);
 
 }

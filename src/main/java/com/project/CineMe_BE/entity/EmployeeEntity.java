@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.UUID;
 
 @Table(name = "employees")
@@ -29,12 +30,11 @@ public class EmployeeEntity {
     private String phone;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Date createdAt;
 
     @ManyToOne
     @JoinColumn(name = "theater_id")
     private TheaterEntity theater;
-
 
     @ManyToOne
     @JoinColumn(name = "role_id")

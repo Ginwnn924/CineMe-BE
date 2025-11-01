@@ -50,4 +50,15 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
         userRepository.save(user);
     }
+
+    //THIS FUNCTION UPDATE USER TO LOCKED OR UNLOCKED
+    @Override
+    public void updateUserLockStatus(UUID id, boolean isLocked) {
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+
+        user.setIsLocked(isLocked);
+        userRepository.save(user);
+
+    }
 }

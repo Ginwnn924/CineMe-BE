@@ -9,12 +9,13 @@ public class CoupleSeatValidator implements ConstraintValidator<ValidCoupleSeat,
 
     @Override
     public boolean isValid(SeatRequest request, ConstraintValidatorContext context) {
-        if (request == null) return true; // để tránh NPE
-
-        int col = request.getCol();
-        int coupleQuantity = request.getCoupleSeatQuantity();
-
-        // logic check
-        return coupleQuantity <= col / 2;
+//        if (request == null) return true; // để tránh NPE
+//
+//        int col = request.getCol();
+//        int coupleQuantity = request.getCoupleSeatQuantity();
+//
+//        // logic check
+//        return coupleQuantity <= col / 2;
+        return true;
     }
 }

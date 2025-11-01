@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.dto.request.RolePermissionRequest;
 import com.project.CineMe_BE.dto.request.RoleRequest;
 import com.project.CineMe_BE.dto.response.RoleResponse;
 import com.project.CineMe_BE.service.RoleService;
@@ -42,6 +43,16 @@ public class RoleController {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message("Create role successfully")
+                .data(response)
+                .build());
+    }
+
+    @PostMapping("/permissions")
+    ResponseEntity<APIResponse> updatePermission(@RequestBody RolePermissionRequest request) {
+        RoleResponse response = roleService.updateRolePermission(request);
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message("Update role permissions successfully")
                 .data(response)
                 .build());
     }

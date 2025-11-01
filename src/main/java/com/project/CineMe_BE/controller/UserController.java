@@ -85,4 +85,17 @@ public class UserController {
         );
     }
 
+    //User update Lock status controller
+    @PutMapping("/{id}/lock")
+    public ResponseEntity<APIResponse> updateUserLockStatus(@PathVariable UUID id, @RequestParam boolean lock) {
+        userService.updateUserLockStatus(id, lock);
+        String messageKey = lock ? MessageKey.USER_LOCK_SUCCESS : MessageKey.USER_UNLOCK_SUCCESS;
+        return ResponseEntity.ok(
+                APIResponse.builder()
+                        .statusCode(200)
+                        .message(localizationUtils.getLocalizedMessage(messageKey))
+                        .build()
+        );
+    }
+
 }

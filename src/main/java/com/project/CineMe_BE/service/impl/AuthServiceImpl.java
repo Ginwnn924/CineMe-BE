@@ -69,6 +69,14 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
+    public AuthResponse login(LoginRequest loginRequest) {
+        UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
+        //Kiểm tra user có bị locked khum
+        if (user.getIsLocked() != null && user.getIsLocked()) {
+            throw new BadCredentialsException("Tài khoản đã bị khóa");
+        }
+
     public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
         if (StringUtils.isEmpty(loginClientRequest.getEmail()) || StringUtils.isEmpty(loginClientRequest.getPassword())) {
             throw new BadCredentialsException("Tài khoản hoặc mật khẩu không được để trống");

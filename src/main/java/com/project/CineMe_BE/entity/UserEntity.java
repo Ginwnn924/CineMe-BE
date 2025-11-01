@@ -36,6 +36,9 @@ public class UserEntity {
     @Column(name = "provider")
     private String provider;
 
+    @Column(name = "is_locked")
+    private Boolean isLocked;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
