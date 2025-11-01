@@ -8,7 +8,7 @@ import java.util.Map;
 
 public interface AuthService {
 
-    AuthResponse loginClient(LoginClientRequest loginClientRequest);
+    AuthResponse loginClient(LoginClientRequest request);
 
     boolean logout(String token, Long ttl);
 

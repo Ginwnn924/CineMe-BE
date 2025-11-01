@@ -3,6 +3,7 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.response.UserRankResponse;
 import com.project.CineMe_BE.entity.UserRankEntity;
+import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.response.RankResponseMapper;
 import com.project.CineMe_BE.repository.UserRankRepository;
 import com.project.CineMe_BE.service.RankService;
@@ -21,7 +22,7 @@ public class RankServiceImpl implements RankService {
     @Override
     public UserRankResponse getUserRankByUserId(UUID userId) {
         UserRankEntity userRankEntity = userRankRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
 
         return UserRankResponse.builder()
                 .totalSpent(userRankEntity.getTotalSpent())

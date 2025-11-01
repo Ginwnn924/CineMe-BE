@@ -68,14 +68,15 @@ public class AuthServiceImpl implements AuthService {
     private final EmailProducer emailProducer;
 
 
-    @Override
-    public AuthResponse login(LoginRequest loginRequest) {
-        UserEntity user = userRepository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginRequest.getEmail()));
-        //Kiểm tra user có bị locked khum
-        if (user.getIsLocked() != null && user.getIsLocked()) {
-            throw new BadCredentialsException("Tài khoản đã bị khóa");
-        }
+//    @Override
+//    public AuthResponse login(LoginAdminRequest loginAdminRequest) {
+//        UserEntity user = userRepository.findByEmail(loginAdminRequest.getEmail())
+//                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginAdminRequest.getEmail()));
+//        //Kiểm tra user có bị locked khum
+//        if (user.getIsLocked() != null && user.getIsLocked()) {
+//            throw new BadCredentialsException("Tài khoản đã bị khóa");
+//        }
+//    }
 
     public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
         if (StringUtils.isEmpty(loginClientRequest.getEmail()) || StringUtils.isEmpty(loginClientRequest.getPassword())) {
@@ -83,6 +84,9 @@ public class AuthServiceImpl implements AuthService {
         }
         UserEntity user = userRepository.findByEmail(loginClientRequest.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginClientRequest.getEmail()));
+        if (user.getIsLocked() != null && user.getIsLocked()) {
+            throw new BadCredentialsException("Tài khoản đã bị khóa");
+        }
         UserDetails userDetails = new CustomUserDetails(user);
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginClientRequest.getEmail(), loginClientRequest.getPassword()));
