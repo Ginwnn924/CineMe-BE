@@ -1,34 +1,29 @@
 package com.project.CineMe_BE.controller;
 
-import com.google.common.net.HttpHeaders;
-import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
-import com.project.CineMe_BE.dto.request.LoginRequest;
+import com.project.CineMe_BE.dto.request.LoginAdminRequest;
+import com.project.CineMe_BE.dto.request.LoginClientRequest;
 import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
-import com.project.CineMe_BE.dto.response.AuthResponse;
-import com.project.CineMe_BE.entity.UserEntity;
-import com.project.CineMe_BE.enums.ProviderEnum;
-import com.project.CineMe_BE.mapper.request.UserRequestMapper;
 import com.project.CineMe_BE.producer.EmailProducer;
-import com.project.CineMe_BE.repository.UserRepository;
+import com.project.CineMe_BE.security.JwtService;
 import com.project.CineMe_BE.service.AuthService;
+import com.project.CineMe_BE.utils.JwtUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,31 +31,59 @@ public class AuthController {
     private final AuthService authService;
     private final LocalizationUtils localizationUtils;
     private final EmailProducer emailProducer;
+    private final JwtService jwtService;
     @Value("${GOOGLE_REDIRECT_FE}")
     private String googleRedirectUrl;
 
     private final RabbitTemplate rabbitTemplate;
 
-    @PostMapping("/api/v1/auth/login")
-    public ResponseEntity<APIResponse> login(@RequestBody LoginRequest request) {
+    @PostMapping("/api/v1/auth/login-client")
+    public ResponseEntity<APIResponse> loginClient(@RequestBody LoginClientRequest request) {
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
-                .data(authService.login(request))
+                .data(authService.loginClient(request))
                 .build();
         return ResponseEntity.ok(response);
     }
 
 
-    @GetMapping("/api/v1/auth/logout")
-    public ResponseEntity<APIResponse> logout(HttpServletRequest request) {
-        authService.logout(request);
+    @GetMapping("/api/v1/auth/logout-client")
+    public ResponseEntity<APIResponse> logoutClient(HttpServletRequest request) {
+        String token = JwtUtil.splitToken(request);
+        Long expireTime = jwtService.getTokenExpire(token);
+        authService.logout(token, expireTime);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_REGISTER_SUCCESS))
+                .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGOUT_SUCCESS))
                 .build();
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/api/v1/auth/login-admin")
+    public ResponseEntity<APIResponse> loginAdmin(@RequestBody LoginAdminRequest request) {
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
+                .data(authService.loginAdmin(request))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/api/v1/auth/logout-admin")
+    public ResponseEntity<APIResponse> logoutAdmin(HttpServletRequest request) {
+        String token = JwtUtil.splitToken(request);
+        Long expireTime = jwtService.getTokenExpire(token);
+        authService.logout(token, expireTime);
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGOUT_SUCCESS))
+                .build();
+        return ResponseEntity.ok(response);
+    }
+
+
 
     @PostMapping("/api/v1/auth/register")
     public ResponseEntity<APIResponse> signUp(@RequestBody SignUpRequest request) {
@@ -73,14 +96,14 @@ public class AuthController {
                 .body(response);
     }
 
-
-    @GetMapping("/oauth2/callback")
-    public void handleGoogleCallback(@RequestParam Map<String, String> request, HttpServletResponse response) throws IOException {
-        String state = authService.oauth2Callback(request);
-        String redirectUrl = googleRedirectUrl
-                + "?state=" + state;
-        response.sendRedirect(redirectUrl);
-    }
+//
+//    @GetMapping("/oauth2/callback")
+//    public void handleGoogleCallback(@RequestParam Map<String, String> request, HttpServletResponse response) throws IOException {
+//        String state = authService.oauth2Callback(request);
+//        String redirectUrl = googleRedirectUrl
+//                + "?state=" + state;
+//        response.sendRedirect(redirectUrl);
+//    }
 
     @GetMapping("/api/v1/auth/extract")
     public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {

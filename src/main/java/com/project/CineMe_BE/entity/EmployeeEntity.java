@@ -39,4 +39,5 @@ public class EmployeeEntity {
     @ManyToOne
     @JoinColumn(name = "role_id")
     private RoleEntity role;
+
 }

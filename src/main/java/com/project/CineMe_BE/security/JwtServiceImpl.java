@@ -1,7 +1,7 @@
-package com.project.CineMe_BE.security.jwt;
+package com.project.CineMe_BE.security;
 
+import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.UserEntity;
-import com.project.CineMe_BE.security.jwt.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,10 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +28,28 @@ public class JwtServiceImpl implements JwtService {
     @Value("${JWT_SECRET_KEY}")
     private String secretKey;
 
+
+    @Override
+    public AuthResponse generateToken(UserDetails user) {
+        String accessToken = generateAccessToken(user);
+        String refreshToken = generateRefreshToken(user);
+        UUID userId = null;
+        String fullName = null;
+        if (user instanceof CustomUserDetails) {
+            userId = ((CustomUserDetails) user).getUserEntity().getId();
+            fullName = ((CustomUserDetails) user).getUserEntity().getFullName();
+        } else if (user instanceof CustomEmployeeDetails) {
+            userId = ((CustomEmployeeDetails) user).getEmployee().getId();
+            fullName = ((CustomEmployeeDetails) user).getEmployee().getFullName();
+        }
+        return AuthResponse.builder()
+                .id(userId)
+                .fullName(fullName)
+                .email(user.getUsername())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
 
     @Override
     public String extractEmail(String token) {
@@ -50,15 +69,20 @@ public class JwtServiceImpl implements JwtService {
 
 
     @Override
-    public String generateToken(UserEntity userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        List<String> permissions = userDetails.getAuthorities()
-                .stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+    public Long getTokenExpire(String token) {
+        return extractClaims(token, Claims::getExpiration).getTime();
+    }
 
-        claims.put("permissions", permissions);
-        claims.put("userId", userDetails.getId());
+    @Override
+    public String generateAccessToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+//        List<String> permissions = userDetails.getAuthorities()
+//                .stream()
+//                .map(GrantedAuthority::getAuthority)
+//                .collect(Collectors.toList());
+//
+//        claims.put("permissions", permissions);
+//        claims.put("userId", userDetails.getId());
         return generateToken(claims, userDetails);
     }
 
@@ -76,7 +100,6 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String generateRefreshToken(UserDetails userDetails) {
-        log.info("Permission: {}", userDetails.getAuthorities());
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))

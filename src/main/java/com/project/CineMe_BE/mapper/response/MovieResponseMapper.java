@@ -6,7 +6,6 @@ import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.entity.MovieEntity;
 import com.project.CineMe_BE.entity.ReviewEntity;
 import com.project.CineMe_BE.mapper.BaseResponseMapper;
-import com.project.CineMe_BE.utils.DomainUtil;
 import com.project.CineMe_BE.utils.StringUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -32,10 +31,10 @@ public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, M
 
     @Named("mapRating")
     default int mapRating(Set<ReviewEntity> listReview) {
-        return (int) listReview.stream()
+        return (int) (listReview.stream()
                 .mapToDouble(rating -> rating.getRating())
                 .average()
-                .orElse(1) / 10 * 100;
+                .orElse(1) / 10 * 100);
     }
 
 

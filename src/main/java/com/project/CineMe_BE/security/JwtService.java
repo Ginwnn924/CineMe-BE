@@ -1,5 +1,6 @@
-package com.project.CineMe_BE.security.jwt;
+package com.project.CineMe_BE.security;
 
+import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.entity.UserEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -7,7 +8,9 @@ import java.util.Date;
 
 public interface JwtService {
 
-    String generateToken(UserEntity user);
+    AuthResponse generateToken(UserDetails user);
+
+    String generateAccessToken(UserDetails userDetails);
 
     String generateRefreshToken(UserDetails userDetails);
 
@@ -17,5 +20,6 @@ public interface JwtService {
 
     Date extractExpiration(String token);
 
+    Long getTokenExpire(String token);
 
 }

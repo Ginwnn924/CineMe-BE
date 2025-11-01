@@ -1,26 +1,25 @@
 package com.project.CineMe_BE.service;
 
-import com.project.CineMe_BE.dto.request.LoginRequest;
-import com.project.CineMe_BE.dto.request.RefreshTokenRequest;
-import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
-import com.project.CineMe_BE.dto.request.SignUpRequest;
+import com.project.CineMe_BE.dto.request.*;
 import com.project.CineMe_BE.dto.response.AuthResponse;
-import com.project.CineMe_BE.entity.UserEntity;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Map;
 
 public interface AuthService {
 
-    AuthResponse login(LoginRequest loginRequest);
+    AuthResponse loginClient(LoginClientRequest loginClientRequest);
+
+    boolean logout(String token, Long ttl);
+
+    AuthResponse loginAdmin(LoginAdminRequest request);
+
 
     AuthResponse refreshToken(RefreshTokenRequest refreshToken);
 
-    String oauth2Callback(Map<String, String> request);
+//    String oauth2Callback(Map<String, String> request);
 
     void register(SignUpRequest request);
-
-    boolean logout(HttpServletRequest request);
 
     Object extractState(String state);
 

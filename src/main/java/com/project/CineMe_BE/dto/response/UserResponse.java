@@ -17,8 +17,6 @@ public class UserResponse {
     private String fullName;
     private String email;
     private String phone;
-//    private UUID roleId;
-//    private String roleName;
     private String provider;
     private String createdAt;
     private String updatedAt;

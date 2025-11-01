@@ -9,6 +9,7 @@ import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class MovieController {
     private final GenreService genreService;
     private final LanguageService languageService;
     private final LocalizationUtils localizationUtils;
+    private final ReviewService reviewService;
 
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -56,6 +58,7 @@ public class MovieController {
                 .build());
     }
 
+
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllMovie() {
         return ResponseEntity.ok(APIResponse.builder()
@@ -65,6 +68,7 @@ public class MovieController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('movie.view')")
     @GetMapping("/available")
     public ResponseEntity<APIResponse> getAvailableMovies() {
         List<MovieResponse> availableMovies = movieService.getAvailableMovies();
@@ -92,6 +96,14 @@ public class MovieController {
                 .statusCode(200)
                 .message("Phim duoc de cu")
                 .data(recommendedMovies)
+                .build());
+    }
+
+    @GetMapping("{id}/reviews")
+    public ResponseEntity<APIResponse> getMovieReviews(@PathVariable UUID id) {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .data(reviewService.getReviewsByMovieId(id))
                 .build());
     }
 }

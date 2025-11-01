@@ -16,9 +16,8 @@ import java.util.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserEntity implements UserDetails {
+public class UserEntity {
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
@@ -40,10 +39,6 @@ public class UserEntity implements UserDetails {
     @Column(name = "is_locked")
     private Boolean isLocked;
 
-//    @ManyToOne
-//    @JoinColumn(name = "role_id")
-//    private RoleEntity role;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -51,37 +46,4 @@ public class UserEntity implements UserDetails {
     private LocalDateTime updatedAt;
 
 
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> listAuthorities = new ArrayList<>();
-//        this.role.getListPermissions().forEach(permission -> {
-//            listAuthorities.add(new SimpleGrantedAuthority(permission.getKey()));
-//        });
-        return listAuthorities;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
-    }
 }

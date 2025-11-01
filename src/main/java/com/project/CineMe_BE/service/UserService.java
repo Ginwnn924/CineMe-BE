@@ -10,7 +10,6 @@ import java.util.UUID;
 
 public interface UserService {
 
-    UserDetailsService userDetailsService();
 
     List<UserResponse> getAll();
 
