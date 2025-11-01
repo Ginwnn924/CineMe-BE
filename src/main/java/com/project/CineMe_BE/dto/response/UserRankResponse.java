@@ -13,4 +13,5 @@ public class UserRankResponse {
     private Long totalSpent;
     private Long totalTransactions;
     private RankResponse rank;
+    private Long nextRankThreshold;
 }

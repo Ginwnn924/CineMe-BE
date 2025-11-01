@@ -24,6 +24,8 @@ public class RankServiceImpl implements RankService {
         UserRankEntity userRankEntity = userRankRepository.findByUserId(userId)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
 
+
+
         return UserRankResponse.builder()
                 .totalSpent(userRankEntity.getTotalSpent())
                 .totalTransactions(userRankEntity.getTotalTransactions())
