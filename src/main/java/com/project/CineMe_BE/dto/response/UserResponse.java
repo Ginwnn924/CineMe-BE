@@ -16,9 +16,7 @@ public class UserResponse {
     private UUID id;
     private String fullName;
     private String email;
-    private String phone;
-    private UUID roleId;
-    private String roleName;
+    private String phone;;
     private String provider;
     private String createdAt;
     private String updatedAt;

@@ -111,20 +111,21 @@ public class BookingServiceImpl implements BookingService {
         long price = listBookingSeats.stream()
                 .mapToLong(BookingSeatEntity::getPrice)
                 .sum();
-
         List<BookingCombo> listBookingCombos = new ArrayList<>();
-        List<ComboEntity> listCombo = comboRepository.findAllById(bookingRequest.getListCombo().keySet());
-        for (ComboEntity combo : listCombo) {
-            int quantity = bookingRequest.getListCombo().getOrDefault(combo.getId(), 0);
-            price +=  quantity * combo.getPrice();
+        if (bookingRequest.getListCombo() != null) {
+            List<ComboEntity> listCombo = comboRepository.findAllById(bookingRequest.getListCombo().keySet());
+            for (ComboEntity combo : listCombo) {
+                int quantity = bookingRequest.getListCombo().getOrDefault(combo.getId(), 0);
+                price +=  quantity * combo.getPrice();
 
-            BookingCombo bookingCombo = BookingCombo.builder()
-                    .booking(booking)
-                    .combo(combo)
-                    .quantity(quantity)
-                    .price(combo.getPrice())
-                    .build();
-            listBookingCombos.add(bookingCombo);
+                BookingCombo bookingCombo = BookingCombo.builder()
+                        .booking(booking)
+                        .combo(combo)
+                        .quantity(quantity)
+                        .price(combo.getPrice())
+                        .build();
+                listBookingCombos.add(bookingCombo);
+            }
         }
 
         booking.setListCombo(listBookingCombos);
@@ -241,8 +242,8 @@ public class BookingServiceImpl implements BookingService {
             MultipartFile file = null;
             try {
                 file = QrCodeUtil.createQR(
-                        privateKey + "_" + booking.getId(),
-                        "booking_" + booking.getId()
+                        booking.getId().toString(),
+                        "TICKET_" + booking.getId()
                 );
             } catch (WriterException e) {
                 throw new RuntimeException(e);
