@@ -48,7 +48,7 @@ public class BookingServiceImpl implements BookingService {
     private final PricingRuleService pricingRuleService;
     private final BookingProducer bookingProducer;
     private final VNPAYConfig vnPayConfig;
-    private final UserRankService userRankService;
+//    private final UserRankService userRankService;
     private final UserService userService;
 
     @Override
