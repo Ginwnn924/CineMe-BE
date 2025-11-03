@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
 
-        user.setIsLocked(isLocked);
+        user.setLocked(isLocked);
         userRepository.save(user);
 
     }
