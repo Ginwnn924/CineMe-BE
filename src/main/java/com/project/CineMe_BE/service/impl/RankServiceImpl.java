@@ -39,7 +39,7 @@ public class RankServiceImpl implements RankService {
 
         return UserRankResponse.builder()
                 .totalSpent(userRankEntity.getTotalSpent())
-                .totalTransactions(userRankEntity.getTotalTransactions())
+//                .totalTransactions(userRankEntity.getTotalTransactions())
                 .rank(rankResponseMapper.toDto(userRankEntity.getRank()))
                 .nextRankThreshold(nextThreshold)
                 .build();

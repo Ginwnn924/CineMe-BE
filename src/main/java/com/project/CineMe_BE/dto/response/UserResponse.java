@@ -20,8 +20,6 @@ public class UserResponse {
     private String provider;
     private String createdAt;
     private String updatedAt;
-
-//    @JsonProperty("isLocked")
     private Boolean locked;
 
 }

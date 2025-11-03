@@ -5,6 +5,7 @@ import com.project.CineMe_BE.config.RabbitConfig;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.ChangePasswordRequest;
 import com.project.CineMe_BE.dto.request.SignUpRequest;
+import com.project.CineMe_BE.dto.response.UserRankResponse;
 import com.project.CineMe_BE.dto.response.UserResponse;
 import com.project.CineMe_BE.entity.UserEntity;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
@@ -96,6 +97,18 @@ public class UserController {
                         .message(localizationUtils.getLocalizedMessage(messageKey))
                         .build()
         );
+    }
+
+    @PreAuthorize("#id == authentication.principal.id")
+    @GetMapping("/{id}/rank")
+    public ResponseEntity<APIResponse> getUserRankByUserId(@PathVariable("id") UUID id) {
+        UserRankResponse result = userService.getUserRankInfo(id);
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.RANK_GET_DETAILS))
+                .data(result)
+                .build();
+        return ResponseEntity.ok(response);
     }
 
 }
