@@ -55,7 +55,8 @@ public class AuthServiceImpl implements AuthService {
     private String googleRedirectUri;
 
     private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
+    private final AuthenticationManager employeeAuthenticationManager;
+    private final AuthenticationManager userAuthenticationManager;
     private final JwtService jwtService;
     private final LocalizationUtils localizationUtils;
     private final RoleRepository roleRepository;
@@ -89,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         }
         UserDetails userDetails = new CustomUserDetails(user);
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginClientRequest.getEmail(), loginClientRequest.getPassword()));
+            userAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginClientRequest.getEmail(), loginClientRequest.getPassword()));
         }
         catch (Exception e) {
             log.error("Error: {}", e.getMessage());
@@ -107,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + request.getEmail()));
         UserDetails userDetails = new CustomEmployeeDetails(employee);
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+            employeeAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         }
         catch (Exception e) {
             log.error("Error: {}", e.getMessage());
