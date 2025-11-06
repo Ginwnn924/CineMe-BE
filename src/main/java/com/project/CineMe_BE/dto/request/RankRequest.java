@@ -1,25 +1,25 @@
 package com.project.CineMe_BE.dto.request;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.*;
-import lombok.*;
-
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class RankRequest {
 
-    @NotBlank(message = "Name is required")
+
     private String name;
 
-    @NotNull(message = "Min amount is required")
-    @Min(value = 0, message = "Min amount must be greater than or equal to 0")
+    @PositiveOrZero(message = "Minimum amount must be positive or zero")
     private Long minAmount;
 
-    @NotNull(message = "Discount percentage is required")
-    @DecimalMin(value = "0.0", message = "Discount percentage must be greater than or equal to 0")
-    @DecimalMax(value = "100.0", message = "Discount percentage must be less than or equal to 100")
+    @PositiveOrZero(message = "Discount percentage must be positive or zero")
     private Double discountPercentage;
 }
+
 
