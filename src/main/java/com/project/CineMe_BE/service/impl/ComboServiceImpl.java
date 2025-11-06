@@ -1,22 +1,26 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.dto.request.ComboRequest;
+import com.project.CineMe_BE.dto.request.ItemComboRequest;
 import com.project.CineMe_BE.dto.response.ComboResponse;
 import com.project.CineMe_BE.entity.ComboEntity;
+import com.project.CineMe_BE.entity.ItemComboEntity;
+import com.project.CineMe_BE.entity.ItemEntity;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.ComboRequestMapper;
 import com.project.CineMe_BE.mapper.response.ComboResponseMapper;
 import com.project.CineMe_BE.repository.ComboRepository;
+import com.project.CineMe_BE.repository.ItemComboRepository;
+import com.project.CineMe_BE.repository.ProductRepository;
 import com.project.CineMe_BE.service.ComboService;
 import com.project.CineMe_BE.service.MinioService;
 import com.project.CineMe_BE.utils.StringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +30,8 @@ public class ComboServiceImpl implements ComboService {
     private final MinioService minioService;
     private final ComboRequestMapper comboRequestMapper;
     private final ComboResponseMapper comboResponseMapper;
+    private final ItemComboRepository itemComboRepository;
+    private final ProductRepository productRepository;
 
 
 
@@ -66,6 +72,61 @@ public class ComboServiceImpl implements ComboService {
                 .orElseThrow(() -> new DataNotFoundException("Combo not found"));
         comboRepository.deleteById(id);
         return true;
+    }
+
+    private ComboEntity getComboEntityRaw(UUID id){
+        return comboRepository.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("Combo not found"));
+    }
+
+    @Override
+    @Transactional
+    public ComboResponse updateComboItems(UUID comboId, List<ItemComboRequest> itemComboRequests) {
+        ComboEntity combo = getComboEntityRaw(comboId);
+        itemComboRepository.deleteByComboId(comboId);
+
+
+        if (itemComboRequests != null && !itemComboRequests.isEmpty()) {
+            List<ItemComboEntity> newItemCombos = createItemComboEntities(combo, itemComboRequests);
+            itemComboRepository.saveAll(newItemCombos);
+        }
+
+        // 4. Refresh combo to get the updated state
+        // Since we manually deleted items using a repository query (which bypasses
+        // the persistence context's cache), re-fetching is the safest way
+        // to ensure the returned response reflects the new state.
+        return getComboById(comboId);
+    }
+
+    /**
+     * Helper method to convert DTOs to Entities and fix the N+1 query problem.
+     */
+    private List<ItemComboEntity> createItemComboEntities(ComboEntity combo, List<ItemComboRequest> requests) {
+
+        // 1. Collect all unique item IDs from the request
+        Set<UUID> itemIds = requests.stream()
+                .map(ItemComboRequest::getItemId)
+                .collect(Collectors.toSet());
+
+        // 2. Fetch all required ItemEntity objects in a *single* database query
+        Map<UUID, ItemEntity> itemMap = productRepository.findAllById(itemIds).stream()
+                .collect(Collectors.toMap(ItemEntity::getId, Function.identity()));
+
+        // 3. Stream the requests and build the ItemComboEntity list
+        return requests.stream()
+                .map(request -> {
+                    // 4. Find the item from the pre-fetched map
+                    ItemEntity item = Optional.ofNullable(itemMap.get(request.getItemId()))
+                            .orElseThrow(() -> new DataNotFoundException("Item not found with id: " + request.getItemId()));
+
+                    // 5. Create the new entity
+                    return ItemComboEntity.builder()
+                            .combo(combo)
+                            .item(item)
+                            .quantity(request.getQuantity())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 }
 

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ComboRequest {
@@ -12,6 +14,7 @@ public class ComboRequest {
     private Long price;
     @ValidImage(message = "Invalid image file. Allowed types: jpeg, png, jpg. Max size: 10MB")
     private MultipartFile img;
+    private List<ItemComboRequest> listItems;
 
 }
 
