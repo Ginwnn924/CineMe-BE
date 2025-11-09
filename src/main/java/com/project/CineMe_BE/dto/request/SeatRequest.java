@@ -1,29 +1,54 @@
 package com.project.CineMe_BE.dto.request;
-import com.project.CineMe_BE.validator.anotation.ValidCoupleSeat;
 import lombok.*;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-//@ValidCoupleSeat(message = "Couple seat quantity exceeds half of total columns")
 public class SeatRequest {
-//    private UUID roomId;
-    private int col; // 1, 2, 3, ..., 18
-    private int row;// A, B, C, D, E, F, G, H
-    private HashMap< UUID ,String> specialSeats;
-    //UUID : SeatTypeId , String : "A", "BC"
+
+    // Total number of columns (e.g., 18)
+    private int col;
+
+    // Total number of rows (e.g., 8 for A-H)
+    private int row;
+
+    // A list of specific coordinates that are walkways (no seat)
     private List<Walkway> walkways;
 
-    private HashMap<UUID,Integer> MultipleSeats;
+    // UNIFIED LIST: This replaces both specialSeats and MultipleSeats
+    // This list defines all the seat blocks in the room.
+    private List<SeatTypePlacement> seatPlacements;
 
+    /**
+     * Defines a specific (row, col) coordinate for a walkway.
+     */
     @Data
-    public static class Walkway{
-        private int columnIndex;
-        private int rowIndex;
+    public static class Walkway {
+        private int columnIndex; // 1-based index
+        private int rowIndex;    // 0-based index (0=A, 1=B, etc.)
+    }
+
+    /**
+     * Defines a horizontal block of seats of a specific type.
+     * Your backend logic will read this and create the individual seats.
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SeatTypePlacement {
+
+        // The ID of the SeatType (e.g., VIP, Standard, Couple)
+        private UUID seatTypeId;
+
+        // The column where this block STARTS (1-based)
+        private String startRow;
+
+        // The column where this block ENDS (1-based)
+        private String endRow;
     }
 }

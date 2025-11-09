@@ -9,6 +9,7 @@ import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import com.project.CineMe_BE.utils.SeatGenerator;
 import com.project.CineMe_BE.utils.SeatGeneratorUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import lombok.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +41,7 @@ public class SeatServiceImpl implements SeatService{
     private final PricingRuleService pricingRuleService;
     private final LocalizationUtils localizationUtils;
     private final SeatTypeRepository seatTypeRepository;
-
+    private final SeatGenerator seatGenerator;
     private UUID defaultSeatTypeId;
 
     @PostConstruct
@@ -63,61 +65,27 @@ public class SeatServiceImpl implements SeatService{
                 .orElseThrow(() -> new IllegalArgumentException("Room not found with id: " + roomId));
     }
 
-    @Override
     @Transactional
     public boolean create(SeatRequest seatRequest, UUID roomId) {
-        int row = seatRequest.getRow();
-        int col = seatRequest.getCol();
-        HashMap<UUID, String> specialSeats = seatRequest.getSpecialSeats();
-        List<SeatRequest.Walkway> walkways = seatRequest.getWalkways();
-        HashMap<UUID, Integer> multipleSeats = seatRequest.getMultipleSeats();
 
-        // ✅ FIX: Giải quyết N+1 Query Problem
-        // Lấy tất cả các UUID của seat type cần dùng từ request
-        Set<UUID> requiredSeatTypeIds = new HashSet<>();
-        if (specialSeats != null) {
-            requiredSeatTypeIds.addAll(specialSeats.keySet());
-        }
-        if (multipleSeats != null) {
-            requiredSeatTypeIds.addAll(multipleSeats.keySet());
+        RoomsEntity room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new DataNotFoundException("Room not found with id: " + roomId));
+
+        Set<UUID> seatTypeIds = seatRequest.getSeatPlacements().stream()
+                .map(SeatRequest.SeatTypePlacement::getSeatTypeId)
+                .collect(Collectors.toSet());
+
+        List<SeatTypeEntity> seatTypes = seatTypeRepository.findAllById(seatTypeIds);
+
+        if (seatTypes.size() != seatTypeIds.size()) {
+            throw new DataNotFoundException("One or more requested SeatTypes were not found.");
         }
 
-        // Query DB một lần duy nhất để lấy thông tin capacity
-        Map<UUID, SeatTypeEntity> seatTypesMap = new HashMap<>();
-        if (!requiredSeatTypeIds.isEmpty()) {
-            seatTypesMap = seatTypeRepository.findAllById(requiredSeatTypeIds).stream()
-                    .collect(Collectors.toMap(SeatTypeEntity::getId, entity -> entity));
-        }
+        Map<UUID, SeatTypeEntity> seatTypeMap = seatTypes.stream()
+                .collect(Collectors.toMap(SeatTypeEntity::getId, Function.identity()));
 
-        // ✅ Gọi util đã được refactor
-        UUID defaultSeatTypeId = getDefaultSeatTypeId();
-        Map<String, UUID> allSeats = SeatGeneratorUtil.generateAllSeats(
-                row,
-                col,
-                defaultSeatTypeId,
-                specialSeats,
-                walkways,
-                multipleSeats,
-                seatTypesMap// Truyền Map vào
-        );
-
-        // ✅ Build entity list để lưu DB (giữ nguyên)
-        List<SeatsEntity> resultEntity = new ArrayList<>(allSeats.size());
-        for (Map.Entry<String, UUID> entry : allSeats.entrySet()) {
-            String seatNumber = entry.getKey();
-            UUID seatTypeId = entry.getValue();
-
-            SeatsEntity seatsEntity = SeatsEntity.builder()
-                    .room(getRoomById(roomId))
-                    .seatNumber(seatNumber)
-                    .seatType(seatTypeId == null ? null : seatTypeRepository.getReferenceById(seatTypeId))
-                    .isActive(true)
-                    .build();
-
-            resultEntity.add(seatsEntity);
-        }
-        seatsRepository.bulkInsert(resultEntity);
-//        seatsRepository.saveAll(resultEntity); // saveAll thường là đủ, không cần custom bulkInsert
+        List<SeatsEntity> seatsToCreate = seatGenerator.generateSeats(seatRequest, room, seatTypeMap);
+        seatsRepository.bulkInsert(seatsToCreate);
         return true;
     }
 
