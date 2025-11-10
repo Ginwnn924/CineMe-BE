@@ -6,6 +6,7 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -14,7 +15,7 @@ public class ComboRequest {
     private Long price;
     @ValidImage(message = "Invalid image file. Allowed types: jpeg, png, jpg. Max size: 10MB")
     private MultipartFile img;
-    private List<ItemComboRequest> listItems;
-
+//    private List<ItemComboRequest> listItemIds;
+    private String listItems;//JSON
 }
 

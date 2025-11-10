@@ -1,5 +1,8 @@
 package com.project.CineMe_BE.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.CineMe_BE.dto.request.ComboRequest;
 import com.project.CineMe_BE.dto.request.ItemComboRequest;
 import com.project.CineMe_BE.dto.response.ComboResponse;
@@ -8,6 +11,7 @@ import com.project.CineMe_BE.entity.ItemComboEntity;
 import com.project.CineMe_BE.entity.ItemEntity;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.ComboRequestMapper;
+import com.project.CineMe_BE.mapper.request.ItemComboRequestMapper;
 import com.project.CineMe_BE.mapper.response.ComboResponseMapper;
 import com.project.CineMe_BE.repository.ComboRepository;
 import com.project.CineMe_BE.repository.ItemComboRepository;
@@ -15,6 +19,9 @@ import com.project.CineMe_BE.repository.ProductRepository;
 import com.project.CineMe_BE.service.ComboService;
 import com.project.CineMe_BE.service.MinioService;
 import com.project.CineMe_BE.utils.StringUtil;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +39,10 @@ public class ComboServiceImpl implements ComboService {
     private final ComboResponseMapper comboResponseMapper;
     private final ItemComboRepository itemComboRepository;
     private final ProductRepository productRepository;
-
-
+    private final ItemComboRepository comboItemRepository;
+    private final ItemComboRequestMapper itemComboRequestMapper;
+    private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     @Override
     public List<ComboResponse> getAllCombos() {
@@ -49,13 +58,30 @@ public class ComboServiceImpl implements ComboService {
     }
 
     @Override
+    @Transactional
     public ComboResponse createCombo(ComboRequest request) {
+        // Map request to entity
         ComboEntity combo = comboRequestMapper.toEntity(request);
-        if (request.getImg() != null) {
+
+        // Upload image if present
+        if (request.getImg() != null && !request.getImg().isEmpty()) {
             String imgUrl = minioService.upload(request.getImg());
             combo.setImg(StringUtil.splitUrlResource(imgUrl));
         }
-        return comboResponseMapper.toDto(comboRepository.save(combo));
+
+        // Save combo first to obtain id and allow FK relationship
+        ComboEntity savedCombo = comboRepository.save(combo);
+
+        // Parse listItems JSON and validate
+        List<ItemComboRequest> itemRequests = parseItemComboRequestsFromJson(request.getListItems());
+
+        if (itemRequests != null && !itemRequests.isEmpty()) {
+            List<ItemComboEntity> itemComboEntities = createItemComboEntities(savedCombo, itemRequests);
+            itemComboRepository.saveAll(itemComboEntities);
+            savedCombo.setListItems(itemComboEntities);
+        }
+
+        return comboResponseMapper.toDto(getComboEntityRaw(savedCombo.getId()));
     }
 
     @Override
@@ -91,11 +117,7 @@ public class ComboServiceImpl implements ComboService {
             itemComboRepository.saveAll(newItemCombos);
         }
 
-        // 4. Refresh combo to get the updated state
-        // Since we manually deleted items using a repository query (which bypasses
-        // the persistence context's cache), re-fetching is the safest way
-        // to ensure the returned response reflects the new state.
-        return getComboById(comboId);
+        return comboResponseMapper.toDto(getComboEntityRaw(comboId));
     }
 
     /**
@@ -128,5 +150,38 @@ public class ComboServiceImpl implements ComboService {
                 })
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Parse JSON string from ComboRequest.listItems into a List<ItemComboRequest>
+     * and validate each ItemComboRequest using the injected Validator.
+     * Returns empty list when input is null/blank.
+     * Throws IllegalArgumentException for invalid JSON and ConstraintViolationException for validation errors.
+     */
+    private List<ItemComboRequest> parseItemComboRequestsFromJson(String json) {
+        if (json == null || json.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        List<ItemComboRequest> requests;
+        try {
+            requests = objectMapper.readValue(json, new TypeReference<List<ItemComboRequest>>() {});
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid listItems JSON format: " + e.getMessage(), e);
+        }
+
+        // Validate each request using Jakarta Bean Validation
+        Set<ConstraintViolation<ItemComboRequest>> allViolations = new HashSet<>();
+        for (ItemComboRequest req : requests) {
+            Set<ConstraintViolation<ItemComboRequest>> violations = validator.validate(req);
+            allViolations.addAll(violations);
+        }
+
+        if (!allViolations.isEmpty()) {
+            throw new ConstraintViolationException(allViolations);
+        }
+
+        return requests;
+    }
+
 }
 
