@@ -12,8 +12,6 @@ public interface MovieRequestMapper extends BaseRequestMapper<MovieRequest, Movi
     @Mapping(target = "trailer", ignore = true)
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "country", source = "countryId")
-//    @Mapping(target = "format", source = "formatId")
-//    @Mapping(target = "language", source = "languageId")
     @Mapping(target = "limitage", source = "limitageId")
     MovieEntity toEntity(MovieRequest dto);
 
@@ -21,8 +19,6 @@ public interface MovieRequestMapper extends BaseRequestMapper<MovieRequest, Movi
     @Mapping(target = "trailer", ignore = true)
     @Mapping(target = "image", ignore = true)
     @Mapping(target = "country", source = "countryId")
-//    @Mapping(target = "format", source = "formatId")
-//    @Mapping(target = "language", source = "languageId")
     @Mapping(target = "limitage", source = "limitageId")
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 

@@ -35,8 +35,6 @@ public class MovieResponse implements Serializable {
     private Long time;
     private String limitageNameVn;
     private String limitageNameEn;
-//    private String languageNameVn;
-//    private String languageNameEn;
     private Long sortorder;
     private List<ActorResponse> listActor;
 
