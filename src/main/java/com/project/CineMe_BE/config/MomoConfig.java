@@ -52,7 +52,7 @@ public class MomoConfig {
             return createPaymentCreationRequest(booking.getId(),
                                                 requestId,
                                                 booking.getTotalPrice(),
-                                                booking.getId(),
+                                                "Thanh toan ve xem phim",
                                                 "",
                                                 "captureWallet",
                                                 true);
@@ -66,7 +66,7 @@ public class MomoConfig {
      * Create payment request and send to MoMo
      */
     public PaymentResponse createPaymentCreationRequest(UUID orderId, String requestId, Long amount,
-                                                        UUID orderInfo, String extraData,
+                                                        String orderInfo, String extraData,
                                                         String type, Boolean autoCapture) {
         try {
             // Build raw data for signature
