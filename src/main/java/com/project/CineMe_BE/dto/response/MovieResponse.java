@@ -37,5 +37,5 @@ public class MovieResponse implements Serializable {
     private String limitageNameEn;
     private Long sortorder;
     private List<ActorResponse> listActor;
-
+    private List<GenreResponse> listGenre;
 }

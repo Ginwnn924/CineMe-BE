@@ -91,14 +91,26 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponse updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
-        Set<ActorEntity> listActor = request.getListActorId().stream()
-                .map(actorId -> {
-                    ActorEntity actor = actorRepository.findById(actorId)
-                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
-                    return actor;
+        if (request.getListGenreId() != null) {
+            Set<GenreEntity> listGenre = request.getListGenreId().stream()
+                    .map(genreId -> {
+                        GenreEntity genre = genreRepository.findById(genreId)
+                                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND)));;
+                        return genre;
                     })
-                .collect(Collectors.toSet());
-        movie.setListActor(listActor);
+                    .collect(Collectors.toSet());
+            movie.setListGenre(listGenre);
+        }
+        if (request.getListActorId() != null) {
+            Set<ActorEntity> listActor = request.getListActorId().stream()
+                    .map(actorId -> {
+                        ActorEntity actor = actorRepository.findById(actorId)
+                                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
+                        return actor;
+                        })
+                    .collect(Collectors.toSet());
+            movie.setListActor(listActor);
+        }
         movieRequestMapper.update(movie, request);
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());

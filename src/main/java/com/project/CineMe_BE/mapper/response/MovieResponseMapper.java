@@ -1,8 +1,10 @@
 package com.project.CineMe_BE.mapper.response;
 
 import com.project.CineMe_BE.dto.response.ActorResponse;
+import com.project.CineMe_BE.dto.response.GenreResponse;
 import com.project.CineMe_BE.dto.response.MovieResponse;
 import com.project.CineMe_BE.entity.ActorEntity;
+import com.project.CineMe_BE.entity.GenreEntity;
 import com.project.CineMe_BE.entity.MovieEntity;
 import com.project.CineMe_BE.entity.ReviewEntity;
 import com.project.CineMe_BE.mapper.BaseResponseMapper;
@@ -14,7 +16,7 @@ import org.mapstruct.Named;
 import java.util.List;
 import java.util.Set;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {GenreResponseMapper.class})
 public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, MovieEntity> {
 
     @Mapping(target = "limitageNameVn", source = "limitage.nameVn")
@@ -25,6 +27,7 @@ public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, M
     @Mapping(target = "image", source = "image", qualifiedByName = "mapImage")
     @Mapping(target = "listActor", source = "listActor", qualifiedByName = "mapActor")
     @Mapping(target = "ratings", source = "listReview", qualifiedByName = "mapRating")
+    @Mapping(target = "listGenre", source = "listGenre")
     MovieResponse toDto(MovieEntity entity);
 
 
