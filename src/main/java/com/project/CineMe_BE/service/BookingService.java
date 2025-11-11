@@ -3,6 +3,7 @@ package com.project.CineMe_BE.service;
 import com.project.CineMe_BE.dto.request.BookingRequest;
 import com.project.CineMe_BE.dto.response.BookingResponse;
 import com.project.CineMe_BE.dto.response.PaymentResponse;
+import com.project.CineMe_BE.enums.PaymentMethod;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.UUID;
 
 public interface BookingService {
 
-    String createBooking(BookingRequest bookingRequest, HttpServletRequest request);
+    String createBooking(BookingRequest bookingRequest, PaymentMethod method, HttpServletRequest request);
 
     UUID confirmBooking(HttpServletRequest request);
 

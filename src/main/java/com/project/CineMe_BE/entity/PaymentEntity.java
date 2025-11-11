@@ -25,9 +25,6 @@ public class PaymentEntity {
     @Column(name = "method")
     private String method;
 
-    @Column(name = "status")
-    private String status;
-
     @Column(name = "transaction_id")
     private String transactionId;
 
