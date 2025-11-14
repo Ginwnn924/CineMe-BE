@@ -3,6 +3,8 @@ package com.project.CineMe_BE.service.impl;
 import com.google.zxing.WriterException;
 import com.project.CineMe_BE.config.VNPAYConfig;
 import com.project.CineMe_BE.dto.response.BookingResponse;
+import com.project.CineMe_BE.enums.PaymentMethod;
+import com.project.CineMe_BE.exception.PaymentFailedException;
 import com.project.CineMe_BE.producer.BookingProducer;
 import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.repository.projection.BookingProjection;
@@ -52,7 +54,9 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
-    public String createBooking(BookingRequest bookingRequest, HttpServletRequest request) {
+    public String createBooking(BookingRequest bookingRequest,
+                                PaymentMethod method,
+                                HttpServletRequest request) {
         EmployeeEntity employee = null;
         if (bookingRequest.getEmployeeId() != null) {
             employee = employeeRepository.findById(bookingRequest.getEmployeeId())
@@ -131,7 +135,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Apply user rank discount
-        price = priceAfterDiscount(price, user.getId());
+//        price = priceAfterDiscount(price, user.getId());
 
         booking.setListCombo(listBookingCombos);
         booking.setTotalPrice(price);
@@ -140,18 +144,62 @@ public class BookingServiceImpl implements BookingService {
 
         bookingProducer.sendBookingDelay(booking.getId());
 
-
-        // url redirect to VnPay
-        return isLocked ? paymentService.createPayment(booking, request) : null;
+        if (isLocked) {
+           if (PaymentMethod.CASH.equals(method)) {
+               // change status to CONFIRMED
+               // create payment record
+           }
+           else if (PaymentMethod.VNPAY.equals(method)) {
+               return paymentService.createPaymentVnpay(booking, request);
+           }
+           // Momo
+           else {
+               return paymentService.createPaymentMomo(booking);
+           }
+        }
+        return null;
     }
 
+    @Override
+    public UUID verifyPaymentMomo(HttpServletRequest request) {
+        String status = request.getParameter("resultCode");
+        if ("0".equals(status)) {
+            UUID bookingId = UUID.fromString(request.getParameter("orderId"));
+            BookingEntity booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+            if (BookingStatusEnum.PENDING.name().equals(booking.getStatus())) {
+                booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+                booking.setUpdatedAt(new Date());
+                String qrCode = generateQRCode(booking);
+                booking.setQrcode(qrCode);
+                bookingRepository.save(booking);
+            }
+            else {
+                log.error("Booking {} is not in PENDING status", bookingId);
+                throw new PaymentFailedException("Booking is not in PENDING status");
+            }
+            // insert payment
+            PaymentEntity payment = PaymentEntity.builder()
+                    .booking(booking)
+                    .amount(Long.parseLong(request.getParameter("amount")))
+                    .createdAt(new Date())
+                    .method(PaymentMethod.MOMO)
+                    .transactionId(request.getParameter("transId"))
+                    .build();
+//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+
+            paymentRepository.save(payment);
+            return bookingId;
+        }
+        return null;
+    }
 
     @Transactional
     @Override
-    public UUID confirmBooking(HttpServletRequest request) {
+    public UUID verifyPaymentVNPay(HttpServletRequest request) {
         if(!isValidParams(request)) {
             log.error("Invalid parameters in VnPay callback");
-            return null;
+            throw new PaymentFailedException("Invalid parameters in VnPay callback");
         }
 
         // Check response code
@@ -170,34 +218,22 @@ public class BookingServiceImpl implements BookingService {
             }
             else {
                 log.error("Booking {} is not in PENDING status", bookingId);
-                return null;
+                throw new PaymentFailedException("Booking is not in PENDING status");
             }
             // insert payment
             PaymentEntity payment = PaymentEntity.builder()
                     .booking(booking)
                     .amount(Long.parseLong(request.getParameter("vnp_Amount")) / 100)
                     .createdAt(new Date())
-                    .method("VNPAY")
-                    .status("SUCCESS")
+                    .method(PaymentMethod.VNPAY)
                     .transactionId(request.getParameter("vnp_TransactionNo"))
                     .build();
-
-            // Update user rank after successful payment
-            try {
-                userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
-                log.info("User rank updated successfully for userId: {}", booking.getUser().getId());
-            } catch (Exception e) {
-                log.error("Failed to update user rank for userId: {}", booking.getUser().getId(), e);
-                // Don't throw exception to avoid payment confirmation failure
-            }
+//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
 
             paymentRepository.save(payment);
             return bookingId;
         }
-        return null;
-
-
-
+        throw new PaymentFailedException("Payment failed");
 
     }
 

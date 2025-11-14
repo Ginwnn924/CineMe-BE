@@ -55,4 +55,12 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<APIResponse> handlePaymentFailedException(PaymentFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(APIResponse.builder()
+                        .statusCode(400)
+                        .message(ex.getMessage())
+                        .build());
+    }
 }

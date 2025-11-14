@@ -1,5 +1,6 @@
 package com.project.CineMe_BE.service.impl;
 
+import com.project.CineMe_BE.config.MomoConfig;
 import com.project.CineMe_BE.config.VNPAYConfig;
 import com.project.CineMe_BE.dto.request.BookingRequest;
 import com.project.CineMe_BE.entity.BookingEntity;
@@ -15,8 +16,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
     private final VNPAYConfig vnPayConfig;
+    private final MomoConfig momoConfig;
+
     @Override
-    public String createPayment(BookingEntity booking, HttpServletRequest request) {
+    public String createPaymentVnpay(BookingEntity booking, HttpServletRequest request) {
         long amount = (booking.getTotalPrice()) * 100;
 
         String vnpayRef = vnPayConfig.getRandomNumber(8);
@@ -36,5 +39,10 @@ public class PaymentServiceImpl implements PaymentService {
         String paymentUrl = vnPayConfig.getVnp_PayUrl() + "?" + queryUrl;
         return paymentUrl;
 
+    }
+
+    @Override
+    public String createPaymentMomo(BookingEntity booking) {
+        return momoConfig.process(booking).getPayUrl();
     }
 }
