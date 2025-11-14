@@ -39,8 +39,6 @@ public class MomoConfig {
     @Value("${MOMO_RETURN_URL}")
     private String returnUrl;
 
-    @Value("${MOMO_IPN_URL:}")
-    private String ipnUrl;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -74,7 +72,7 @@ public class MomoConfig {
             params.put("accessKey", accessKey);
             params.put("amount", amount.toString());
             params.put("extraData", extraData != null ? extraData : "");
-            params.put("ipnUrl", ipnUrl != null && !ipnUrl.isEmpty() ? ipnUrl : returnUrl);
+            params.put("ipnUrl", returnUrl);
             params.put("orderId", orderId.toString());
             params.put("orderInfo", orderInfo.toString());
             params.put("partnerCode", partnerCode);
@@ -102,7 +100,7 @@ public class MomoConfig {
                     .partnerName("CineMe")
                     .requestType(type)
                     .redirectUrl(returnUrl)
-                    .ipnUrl(ipnUrl != null && !ipnUrl.isEmpty() ? ipnUrl : returnUrl)
+                    .ipnUrl(returnUrl)
                     .storeId("CineMe_Store")
                     .extraData(extraData != null ? extraData : "")
                     .autoCapture(autoCapture)

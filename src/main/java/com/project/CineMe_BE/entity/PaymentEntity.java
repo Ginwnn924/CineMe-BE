@@ -1,5 +1,6 @@
 package com.project.CineMe_BE.entity;
 
+import com.project.CineMe_BE.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,7 +24,8 @@ public class PaymentEntity {
     private Long amount;
 
     @Column(name = "method")
-    private String method;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod method;
 
     @Column(name = "transaction_id")
     private String transactionId;

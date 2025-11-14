@@ -13,7 +13,8 @@ public interface BookingService {
 
     String createBooking(BookingRequest bookingRequest, PaymentMethod method, HttpServletRequest request);
 
-    UUID confirmBooking(HttpServletRequest request);
+    UUID verifyPaymentVNPay(HttpServletRequest request);
+    UUID verifyPaymentMomo(HttpServletRequest request);
 
     PaymentResponse getBookingInfo(UUID id);
 

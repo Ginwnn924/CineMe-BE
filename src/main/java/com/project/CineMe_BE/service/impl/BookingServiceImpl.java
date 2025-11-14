@@ -160,10 +160,43 @@ public class BookingServiceImpl implements BookingService {
         return null;
     }
 
+    @Override
+    public UUID verifyPaymentMomo(HttpServletRequest request) {
+        String status = request.getParameter("resultCode");
+        if ("0".equals(status)) {
+            UUID bookingId = UUID.fromString(request.getParameter("orderId"));
+            BookingEntity booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+            if (BookingStatusEnum.PENDING.name().equals(booking.getStatus())) {
+                booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+                booking.setUpdatedAt(new Date());
+                String qrCode = generateQRCode(booking);
+                booking.setQrcode(qrCode);
+                bookingRepository.save(booking);
+            }
+            else {
+                log.error("Booking {} is not in PENDING status", bookingId);
+                throw new PaymentFailedException("Booking is not in PENDING status");
+            }
+            // insert payment
+            PaymentEntity payment = PaymentEntity.builder()
+                    .booking(booking)
+                    .amount(Long.parseLong(request.getParameter("amount")))
+                    .createdAt(new Date())
+                    .method(PaymentMethod.MOMO)
+                    .transactionId(request.getParameter("transId"))
+                    .build();
+//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+
+            paymentRepository.save(payment);
+            return bookingId;
+        }
+        return null;
+    }
 
     @Transactional
     @Override
-    public UUID confirmBooking(HttpServletRequest request) {
+    public UUID verifyPaymentVNPay(HttpServletRequest request) {
         if(!isValidParams(request)) {
             log.error("Invalid parameters in VnPay callback");
             throw new PaymentFailedException("Invalid parameters in VnPay callback");
@@ -192,7 +225,7 @@ public class BookingServiceImpl implements BookingService {
                     .booking(booking)
                     .amount(Long.parseLong(request.getParameter("vnp_Amount")) / 100)
                     .createdAt(new Date())
-                    .method("VNPAY")
+                    .method(PaymentMethod.VNPAY)
                     .transactionId(request.getParameter("vnp_TransactionNo"))
                     .build();
 //            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());

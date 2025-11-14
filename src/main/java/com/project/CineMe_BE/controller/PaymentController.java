@@ -63,8 +63,8 @@ public class PaymentController {
 
 
     @GetMapping("/vnpay/callback")
-    public ResponseEntity<APIResponse> vnpayCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UUID idBooking = bookingService.confirmBooking(request);
+    public ResponseEntity<APIResponse> vnpayCallback(HttpServletRequest request) {
+        UUID idBooking = bookingService.verifyPaymentVNPay(request);
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message("Payment successful")
@@ -73,8 +73,13 @@ public class PaymentController {
     }
 
     @GetMapping("/momo/callback")
-    public void momoCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
-
+    public ResponseEntity<APIResponse> momoCallback(HttpServletRequest request) {
+        UUID idBooking = bookingService.verifyPaymentMomo(request);
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message("Payment successful")
+                .data(bookingService.getBookingInfo(idBooking))
+                .build());
     }
 
     @PostMapping("/momo/create")
