@@ -68,7 +68,7 @@ public class MovieEntity {
     @Column(name = "sortorder")
     private Long sortorder;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "movie_actor",
             joinColumns = @JoinColumn(name = "movie_id"),
@@ -76,7 +76,7 @@ public class MovieEntity {
     )
     private Set<ActorEntity> listActor;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "movie_genres",
             joinColumns = @JoinColumn(name = "movie_id"),

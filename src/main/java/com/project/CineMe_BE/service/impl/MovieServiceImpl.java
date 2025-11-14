@@ -12,6 +12,7 @@ import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.MovieRequestMapper;
 import com.project.CineMe_BE.mapper.response.MovieResponseMapper;
 import com.project.CineMe_BE.repository.ActorRepository;
+import com.project.CineMe_BE.repository.GenreRepository;
 import com.project.CineMe_BE.repository.MovieRepository;
 import com.project.CineMe_BE.repository.ReviewRepository;
 import com.project.CineMe_BE.service.MinioService;
@@ -39,6 +40,7 @@ public class MovieServiceImpl implements MovieService {
     private final MinioService minioService;
     private final ReviewRepository reviewRepository;
     private final ActorRepository actorRepository;
+    private final GenreRepository genreRepository;
     private final CosineSimilarity cosine = new CosineSimilarity();
 
     @Override
@@ -47,6 +49,7 @@ public class MovieServiceImpl implements MovieService {
         return movieResponseMapper.toListDto(listMovie);
     }
 
+    @Transactional
     @Override
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
     public MovieResponse createMovie(MovieRequest request) {
@@ -58,7 +61,18 @@ public class MovieServiceImpl implements MovieService {
                     return actor;
                 })
                 .collect(Collectors.toSet());
+        Set<GenreEntity> listGenre = request.getListGenreId().stream()
+                .map(genreId -> {
+                    GenreEntity genre = genreRepository.findById(genreId)
+                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND)));;
+                    return genre;
+                })
+                .collect(Collectors.toSet());
+        movie.setListGenre(listGenre);
         movie.setListActor(listActor);
+
+
+
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());
             movie.setImage(StringUtil.splitUrlResource(imgUrl));
@@ -77,14 +91,26 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponse updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
-        Set<ActorEntity> listActor = request.getListActorId().stream()
-                .map(actorId -> {
-                    ActorEntity actor = actorRepository.findById(actorId)
-                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
-                    return actor;
+        if (request.getListGenreId() != null) {
+            Set<GenreEntity> listGenre = request.getListGenreId().stream()
+                    .map(genreId -> {
+                        GenreEntity genre = genreRepository.findById(genreId)
+                                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND)));;
+                        return genre;
                     })
-                .collect(Collectors.toSet());
-        movie.setListActor(listActor);
+                    .collect(Collectors.toSet());
+            movie.setListGenre(listGenre);
+        }
+        if (request.getListActorId() != null) {
+            Set<ActorEntity> listActor = request.getListActorId().stream()
+                    .map(actorId -> {
+                        ActorEntity actor = actorRepository.findById(actorId)
+                                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
+                        return actor;
+                        })
+                    .collect(Collectors.toSet());
+            movie.setListActor(listActor);
+        }
         movieRequestMapper.update(movie, request);
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());

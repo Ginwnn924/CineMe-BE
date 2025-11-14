@@ -24,4 +24,5 @@ public class MovieRequest {
     private Long time;
     private UUID limitageId;
     private List<UUID> listActorId;
+    private List<UUID> listGenreId;
 }
