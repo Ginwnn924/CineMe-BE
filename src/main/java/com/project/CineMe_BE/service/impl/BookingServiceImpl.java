@@ -50,8 +50,8 @@ public class BookingServiceImpl implements BookingService {
     private final PricingRuleService pricingRuleService;
     private final BookingProducer bookingProducer;
     private final VNPAYConfig vnPayConfig;
-    private final UserRankService userRankService;
-
+//    private final UserRankService userRankService;
+    private final UserService userService;
 
     @Override
     public String createBooking(BookingRequest bookingRequest,
@@ -228,7 +228,16 @@ public class BookingServiceImpl implements BookingService {
                     .method(PaymentMethod.VNPAY)
                     .transactionId(request.getParameter("vnp_TransactionNo"))
                     .build();
-//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+
+            // Update user rank after successful payment
+            try {
+//                userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+                userService.updateUserRank(booking.getUser().getId(), booking.getTotalPrice());
+                log.info("User rank updated successfully for userId: {}", booking.getUser().getId());
+            } catch (Exception e) {
+                log.error("Failed to update user rank for userId: {}", booking.getUser().getId(), e);
+                // Don't throw exception to avoid payment confirmation failure
+            }
 
             paymentRepository.save(payment);
             return bookingId;
@@ -364,7 +373,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private Long priceAfterDiscount(Long totalPrice , UUID userID){
-        Double discount = userRankService.getUserDiscountPercentage(userID);
+//        Double discount = userRankService.getUserDiscountPercentage(userID);
+        Double discount = userService.getUserDiscountPercentage(userID);
         return totalPrice - Math.round(totalPrice * (discount / 100));
+
     }
 }

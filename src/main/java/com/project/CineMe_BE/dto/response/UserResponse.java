@@ -1,12 +1,12 @@
 package com.project.CineMe_BE.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
-
 
 @Data
 @AllArgsConstructor
@@ -20,6 +20,7 @@ public class UserResponse {
     private String provider;
     private String createdAt;
     private String updatedAt;
-
+    private Boolean locked;
 
 }
+

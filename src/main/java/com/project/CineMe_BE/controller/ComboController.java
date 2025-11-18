@@ -3,6 +3,7 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.ComboRequest;
+import com.project.CineMe_BE.dto.request.ItemComboRequest;
 import com.project.CineMe_BE.dto.response.ComboResponse;
 import com.project.CineMe_BE.service.ComboService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
@@ -65,6 +66,17 @@ public class ComboController {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_DELETE_SUCCESS))
+                .build());
+    }
+
+    @PutMapping("/{id}/items")
+    public ResponseEntity<APIResponse> updateComboItems(
+            @PathVariable UUID id,
+            @Valid @RequestBody List<ItemComboRequest> itemComboRequests) {
+        return ResponseEntity.ok(APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS))
+                .data(comboService.updateComboItems(id, itemComboRequests))
                 .build());
     }
 }

@@ -5,13 +5,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRankResponse {
-    private Long totalSpent;
-//    private Long totalTransactions;
-    private RankResponse rank;
-    private Long nextRankThreshold;
+public class PricingRuleResponse {
+
+    private UUID id;
+    private Integer dayOfWeek;
+    private String dayOfWeekName;
+    private SeatTypeResponse seatType;
+    private Long price;
 }
+
+

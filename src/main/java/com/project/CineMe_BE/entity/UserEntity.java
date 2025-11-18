@@ -37,7 +37,7 @@ public class UserEntity {
     private String provider;
 
     @Column(name = "is_locked")
-    private Boolean isLocked;
+    private Boolean locked;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -45,5 +45,10 @@ public class UserEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch =  FetchType.LAZY)
+    @JoinColumn(name = "rank_id")
+    private RankEntity rank;
 
+    @Column(name = "total_spent")
+    private Long totalSpent;
 }

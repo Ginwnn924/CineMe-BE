@@ -157,4 +157,12 @@ public class MessageKey {
     public static final String RANK_DELETE_SUCCESS = "rank.delete_success";
     public static final String RANK_GET_DETAILS = "rank.get_details";
     public static final String RANK_GET_ALL_SUCCESS = "rank.get_all_success";
+
+    // Pricing Rule
+    public static final String PRICING_RULE_NOT_FOUND = "pricing_rule.not_found";
+    public static final String PRICING_RULE_CREATE_SUCCESS = "pricing_rule.create_success";
+    public static final String PRICING_RULE_UPDATE_SUCCESS = "pricing_rule.update_success";
+    public static final String PRICING_RULE_DELETE_SUCCESS = "pricing_rule.delete_success";
+    public static final String PRICING_RULE_GET_DETAILS = "pricing_rule.get_details";
+    public static final String PRICING_RULE_GET_ALL_SUCCESS = "pricing_rule.get_all_success";
 }

@@ -3,9 +3,7 @@ package com.project.CineMe_BE.entity;
 import com.project.CineMe_BE.entity.id.ItemComboId;
 import com.project.CineMe_BE.entity.id.MovieGenreId;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -14,6 +12,9 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "item_combo")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ItemComboEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
