@@ -2,7 +2,8 @@ package com.project.CineMe_BE.config;
 
 
 import com.project.CineMe_BE.filter.JwtAuthenFilter;
-import com.project.CineMe_BE.security.CustomDetailsService;
+import com.project.CineMe_BE.security.EmployeeDetailsServiceImpl;
+import com.project.CineMe_BE.security.UserDetailsServiceImpl;
 import com.project.CineMe_BE.security.OAuthLoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -34,7 +36,8 @@ import java.util.List;
 @EnableMethodSecurity(prePostEnabled = true)
 
 public class SecurityConfig {
-    private final CustomDetailsService userDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final EmployeeDetailsServiceImpl employeeDetailsService;
     private final JwtAuthenFilter jwtAuthenFilter;
     private final RedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
@@ -92,14 +95,32 @@ public class SecurityConfig {
         };
     }
 
+    // 1️⃣ Provider cho SecurityFilterChain (dùng cho JWT authentication)
     @Bean
     public AuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder);
         provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
+    // 2️⃣ Manager riêng cho User Login
+    @Bean("userAuthenticationManager")
+    public AuthenticationManager userAuthenticationManager() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return new ProviderManager(provider);
+    }
+
+    // 3️⃣ Manager riêng cho Employee Login
+    @Bean("employeeAuthenticationManager")
+    public AuthenticationManager employeeAuthenticationManager() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(employeeDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return new ProviderManager(provider);
+    }
 
     // Quan li cac role/user khi access vao he thong
     @Bean

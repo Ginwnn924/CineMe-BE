@@ -1,9 +1,8 @@
 package com.project.CineMe_BE.filter;
 
 import com.google.common.net.HttpHeaders;
-import com.project.CineMe_BE.security.CustomDetailsService;
+import com.project.CineMe_BE.security.UserDetailsServiceImpl;
 import com.project.CineMe_BE.security.JwtService;
-import com.project.CineMe_BE.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,7 +26,7 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenFilter extends OncePerRequestFilter {
-    private final CustomDetailsService customDetailsService;
+    private final UserDetailsServiceImpl userDetailsServiceImpl;
     private final JwtService jwtService;
     private final RedisTemplate redisTemplate;
 
@@ -47,7 +46,7 @@ public class JwtAuthenFilter extends OncePerRequestFilter {
             }
             String email = jwtService.extractEmail(jwt);
             if (StringUtils.isNotEmpty(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = customDetailsService.loadUserByUsername(email);
+                UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
                 if (jwtService.isValidateToken(jwt, userDetails)) {
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

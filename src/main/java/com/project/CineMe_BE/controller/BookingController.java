@@ -23,33 +23,11 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/bookings")
 public class BookingController {
-    @Value("${VNPAY_REDIRECTION_FE}")
-    private String urlFe;
+
     private final BookingService bookingService;
     private final LocalizationUtils localizationUtils;
-    @PostMapping("")
-    public ResponseEntity<APIResponse> createBooking(@RequestBody BookingRequest bookingRequest, HttpServletRequest request) {
-        String paymentUrl = bookingService.createBooking(bookingRequest, request);
-        APIResponse apiResponse = new APIResponse();
-        int statusCode = 200;
-        if (paymentUrl == null ) {
-            statusCode = 400;
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_FAILED));
-        }
-        else {
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_SUCCESS));
-            apiResponse.setData(paymentUrl);
-        }
-        apiResponse.setStatusCode(statusCode);
-        return ResponseEntity.status(statusCode).body(apiResponse);
-    }
 
-    @GetMapping("/callback")
-    public void vnpayCallback(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UUID idBooking = bookingService.confirmBooking(request);
-        String redirectingUrl = urlFe + "?status=" + (idBooking != null ? "success" : "failed") + "&booking=" + idBooking;
-        response.sendRedirect(redirectingUrl);
-    }
+
 
     @GetMapping("{id}/info")
     public ResponseEntity<APIResponse> getBookingInfo(@PathVariable UUID id) {

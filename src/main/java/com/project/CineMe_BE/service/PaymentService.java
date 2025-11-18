@@ -5,5 +5,7 @@ import com.project.CineMe_BE.entity.BookingEntity;
 import jakarta.servlet.http.HttpServletRequest;
 
 public interface PaymentService {
-    String createPayment(BookingEntity booking, HttpServletRequest request);
+    String createPaymentVnpay(BookingEntity booking, HttpServletRequest request);
+
+    String createPaymentMomo(BookingEntity booking);
 }
