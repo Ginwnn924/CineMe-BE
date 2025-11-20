@@ -12,9 +12,11 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface ComboRequestMapper extends BaseRequestMapper<ComboRequest,ComboEntity> {
     @Mapping(target = "img", ignore = true)
+    @Mapping(target = "listItems" , ignore = true)
     ComboEntity toEntity(ComboRequest dto);
 
     @Mapping(target = "img", ignore = true)
+    @Mapping(target = "listItems" , ignore = true)
     void update(@MappingTarget ComboEntity entity, ComboRequest dto);
 }
 
