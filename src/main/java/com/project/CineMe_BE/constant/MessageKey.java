@@ -111,7 +111,7 @@ public class MessageKey {
     public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
     public static final String AUTH_LOGOUT_SUCCESS = "auth.logout_success";
     public static final String AUTH_LOGIN_FAILED = "auth.login_failed";
-
+    public static final String AUTH_REFRESH_TOKEN_SUCCESS = "auth.refresh_token_success";
 
     // Country
     public static final String COUNTRY_GET_ALL_SUCCESS = "country.get_all_success";

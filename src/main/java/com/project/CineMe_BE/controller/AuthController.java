@@ -2,10 +2,7 @@ package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
-import com.project.CineMe_BE.dto.request.LoginAdminRequest;
-import com.project.CineMe_BE.dto.request.LoginClientRequest;
-import com.project.CineMe_BE.dto.request.ResetPasswordRequest;
-import com.project.CineMe_BE.dto.request.SignUpRequest;
+import com.project.CineMe_BE.dto.request.*;
 import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.security.JwtService;
 import com.project.CineMe_BE.service.AuthService;
@@ -95,6 +92,15 @@ public class AuthController {
         return ResponseEntity.status(201)
                 .body(response);
     }
+
+    @PostMapping("/api/v1/auth/refresh-token")
+    public ResponseEntity<APIResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        APIResponse response = APIResponse.builder()
+                .statusCode(200)
+                .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_REFRESH_TOKEN_SUCCESS))
+                .data(authService.refreshToken(request))
+                .build();
+        return ResponseEntity.ok(response);
 
 //
 //    @GetMapping("/oauth2/callback")

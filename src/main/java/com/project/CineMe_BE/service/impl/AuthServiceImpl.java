@@ -133,6 +133,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse refreshToken(RefreshTokenRequest refreshToken) {
+        String role = jwtService.extractRole(refreshToken.getRefreshToken());
+        String email = jwtService.extractEmail(refreshToken.getRefreshToken());
+
         return null;
     }
 
