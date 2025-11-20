@@ -57,6 +57,11 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
+    public String extractRole(String token) {
+        return extractClaims(token, claims -> (String) claims.get("role"));
+    }
+
+    @Override
     public boolean isValidateToken(String token, UserDetails userDetails) {
         try {
             String username = extractEmail(token);
@@ -83,6 +88,15 @@ public class JwtServiceImpl implements JwtService {
 //
 //        claims.put("permissions", permissions);
 //        claims.put("userId", userDetails.getId());
+
+        if (userDetails instanceof CustomUserDetails cu) {
+            claims.put("role", "CUSTOMER");
+            claims.put("userId", cu.getUserEntity().getId().toString());
+        }
+        else if (userDetails instanceof CustomEmployeeDetails ce) {
+            claims.put("role", "EMPLOYEE");
+            claims.put("userId", ce.getEmployee().getId().toString());
+        }
         return generateToken(claims, userDetails);
     }
 

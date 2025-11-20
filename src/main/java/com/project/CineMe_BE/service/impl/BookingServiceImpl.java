@@ -55,15 +55,17 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public String createBooking(BookingRequest bookingRequest,
-                                PaymentMethod method,
                                 HttpServletRequest request) {
         EmployeeEntity employee = null;
+        UserEntity user = null;
         if (bookingRequest.getEmployeeId() != null) {
             employee = employeeRepository.findById(bookingRequest.getEmployeeId())
                     .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
         }
-        UserEntity user = userRepository.findById(bookingRequest.getUserId())
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        if (bookingRequest.getUserId() != null) {
+            user = userRepository.findById(bookingRequest.getUserId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        }
         ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
                 .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
         Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
@@ -82,16 +84,23 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
-        // Lock seats
-        boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
-                user,
-                showtime,
-                selectedSeats
-        );
-        if (!isLocked) {
-            log.error("Failed to lock seats {} for user {} and showtime {}", selectedSeats, user.getId(), showtime.getId());
-            return null;
+        boolean isLocked = true;
+        if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
+            log.info("Payment method: CASH");
         }
+        else {
+            // Lock seats
+            isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
+                    user,
+                    showtime,
+                    selectedSeats
+            );
+            if (!isLocked) {
+                log.error("Failed to lock seats {} for user {} and showtime {}", selectedSeats, user.getId(), showtime.getId());
+                return null;
+            }
+        }
+
 
         BookingEntity booking = BookingEntity.builder()
                 .user(user)
@@ -142,18 +151,28 @@ public class BookingServiceImpl implements BookingService {
         booking.setBookingSeats(listBookingSeats);
         bookingRepository.save(booking);
 
-        bookingProducer.sendBookingDelay(booking.getId());
 
         if (isLocked) {
-           if (PaymentMethod.CASH.equals(method)) {
+           if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
                // change status to CONFIRMED
                // create payment record
+               PaymentEntity payment = PaymentEntity.builder()
+                       .booking(booking)
+                       .amount(Long.parseLong(request.getParameter("amount")))
+                       .createdAt(new Date())
+                       .method(PaymentMethod.CASH)
+                       .build();
+//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+
+               paymentRepository.save(payment);
            }
-           else if (PaymentMethod.VNPAY.equals(method)) {
+           else if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
+               bookingProducer.sendBookingDelay(booking.getId());
                return paymentService.createPaymentVnpay(booking, request);
            }
            // Momo
            else {
+               bookingProducer.sendBookingDelay(booking.getId());
                return paymentService.createPaymentMomo(booking);
            }
         }

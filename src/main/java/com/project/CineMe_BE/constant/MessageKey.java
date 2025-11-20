@@ -95,6 +95,7 @@ public class MessageKey {
     public static final String USER_UPDATE_SUCCESS = "user.update_success";
     public static final String USER_LOCK_SUCCESS = "user.lock_success";
     public static final String USER_UNLOCK_SUCCESS = "user.unlock_success";
+
     // Payment
     public static final String PAYMENT_CREATE_URL_SUCCESS = "payment.create_url_success";
     public static final String PAYMENT_CREATE_URL_FAILED = "payment.create_url_failed";
@@ -118,6 +119,7 @@ public class MessageKey {
     // Booking
     public static final String BOOKING_NOT_FOUND = "booking.not_found";
     public static final String BOOKING_GET_SUCCESS = "booking.get_success";
+    public static final String BOOKING_CREATE_SUCCESS = "booking.create_success";
 
 
     // Product

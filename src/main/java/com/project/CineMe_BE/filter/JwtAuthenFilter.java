@@ -1,6 +1,7 @@
 package com.project.CineMe_BE.filter;
 
 import com.google.common.net.HttpHeaders;
+import com.project.CineMe_BE.security.EmployeeDetailsServiceImpl;
 import com.project.CineMe_BE.security.UserDetailsServiceImpl;
 import com.project.CineMe_BE.security.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -27,6 +28,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenFilter extends OncePerRequestFilter {
     private final UserDetailsServiceImpl userDetailsServiceImpl;
+    private final EmployeeDetailsServiceImpl employeeDetailsServiceImpl;
     private final JwtService jwtService;
     private final RedisTemplate redisTemplate;
 
@@ -46,8 +48,14 @@ public class JwtAuthenFilter extends OncePerRequestFilter {
             }
             String email = jwtService.extractEmail(jwt);
             if (StringUtils.isNotEmpty(email) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
-                if (jwtService.isValidateToken(jwt, userDetails)) {
+                String role = jwtService.extractRole(jwt);
+                UserDetails userDetails;
+
+                if ("EMPLOYEE".equals(role)) {
+                    userDetails = employeeDetailsServiceImpl.loadUserByUsername(email);
+                } else {
+                    userDetails = userDetailsServiceImpl.loadUserByUsername(email);
+                }                if (jwtService.isValidateToken(jwt, userDetails)) {
                     SecurityContext context = SecurityContextHolder.createEmptyContext();
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
