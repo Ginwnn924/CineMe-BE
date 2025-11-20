@@ -24,7 +24,7 @@ public class SeatSocketBroadcaster {
     private final SocketIOServer server;
 
     public boolean lockSeatAndBroadcast(UserEntity user, ShowtimeEntity showtime, List<UUID> selectedSeats) {
-        UUID userId = user.getId();
+        UUID userId = user != null ? user.getId() : null;
         UUID showtimeId = showtime.getId();
         try {
             boolean isLocked = seatService.lockSeats(user, showtime, selectedSeats);

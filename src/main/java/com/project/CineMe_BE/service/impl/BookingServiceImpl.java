@@ -158,7 +158,7 @@ public class BookingServiceImpl implements BookingService {
                // create payment record
                PaymentEntity payment = PaymentEntity.builder()
                        .booking(booking)
-                       .amount(Long.parseLong(request.getParameter("amount")))
+                       .amount(price)
                        .createdAt(new Date())
                        .method(PaymentMethod.CASH)
                        .build();
