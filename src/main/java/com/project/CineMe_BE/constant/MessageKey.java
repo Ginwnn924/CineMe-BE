@@ -50,6 +50,7 @@ public class MessageKey {
     public static final String SEAT_NOT_FOUND = "seat.not_found";
     public static final String SEAT_GET_DETAILS = "seat.get_details";
     public static final String SEAT_GET_LIST = "seat.get_all";
+    public static final String SEAT_NOT_AVAILABLE = "seat.not_available";
 
     // SeatType
     public static final String SEAT_TYPE_CREATE_SUCCESS = "seat_type.create_success";

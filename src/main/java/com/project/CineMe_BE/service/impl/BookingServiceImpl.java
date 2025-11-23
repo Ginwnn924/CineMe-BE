@@ -53,55 +53,13 @@ public class BookingServiceImpl implements BookingService {
 //    private final UserRankService userRankService;
     private final UserService userService;
 
-    @Override
-    public String createBooking(BookingRequest bookingRequest,
-                                HttpServletRequest request) {
-        EmployeeEntity employee = null;
-        UserEntity user = null;
-        if (bookingRequest.getEmployeeId() != null) {
-            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
-        }
-        if (bookingRequest.getUserId() != null) {
-            user = userRepository.findById(bookingRequest.getUserId())
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
-        }
-        ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
-        Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
-                .stream()
-                .filter(s -> s.getSeatType() != null)
-                .collect(Collectors.toMap(
-                        SeatsEntity::getId,
-                        s -> s.getSeatType().getName()
-                ));
-        List<UUID> selectedSeats = bookingRequest.getListSeatId();
 
-        // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
-        for (UUID seatId : selectedSeats) {
-            if (!listSeats.containsKey(seatId)) {
-                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
-            }
-        }
-
-        boolean isLocked = true;
-        if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
-            log.info("Payment method: CASH");
-        }
-        else {
-            // Lock seats
-            isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
-                    user == null ? bookingRequest.getEmployeeId() : bookingRequest.getUserId(),
-                    showtime,
-                    selectedSeats
-            );
-            if (!isLocked) {
-                log.error("Failed to lock seats {} for user {} and showtime {}", selectedSeats, user.getId(), showtime.getId());
-                return null;
-            }
-        }
-
-
+    private BookingEntity createBooking(BookingRequest bookingRequest,
+                                        EmployeeEntity employee,
+                                        UserEntity user,
+                                        ShowtimeEntity showtime,
+                                        Map<UUID, String> listSeats,
+                                        List<UUID> selectedSeats) {
         BookingEntity booking = BookingEntity.builder()
                 .user(user)
                 .employee(employee)
@@ -150,32 +108,112 @@ public class BookingServiceImpl implements BookingService {
         booking.setTotalPrice(price);
         booking.setBookingSeats(listBookingSeats);
         bookingRepository.save(booking);
+        return booking;
+    }
 
+    @Override
+    public void createBookingWithCash(BookingRequest bookingRequest, HttpServletRequest request) {
+        // Check ghe da dat chua
+        Boolean isLocked = bookingRepository.existsSeatsLockedByShowtime(bookingRequest.getShowtimeId(), bookingRequest.getListSeatId());
+        if (isLocked != null && isLocked) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_AVAILABLE));
+        }
+        EmployeeEntity employee = null;
+        UserEntity user = null;
+        if (bookingRequest.getEmployeeId() != null) {
+            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
+        }
+        if (bookingRequest.getUserId() != null) {
+            user = userRepository.findById(bookingRequest.getUserId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        }
+        ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+        Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
+                .stream()
+                .filter(s -> s.getSeatType() != null)
+                .collect(Collectors.toMap(
+                        SeatsEntity::getId,
+                        s -> s.getSeatType().getName()
+                ));
+        List<UUID> selectedSeats = bookingRequest.getListSeatId();
+
+        // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
+        for (UUID seatId : selectedSeats) {
+            if (!listSeats.containsKey(seatId)) {
+                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
+            }
+        }
+
+
+        BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
+        PaymentEntity payment = PaymentEntity.builder()
+                .booking(booking)
+                .amount(booking.getTotalPrice())
+                .createdAt(new Date())
+                .method(PaymentMethod.CASH)
+                .build();
+//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+        booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+        bookingRepository.save(booking);
+        paymentRepository.save(payment);
+    }
+
+    @Override
+    public String createBookingWithEWallet(BookingRequest bookingRequest,
+                                HttpServletRequest request) {
+        // Check ghe da dat chua
+        Boolean isLocked = bookingRepository.existsSeatsLockedByShowtime(bookingRequest.getShowtimeId(), bookingRequest.getListSeatId());
+        if (isLocked != null && isLocked) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_AVAILABLE));
+        }
+        EmployeeEntity employee = null;
+        UserEntity user = null;
+        if (bookingRequest.getEmployeeId() != null) {
+            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
+        }
+        if (bookingRequest.getUserId() != null) {
+            user = userRepository.findById(bookingRequest.getUserId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        }
+        ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+        Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
+                .stream()
+                .filter(s -> s.getSeatType() != null)
+                .collect(Collectors.toMap(
+                        SeatsEntity::getId,
+                        s -> s.getSeatType().getName()
+                ));
+        List<UUID> selectedSeats = bookingRequest.getListSeatId();
+
+        // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
+        for (UUID seatId : selectedSeats) {
+            if (!listSeats.containsKey(seatId)) {
+                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
+            }
+        }
+
+        boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
+                user == null ? bookingRequest.getEmployeeId() : bookingRequest.getUserId(),
+                showtime,
+                selectedSeats);
+
+
+        BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
 
         if (isLocked) {
-           if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
-               // change status to CONFIRMED
-               // create payment record
-               PaymentEntity payment = PaymentEntity.builder()
-                       .booking(booking)
-                       .amount(price)
-                       .createdAt(new Date())
-                       .method(PaymentMethod.CASH)
-                       .build();
-//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
-               booking.setStatus(BookingStatusEnum.CONFIRMED.name());
-               paymentRepository.save(payment);
-               return "Ahihi do ngok";
-           }
-           else if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
-               bookingProducer.sendBookingDelay(booking.getId());
-               return paymentService.createPaymentVnpay(booking, request);
-           }
-           // Momo
-           else {
-               bookingProducer.sendBookingDelay(booking.getId());
-               return paymentService.createPaymentMomo(booking);
-           }
+            if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
+                bookingProducer.sendBookingDelay(booking.getId());
+                return paymentService.createPaymentVnpay(booking, request);
+            }
+            // Momo
+            else {
+                bookingProducer.sendBookingDelay(booking.getId());
+                return paymentService.createPaymentMomo(booking);
+            }
         }
         return null;
     }

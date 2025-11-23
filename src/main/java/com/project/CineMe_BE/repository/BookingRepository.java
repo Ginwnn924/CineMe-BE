@@ -23,6 +23,11 @@ public interface BookingRepository extends JpaRepository<BookingEntity, UUID> {
             "WHERE b.showtime_id = :showtimeId AND b.status IN ('PENDING', 'CONFIRMED')", nativeQuery = true)
     Set<UUID> getSeatsLockedByShowtime(UUID showtimeId);
 
+    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM bookings b " +
+            "JOIN booking_seats bs ON bs.booking_id = b.id " +
+            "WHERE b.showtime_id = :showtimeId AND bs.seat_id IN :listSeats AND b.status IN ('PENDING', 'CONFIRMED')", nativeQuery = true)
+    Boolean existsSeatsLockedByShowtime(UUID showtimeId, List<UUID> listSeats);
+
     @Query(value = "SELECT " +
             "m.name_vn AS movieName, " +
             "m.time AS duration, " +
