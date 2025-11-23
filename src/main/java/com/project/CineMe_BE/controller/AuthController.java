@@ -101,6 +101,7 @@ public class AuthController {
                 .data(authService.refreshToken(request))
                 .build();
         return ResponseEntity.ok(response);
+    }
 
 //
 //    @GetMapping("/oauth2/callback")
@@ -111,20 +112,20 @@ public class AuthController {
 //        response.sendRedirect(redirectUrl);
 //    }
 
-    @GetMapping("/api/v1/auth/extract")
-    public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {
-        if (!StringUtils.isEmpty(state)) {
-            Object response = authService.extractState(state);
-            if (response != null) {
-                return ResponseEntity.ok(APIResponse.builder()
-                        .statusCode(200)
-                        .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
-                        .data(response)
-                        .build());
-            }
-        }
-        return ResponseEntity.notFound().build();
-    }
+//    @GetMapping("/api/v1/auth/extract")
+//    public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {
+//        if (!StringUtils.isEmpty(state)) {
+//            Object response = authService.extractState(state);
+//            if (response != null) {
+//                return ResponseEntity.ok(APIResponse.builder()
+//                        .statusCode(200)
+//                        .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
+//                        .data(response)
+//                        .build());
+//            }
+//        }
+//        return ResponseEntity.notFound().build();
+//    }
 
     @PostMapping("/api/v1/auth/forgot-password")
     public ResponseEntity<APIResponse> forgotPassword(@RequestParam final String email) {

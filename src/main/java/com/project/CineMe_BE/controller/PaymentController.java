@@ -54,7 +54,7 @@ public class PaymentController {
             apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_FAILED));
         }
         else {
-            if (bookingRequest.getPaymentMethod().equals(PaymentMethod.CASH.name())) {
+            if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
                 apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_CREATE_SUCCESS));
             }
             else {

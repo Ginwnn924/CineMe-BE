@@ -137,13 +137,12 @@ public class SeatServiceImpl implements SeatService{
     }
 
     @Override
-    public boolean lockSeats(UserEntity user, ShowtimeEntity showtime, List<UUID> selectedSeats) {
-        UUID userId = user.getId();
+    public boolean lockSeats(UUID id, ShowtimeEntity showtime, List<UUID> selectedSeats) {
         UUID showtimeId = showtime.getId();
         Set<UUID> listSeatIdLocked = bookingRepository.getSeatsLockedByShowtime(showtimeId);
         for (UUID seatId : selectedSeats) {
             // Rollback nếu có bất kỳ ghế nào ko thể lock
-            boolean isLocked = lockSeat(showtimeId, seatId, userId);
+            boolean isLocked = lockSeat(showtimeId, seatId, id);
             log.info("isLocked seat {}: {}", seatId, isLocked);
             if (isLocked && listSeatIdLocked.contains(seatId)) {
                 boolean isDeleted = redisTemplate.delete("seat-lock:" + showtimeId + ":" + seatId);

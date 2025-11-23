@@ -91,7 +91,7 @@ public class BookingServiceImpl implements BookingService {
         else {
             // Lock seats
             isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
-                    user,
+                    user == null ? bookingRequest.getEmployeeId() : bookingRequest.getUserId(),
                     showtime,
                     selectedSeats
             );
@@ -163,8 +163,9 @@ public class BookingServiceImpl implements BookingService {
                        .method(PaymentMethod.CASH)
                        .build();
 //            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
-
+               booking.setStatus(BookingStatusEnum.CONFIRMED.name());
                paymentRepository.save(payment);
+               return "Ahihi do ngok";
            }
            else if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
                bookingProducer.sendBookingDelay(booking.getId());
