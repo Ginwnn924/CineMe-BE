@@ -13,9 +13,9 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 public class GlobalExceptionHandler {
     @ExceptionHandler(DataNotFoundException.class)
     public ResponseEntity<APIResponse> handleDataNotFoundException(DataNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(APIResponse.builder()
-                        .statusCode(404)
+                        .statusCode(409)
                         .message(ex.getMessage())
                         .build());
     }
