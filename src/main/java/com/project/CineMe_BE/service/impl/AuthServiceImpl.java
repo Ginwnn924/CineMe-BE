@@ -96,7 +96,9 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return jwtService.generateToken(userDetails);
+        AuthResponse authResponse = jwtService.generateToken(userDetails);
+        user.setRefreshToken(authResponse.getRefreshToken());
+        return authResponse;
     }
 
     @Override
@@ -114,7 +116,9 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return jwtService.generateToken(userDetails);
+        AuthResponse authResponse = jwtService.generateToken(userDetails);
+        employee.setRefreshToken(authResponse.getRefreshToken());
+        return authResponse;
     }
 
     @Override
@@ -133,8 +137,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse refreshToken(RefreshTokenRequest refreshToken) {
-        String role = jwtService.extractRole(refreshToken.getRefreshToken());
-        String email = jwtService.extractEmail(refreshToken.getRefreshToken());
+        // check token valid
+
+
 
         return null;
     }

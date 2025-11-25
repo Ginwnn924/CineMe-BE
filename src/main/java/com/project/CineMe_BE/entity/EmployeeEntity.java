@@ -32,6 +32,9 @@ public class EmployeeEntity {
     @Column(name = "created_at")
     private Date createdAt;
 
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
     @ManyToOne
     @JoinColumn(name = "theater_id")
     private TheaterEntity theater;

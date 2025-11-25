@@ -9,6 +9,7 @@ import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.utils.JwtUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +30,6 @@ public class AuthController {
     private final LocalizationUtils localizationUtils;
     private final EmailProducer emailProducer;
     private final JwtService jwtService;
-    @Value("${GOOGLE_REDIRECT_FE}")
-    private String googleRedirectUrl;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -94,13 +93,15 @@ public class AuthController {
     }
 
     @PostMapping("/api/v1/auth/refresh-token")
-    public ResponseEntity<APIResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
-        APIResponse response = APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_REFRESH_TOKEN_SUCCESS))
-                .data(authService.refreshToken(request))
-                .build();
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+
+        }
+        else {
+            System.out.println("No cookies found");
+        }
+        return ResponseEntity.ok("Check console");
     }
 
 //

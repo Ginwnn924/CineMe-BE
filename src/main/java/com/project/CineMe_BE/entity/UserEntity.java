@@ -45,6 +45,9 @@ public class UserEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
     @ManyToOne(fetch =  FetchType.LAZY)
     @JoinColumn(name = "rank_id")
     private RankEntity rank;

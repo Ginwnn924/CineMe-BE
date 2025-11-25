@@ -1,5 +1,6 @@
 package com.project.CineMe_BE.repository;
 
+import com.project.CineMe_BE.entity.EmployeeEntity;
 import com.project.CineMe_BE.entity.UserEntity;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,5 +14,6 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     Optional<UserEntity> findByEmail(String email);
 
+    Optional<UserEntity> findByRefreshToken(String refreshToken);
 
 }
