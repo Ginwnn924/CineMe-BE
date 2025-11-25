@@ -2,7 +2,9 @@ package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.dto.request.CreateScheduleRequest;
 import com.project.CineMe_BE.dto.request.RecomendScheduleRequest;
+import com.project.CineMe_BE.dto.response.CreateScheduleResponse;
 import com.project.CineMe_BE.dto.response.RecommendScheduleResponse;
 import com.project.CineMe_BE.entity.ShowtimeEntity;
 import com.project.CineMe_BE.repository.ShowtimeRepository;
@@ -38,6 +40,19 @@ public class ScheduleController {
                 .body(APIResponse.builder()
                         .message(localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_GET_ALL_SUCCESS))
                         .data(scheduleService.findByTheaterIdAndDate(theaterId, DateFormatUltil.formatDate(date)))
+                        .build());
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<APIResponse> createSchedules(@RequestBody List<CreateScheduleRequest> requests,
+                                                       @AuthenticationPrincipal CustomEmployeeDetails principal) {
+        UUID theaterId = principal.getEmployee().getTheater().getId();
+        List<CreateScheduleResponse> createdSchedules = scheduleService.createSchedulesBatch(requests, theaterId);
+        
+        return ResponseEntity.status(201)
+                .body(APIResponse.builder()
+                        .message(localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_CREATE_SUCCESS))
+                        .data(createdSchedules)
                         .build());
     }
 

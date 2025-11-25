@@ -136,9 +136,36 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse refreshToken(RefreshTokenRequest refreshToken) {
+    public AuthResponse refreshToken(String refreshToken) {
         // check token valid
-
+        if (StringUtils.isEmpty(refreshToken)) {
+            throw new BadCredentialsException("Refresh token is required");
+        }
+        UserEntity user = userRepository.findByRefreshToken(refreshToken)
+                .orElse(null);
+        EmployeeEntity employee = employeeRepository.findByRefreshToken(refreshToken)
+                .orElse(null);
+        if (user == null && employee == null) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        if (user != null) {
+            UserDetails userDetails = new CustomUserDetails(user);
+            if (!jwtService.isValidateToken(refreshToken, userDetails)) {
+                throw new BadCredentialsException("Invalid refresh token");
+            }
+            user.setRefreshToken(jwtService.generateRefreshToken(userDetails));
+            userRepository.save(user);
+            return jwtService.generateToken(userDetails);
+        }
+        else if (employee != null) {
+            UserDetails userDetails = new CustomEmployeeDetails(employee);
+            if (!jwtService.isValidateToken(refreshToken, userDetails)) {
+                throw new BadCredentialsException("Invalid refresh token");
+            }
+            employee.setRefreshToken(jwtService.generateRefreshToken(userDetails));
+            employeeRepository.save(employee);
+            return jwtService.generateToken(userDetails);
+        }
 
 
         return null;

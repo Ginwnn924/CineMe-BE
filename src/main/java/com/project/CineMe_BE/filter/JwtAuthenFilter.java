@@ -77,6 +77,7 @@ public class JwtAuthenFilter extends OncePerRequestFilter {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("{\"error\": \"Invalid token 456\"}");
+            System.out.println(e.getMessage());
             return;
         }
 

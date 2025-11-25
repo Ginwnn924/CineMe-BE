@@ -103,6 +103,7 @@ public class MessageKey {
 
     // Schedule
     public static final String SCHEDULE_GET_ALL_SUCCESS = "schedule.get_all_success";
+    public static final String SCHEDULE_CREATE_SUCCESS = "schedule.create_success";
 
     // Role
     public static final String ROLE_NOT_FOUND = "role.not_found";

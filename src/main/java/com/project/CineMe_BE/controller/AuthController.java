@@ -3,6 +3,7 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.*;
+import com.project.CineMe_BE.dto.response.AuthResponse;
 import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.security.JwtService;
 import com.project.CineMe_BE.service.AuthService;
@@ -17,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -93,15 +95,21 @@ public class AuthController {
     }
 
     @PostMapping("/api/v1/auth/refresh-token")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
+        String refreshToken = null;
         if (cookies != null) {
-
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    return ResponseEntity.ok(authService.refreshToken(refreshToken));
+                }
+            }
         }
         else {
             System.out.println("No cookies found");
         }
-        return ResponseEntity.ok("Check console");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
 //
