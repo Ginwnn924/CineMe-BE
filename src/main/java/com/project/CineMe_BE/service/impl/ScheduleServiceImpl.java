@@ -110,7 +110,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    public List<CreateScheduleResponse> createSchedules(CreateScheduleRequest request, UUID theaterId) {
+    public List<CreateScheduleResponse> createSchedules(CreateScheduleRequest request) {
         LocalDate scheduleDate = DateFormatUltil.formatDate(request.getDate());
         List<CreateScheduleResponse> responses = new ArrayList<>();
         
@@ -137,7 +137,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                 // If not, create one (constraint: only one schedule per movie per date)
                 ScheduleEntity schedule = movieScheduleMap.get(movieShowtime.getId());
                 if (schedule == null) {
-                    Optional<ScheduleEntity> existingSchedule = scheduleRepository.findByMovieIdAndDate(
+                    Optional<ScheduleEntity> existingSchedule = scheduleRepository.findFirstByMovieIdAndDate(
                             movieShowtime.getId(), 
                             scheduleDate
                     );
@@ -197,12 +197,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     @Transactional
-    public List<CreateScheduleResponse> createSchedulesBatch(List<CreateScheduleRequest> requests, UUID theaterId) {
+    public List<CreateScheduleResponse> createSchedulesBatch(List<CreateScheduleRequest> requests) {
         List<CreateScheduleResponse> allResponses = new ArrayList<>();
         
         // Process each schedule request (each request represents a different date)
         for (CreateScheduleRequest request : requests) {
-            List<CreateScheduleResponse> responses = createSchedules(request, theaterId);
+            List<CreateScheduleResponse> responses = createSchedules(request);
             allResponses.addAll(responses);
         }
         

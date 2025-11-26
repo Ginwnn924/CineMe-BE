@@ -8,6 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ScheduleRepository extends JpaRepository<ScheduleEntity, UUID> {
-    Optional<ScheduleEntity> findByMovieIdAndDate(UUID movieId, LocalDate date);
+    Optional<ScheduleEntity> findFirstByMovieIdAndDate(UUID movieId, LocalDate date);
 
 }

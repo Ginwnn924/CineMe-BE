@@ -44,10 +44,9 @@ public class ScheduleController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<APIResponse> createSchedules(@RequestBody List<CreateScheduleRequest> requests,
-                                                       @AuthenticationPrincipal CustomEmployeeDetails principal) {
-        UUID theaterId = principal.getEmployee().getTheater().getId();
-        List<CreateScheduleResponse> createdSchedules = scheduleService.createSchedulesBatch(requests, theaterId);
+    public ResponseEntity<APIResponse> createSchedules(@RequestBody List<CreateScheduleRequest> requests) {
+//        UUID theaterId = principal.getEmployee().getTheater().getId();
+        List<CreateScheduleResponse> createdSchedules = scheduleService.createSchedulesBatch(requests);
         
         return ResponseEntity.status(201)
                 .body(APIResponse.builder()

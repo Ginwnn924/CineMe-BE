@@ -16,7 +16,7 @@ public interface ScheduleService {
 
 //    List<RecommendScheduleResponse> recommendSchedules(RecomendScheduleRequest request);
 //
-    List<CreateScheduleResponse> createSchedules(CreateScheduleRequest request, UUID theaterId);
+    List<CreateScheduleResponse> createSchedules(CreateScheduleRequest request);
 
-    List<CreateScheduleResponse> createSchedulesBatch(List<CreateScheduleRequest> requests, UUID theaterId);
+    List<CreateScheduleResponse> createSchedulesBatch(List<CreateScheduleRequest> requests);
 }
