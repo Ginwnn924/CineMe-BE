@@ -29,7 +29,7 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final LocalizationUtils localizationUtils;
     @GetMapping("/search")
-    public ResponseEntity<APIResponse> searchSchedules(@RequestParam UUID theaterId,
+    public ResponseEntity<APIResponse> searchSchedules(@RequestParam(required = false) UUID theaterId,
                                                        @RequestParam(required = false) String date,
                                                        @AuthenticationPrincipal CustomEmployeeDetails principal) {
 

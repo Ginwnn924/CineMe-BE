@@ -27,7 +27,7 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void set(String key, Object value, long ttl) {
         redisTemplate.opsForValue().set(key, value);
-        redisTemplate.expire(key, Duration.ofMinutes(ttl));
+        redisTemplate.expire(key, Duration.ofSeconds(ttl));
     }
 
     @Override

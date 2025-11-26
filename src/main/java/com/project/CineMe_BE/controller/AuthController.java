@@ -49,8 +49,7 @@ public class AuthController {
     @GetMapping("/api/v1/auth/logout-client")
     public ResponseEntity<APIResponse> logoutClient(HttpServletRequest request) {
         String token = JwtUtil.splitToken(request);
-        Long expireTime = jwtService.getTokenExpire(token);
-        authService.logout(token, expireTime);
+        authService.logout(token);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGOUT_SUCCESS))
@@ -72,8 +71,7 @@ public class AuthController {
     @GetMapping("/api/v1/auth/logout-admin")
     public ResponseEntity<APIResponse> logoutAdmin(HttpServletRequest request) {
         String token = JwtUtil.splitToken(request);
-        Long expireTime = jwtService.getTokenExpire(token);
-        authService.logout(token, expireTime);
+        authService.logout(token);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGOUT_SUCCESS))

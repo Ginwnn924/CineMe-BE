@@ -10,7 +10,7 @@ public interface AuthService {
 
     AuthResponse loginClient(LoginClientRequest request);
 
-    boolean logout(String token, Long ttl);
+    boolean logout(String token);
 
     AuthResponse loginAdmin(LoginAdminRequest request);
 
