@@ -35,6 +35,9 @@ public class OAuthLoginSuccessHandler extends SavedRequestAwareAuthenticationSuc
     @Value("${GOOGLE_REDIRECT_FE}")
     private String googleRedirectUrl;
 
+    @Value("${JWT_REFRESH_TOKEN_EXPIRATION}")
+    private Integer refreshTokenExpire;
+
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RedisService redisService;
@@ -89,7 +92,7 @@ public class OAuthLoginSuccessHandler extends SavedRequestAwareAuthenticationSuc
         cookie.setHttpOnly(true);
         cookie.setSecure(true);      // HTTPS only
         cookie.setPath("/");
-        cookie.setMaxAge(30 * 24 * 60 * 60); // 30 days
+        cookie.setMaxAge(refreshTokenExpire * 24 * 60 * 60);
         cookie.setAttribute("SameSite", "None"); // QUAN TRỌNG nếu FE/BE khác domain
 
         response.addCookie(cookie);
