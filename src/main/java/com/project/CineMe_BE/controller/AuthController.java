@@ -32,8 +32,11 @@ public class AuthController {
     private final LocalizationUtils localizationUtils;
     private final EmailProducer emailProducer;
     private final JwtService jwtService;
-
     private final RabbitTemplate rabbitTemplate;
+
+    @Value("${JWT_REFRESH_TOKEN_EXPIRATION}")
+    private Integer refreshTokenExpire;
+
 
     @PostMapping("/api/v1/auth/login-client")
     public ResponseEntity<APIResponse> loginClient(@RequestBody LoginClientRequest request) {
@@ -93,21 +96,42 @@ public class AuthController {
     }
 
     @PostMapping("/api/v1/auth/refresh-token")
-    public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request,
+                                                     HttpServletResponse response) {
+
         Cookie[] cookies = request.getCookies();
         String refreshToken = null;
+
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("refreshToken".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
-                    return ResponseEntity.ok(authService.refreshToken(refreshToken));
                 }
             }
         }
-        else {
-            System.out.println("No cookies found");
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        // Gọi service refresh (trong đó tạo RT mới + AC mới)
+        AuthResponse authResponse = authService.refreshToken(refreshToken);
+
+        // Clear old
+        Cookie clearCookie = new Cookie("refreshToken", null);
+        clearCookie.setHttpOnly(true);
+        clearCookie.setPath("/");
+        clearCookie.setMaxAge(0); //
+        response.addCookie(clearCookie);
+
+
+        Cookie newCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
+        newCookie.setHttpOnly(true);
+        newCookie.setPath("/");
+        newCookie.setMaxAge(refreshTokenExpire * 24 * 60 * 60);
+        response.addCookie(newCookie);
+
+        return ResponseEntity.ok(authResponse);
     }
 
 //
