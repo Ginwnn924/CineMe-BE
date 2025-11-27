@@ -165,6 +165,7 @@ public class ScheduleServiceImpl implements ScheduleService {
                         .format(format)
                         .startTime(startTime)
                         .endTime(endTime)
+                        .privateKey((System.currentTimeMillis() % 10000000000L) + "")
                         .build();
                 
                 showtime = showtimeRepository.save(showtime);
@@ -194,6 +195,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         
         return responses;
     }
+
+
 
     @Override
     @Transactional
