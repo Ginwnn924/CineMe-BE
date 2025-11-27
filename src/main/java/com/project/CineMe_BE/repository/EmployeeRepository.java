@@ -21,4 +21,6 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
             "JOIN FETCH r.listPermissions " +
             "WHERE e.email = ?1 ")
     Optional<EmployeeEntity> findByEmail(String email);
+
+    Optional<EmployeeEntity> findByRefreshToken(String refreshToken);
 }

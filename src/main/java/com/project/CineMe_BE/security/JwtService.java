@@ -16,6 +16,8 @@ public interface JwtService {
 
     String extractEmail(String token);
 
+    String extractRole(String token);
+
     boolean isValidateToken(String token, UserDetails userDetails);
 
     Date extractExpiration(String token);

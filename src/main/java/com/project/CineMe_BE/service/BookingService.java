@@ -11,9 +11,11 @@ import java.util.UUID;
 
 public interface BookingService {
 
-    String createBooking(BookingRequest bookingRequest, PaymentMethod method, HttpServletRequest request);
+    String createBookingWithEWallet(BookingRequest bookingRequest, HttpServletRequest request);
+    void createBookingWithCash(BookingRequest bookingRequest, HttpServletRequest request);
 
     UUID verifyPaymentVNPay(HttpServletRequest request);
+
     UUID verifyPaymentMomo(HttpServletRequest request);
 
     PaymentResponse getBookingInfo(UUID id);

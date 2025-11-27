@@ -30,4 +30,9 @@ public class EmailConsumer {
         String otp = (String) payload.get("otp");
         emailService.sendEmailOtp(email, fullName, otp);
     }
+
+    @RabbitListener(queues = RabbitConstant.EMAIL_BOOKING_QUEUE)
+    public void handleEmailBooking(Map<String, String> data) {
+        emailService.sendEmailConfirm(data.get("email"), data);
+    }
 }

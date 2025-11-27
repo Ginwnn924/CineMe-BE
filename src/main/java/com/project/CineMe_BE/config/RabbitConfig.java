@@ -84,4 +84,22 @@ public class RabbitConfig {
                 .to(cancelBookingExchange)
                 .with(RabbitConstant.ORDER_CANCEL_KEY);
     }
+
+    @Bean
+    public DirectExchange emailConfirmedExchange() {
+        return new DirectExchange(RabbitConstant.EMAIL_BOOKING_EXCHANGE);
+    }
+
+    @Bean
+    public Queue emailConfirmedQueue() {
+        return new Queue(RabbitConstant.EMAIL_BOOKING_QUEUE, true);
+    }
+
+    @Bean
+    public Binding sendEmailConfirmedBiding(Queue emailConfirmedQueue, DirectExchange emailConfirmedExchange) {
+        return BindingBuilder.bind(emailConfirmedQueue)
+                .to(emailConfirmedExchange)
+                .with(RabbitConstant.EMAIL_BOOKING_KEY);
+    }
+
 }

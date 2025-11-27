@@ -23,12 +23,11 @@ public class SeatSocketBroadcaster {
     private final SeatService seatService;
     private final SocketIOServer server;
 
-    public boolean lockSeatAndBroadcast(UserEntity user, ShowtimeEntity showtime, List<UUID> selectedSeats) {
-        UUID userId = user.getId();
+    public boolean lockSeatAndBroadcast(UUID id, ShowtimeEntity showtime, List<UUID> selectedSeats) {
         UUID showtimeId = showtime.getId();
         try {
-            boolean isLocked = seatService.lockSeats(user, showtime, selectedSeats);
-            MessageSocket data = new MessageSocket(showtimeId, userId, selectedSeats);
+            boolean isLocked = seatService.lockSeats(id, showtime, selectedSeats);
+            MessageSocket data = new MessageSocket(showtimeId, id, selectedSeats);
 
             if (isLocked) {
                 log.info("Seats {} for showtime {} locked successfully", selectedSeats, showtimeId);
@@ -41,7 +40,7 @@ public class SeatSocketBroadcaster {
         } catch (IllegalArgumentException e) {
             log.error("Error locking seats for showtime {}: {}", showtimeId, e.getMessage());
             server.getRoomOperations(showtimeId.toString()).sendEvent("seat_lock_failed",
-                    new MessageSocket(showtimeId, userId, selectedSeats));
+                    new MessageSocket(showtimeId, id, selectedSeats));
             return false;
         }
     }

@@ -2,6 +2,7 @@ package com.project.CineMe_BE.config;
 
 
 import com.project.CineMe_BE.filter.JwtAuthenFilter;
+import com.project.CineMe_BE.security.CustomOAuth2UserService;
 import com.project.CineMe_BE.security.EmployeeDetailsServiceImpl;
 import com.project.CineMe_BE.security.UserDetailsServiceImpl;
 import com.project.CineMe_BE.security.OAuthLoginSuccessHandler;
@@ -42,6 +43,7 @@ public class SecurityConfig {
     private final RedisTemplate redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
@@ -53,9 +55,16 @@ public class SecurityConfig {
                                 .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/api/v1/auth/login/oauth2") // D biet tac dung
-                        .successHandler(oAuthLoginSuccessHandler)
-                )
+                        .authorizationEndpoint(auth -> auth
+                                        .baseUri("/oauth2/authorize")
+                                // Nếu dùng cookie lưu redirect_uri:
+                                // .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository())
+                        )
+                        .redirectionEndpoint(redir -> redir
+                                .baseUri("/oauth2/callback/*"))
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))
+                        .successHandler(oAuthLoginSuccessHandler))
                 .formLogin(login -> login.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Khong luu token o phia server
                 .authenticationProvider(authenticationProvider())
@@ -70,7 +79,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Auth-Token"));
         configuration.setExposedHeaders(List.of("X-Auth-Token"));

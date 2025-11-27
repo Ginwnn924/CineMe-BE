@@ -6,6 +6,7 @@ import com.project.CineMe_BE.dto.response.BookingResponse;
 import com.project.CineMe_BE.enums.PaymentMethod;
 import com.project.CineMe_BE.exception.PaymentFailedException;
 import com.project.CineMe_BE.producer.BookingProducer;
+import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.repository.projection.BookingProjection;
 import com.project.CineMe_BE.repository.projection.PaymentProjection;
@@ -25,11 +26,15 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,47 +57,18 @@ public class BookingServiceImpl implements BookingService {
     private final VNPAYConfig vnPayConfig;
 //    private final UserRankService userRankService;
     private final UserService userService;
+    private final RedissonClient redissonClient;
+    private final EmailProducer emailProducer;
 
-    @Override
-    public String createBooking(BookingRequest bookingRequest,
-                                PaymentMethod method,
-                                HttpServletRequest request) {
-        EmployeeEntity employee = null;
-        if (bookingRequest.getEmployeeId() != null) {
-            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
-        }
-        UserEntity user = userRepository.findById(bookingRequest.getUserId())
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
-        ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
-        Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
-                .stream()
-                .filter(s -> s.getSeatType() != null)
-                .collect(Collectors.toMap(
-                        SeatsEntity::getId,
-                        s -> s.getSeatType().getName()
-                ));
-        List<UUID> selectedSeats = bookingRequest.getListSeatId();
 
-        // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
-        for (UUID seatId : selectedSeats) {
-            if (!listSeats.containsKey(seatId)) {
-                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
-            }
-        }
 
-        // Lock seats
-        boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
-                user,
-                showtime,
-                selectedSeats
-        );
-        if (!isLocked) {
-            log.error("Failed to lock seats {} for user {} and showtime {}", selectedSeats, user.getId(), showtime.getId());
-            return null;
-        }
 
+    private BookingEntity createBooking(BookingRequest bookingRequest,
+                                        EmployeeEntity employee,
+                                        UserEntity user,
+                                        ShowtimeEntity showtime,
+                                        Map<UUID, String> listSeats,
+                                        List<UUID> selectedSeats) {
         BookingEntity booking = BookingEntity.builder()
                 .user(user)
                 .employee(employee)
@@ -117,6 +93,7 @@ public class BookingServiceImpl implements BookingService {
         long price = listBookingSeats.stream()
                 .mapToLong(BookingSeatEntity::getPrice)
                 .sum();
+        System.out.println(price);
         List<BookingCombo> listBookingCombos = new ArrayList<>();
         if (bookingRequest.getListCombo() != null) {
             List<ComboEntity> listCombo = comboRepository.findAllById(bookingRequest.getListCombo().keySet());
@@ -140,22 +117,150 @@ public class BookingServiceImpl implements BookingService {
         booking.setListCombo(listBookingCombos);
         booking.setTotalPrice(price);
         booking.setBookingSeats(listBookingSeats);
+
         bookingRepository.save(booking);
 
-        bookingProducer.sendBookingDelay(booking.getId());
+        return booking;
+    }
+
+    @Override
+    public void createBookingWithCash(BookingRequest bookingRequest, HttpServletRequest request) {
+        List<RLock> seatLocks = bookingRequest.getListSeatId().stream()
+                .map(seatId -> redissonClient.getLock("seatLock:" + bookingRequest.getShowtimeId() + ":" + seatId))
+                .toList();
+        RLock multiLock = redissonClient.getMultiLock(seatLocks.toArray(new RLock[0]));
+        boolean locked = false;
+        try {
+            locked = multiLock.tryLock(3, 60, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new DataNotFoundException("Booking thất bại do lock error");
+            }
+            // Check ghe da dat chua
+            Boolean seatIsLocked = bookingRepository.existsSeatsLockedByShowtime(bookingRequest.getShowtimeId(), bookingRequest.getListSeatId());
+            if (seatIsLocked != null && seatIsLocked) {
+                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_AVAILABLE));
+            }
+            EmployeeEntity employee = null;
+            UserEntity user = null;
+            if (bookingRequest.getEmployeeId() != null) {
+                employee = employeeRepository.findById(bookingRequest.getEmployeeId())
+                        .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
+            }
+            if (bookingRequest.getUserId() != null) {
+                user = userRepository.findById(bookingRequest.getUserId())
+                        .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+            }
+            ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+            Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
+                    .stream()
+                    .filter(s -> s.getSeatType() != null)
+                    .collect(Collectors.toMap(
+                            SeatsEntity::getId,
+                            s -> s.getSeatType().getName()
+                    ));
+            List<UUID> selectedSeats = bookingRequest.getListSeatId();
+
+            // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
+            for (UUID seatId : selectedSeats) {
+                if (!listSeats.containsKey(seatId)) {
+                    throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
+                }
+            }
+
+            List<String> seatNumbers = seatsRepository.findAllById(selectedSeats).stream()
+                    .map(SeatsEntity::getSeatNumber)
+                    .collect(Collectors.toList());
+
+
+
+            BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
+            PaymentEntity payment = PaymentEntity.builder()
+                    .booking(booking)
+                    .amount(booking.getTotalPrice())
+                    .createdAt(new Date())
+                    .method(PaymentMethod.CASH)
+                    .build();
+//            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
+            booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+
+            String qrCode = generateQRCode(booking);
+            booking.setQrcode(qrCode);
+            bookingRepository.save(booking);
+            paymentRepository.save(payment);
+
+            if (user != null) {
+                emailProducer.sendEmailConfirm(user.getEmail(), booking, seatNumbers);
+            }
+
+
+        }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (locked) {
+                multiLock.unlock();
+            }
+        }
+
+
+
+    }
+
+    @Override
+    public String createBookingWithEWallet(BookingRequest bookingRequest,
+                                HttpServletRequest request) {
+        // Check ghe da dat chua
+        Boolean seatIsLocked = bookingRepository.existsSeatsLockedByShowtime(bookingRequest.getShowtimeId(), bookingRequest.getListSeatId());
+        if (seatIsLocked != null && seatIsLocked) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_AVAILABLE));
+        }
+        EmployeeEntity employee = null;
+        UserEntity user = null;
+        if (bookingRequest.getEmployeeId() != null) {
+            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
+        }
+        if (bookingRequest.getUserId() != null) {
+            user = userRepository.findById(bookingRequest.getUserId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+        }
+        ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
+                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+        Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
+                .stream()
+                .filter(s -> s.getSeatType() != null)
+                .collect(Collectors.toMap(
+                        SeatsEntity::getId,
+                        s -> s.getSeatType().getName()
+                ));
+        List<UUID> selectedSeats = bookingRequest.getListSeatId();
+
+        // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
+        for (UUID seatId : selectedSeats) {
+            if (!listSeats.containsKey(seatId)) {
+                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
+            }
+        }
+
+        boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
+                user == null ? bookingRequest.getEmployeeId() : bookingRequest.getUserId(),
+                showtime,
+                selectedSeats);
+
+
+        BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
 
         if (isLocked) {
-           if (PaymentMethod.CASH.equals(method)) {
-               // change status to CONFIRMED
-               // create payment record
-           }
-           else if (PaymentMethod.VNPAY.equals(method)) {
-               return paymentService.createPaymentVnpay(booking, request);
-           }
-           // Momo
-           else {
-               return paymentService.createPaymentMomo(booking);
-           }
+            if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
+                bookingProducer.sendBookingDelay(booking.getId());
+                return paymentService.createPaymentVnpay(booking, request);
+            }
+            // Momo
+            else {
+                bookingProducer.sendBookingDelay(booking.getId());
+                return paymentService.createPaymentMomo(booking);
+            }
         }
         return null;
     }
@@ -189,6 +294,17 @@ public class BookingServiceImpl implements BookingService {
 //            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
 
             paymentRepository.save(payment);
+            List<String> seatNumbers = seatsRepository.findAllById(
+                            booking.getBookingSeats().stream()
+                                    .map(bs -> bs.getSeat().getId())
+                                    .collect(Collectors.toList())
+                    ).stream()
+                    .map(SeatsEntity::getSeatNumber)
+                    .collect(Collectors.toList());
+
+            String email = booking.getUser().getEmail();
+
+            emailProducer.sendEmailConfirm(email, booking, seatNumbers);
             return bookingId;
         }
         return null;
@@ -229,6 +345,8 @@ public class BookingServiceImpl implements BookingService {
                     .transactionId(request.getParameter("vnp_TransactionNo"))
                     .build();
 
+
+
             // Update user rank after successful payment
             try {
 //                userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
@@ -239,7 +357,20 @@ public class BookingServiceImpl implements BookingService {
                 // Don't throw exception to avoid payment confirmation failure
             }
 
+            List<String> seatNumbers = seatsRepository.findAllById(
+                            booking.getBookingSeats().stream()
+                                    .map(bs -> bs.getSeat().getId())
+                                    .collect(Collectors.toList())
+                    ).stream()
+                    .map(SeatsEntity::getSeatNumber)
+                    .collect(Collectors.toList());
+
+            String email = booking.getUser().getEmail();
+
+            emailProducer.sendEmailConfirm(email, booking, seatNumbers);
+
             paymentRepository.save(payment);
+
             return bookingId;
         }
         throw new PaymentFailedException("Payment failed");

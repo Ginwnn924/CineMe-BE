@@ -36,6 +36,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -96,7 +97,10 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return jwtService.generateToken(userDetails);
+        AuthResponse authResponse = jwtService.generateToken(userDetails);
+        user.setRefreshToken(authResponse.getRefreshToken());
+        userRepository.save(user);
+        return authResponse;
     }
 
     @Override
@@ -114,12 +118,38 @@ public class AuthServiceImpl implements AuthService {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        return jwtService.generateToken(userDetails);
+        AuthResponse authResponse = jwtService.generateToken(userDetails);
+        employee.setRefreshToken(authResponse.getRefreshToken());
+        employeeRepository.save(employee);
+        return authResponse;
     }
 
     @Override
-    public boolean logout(String token, Long ttl) {
-        redisService.set("blacklist:" + token, "", ttl);
+    public boolean logout(String token) {
+        String email = jwtService.extractEmail(token);
+        String role = jwtService.extractRole(token);
+
+        if("CUSTOMER".equals(role)) {
+            UserEntity user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+            user.setRefreshToken(null);
+            userRepository.save(user);
+        }
+        else {
+            EmployeeEntity employee = employeeRepository.findByEmail(email)
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+            employee.setRefreshToken(null);
+            employeeRepository.save(employee);
+        }
+
+        Long ttl = jwtService.getTokenExpire(token);
+        Long now = new Date().getTime();
+        Long time = (ttl - now) / 1000;
+        System.out.println("TTL: " + ttl);
+        System.out.println("Now: " + now);
+        System.out.println("Time: " + time);
+        redisService.set("blacklist:" + token, "", time);
+
         return true;
     }
 
@@ -132,7 +162,38 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse refreshToken(RefreshTokenRequest refreshToken) {
+    public AuthResponse refreshToken(String refreshToken) {
+        // check token valid
+        if (StringUtils.isEmpty(refreshToken)) {
+            throw new BadCredentialsException("Refresh token is required");
+        }
+        UserEntity user = userRepository.findByRefreshToken(refreshToken)
+                .orElse(null);
+        EmployeeEntity employee = employeeRepository.findByRefreshToken(refreshToken)
+                .orElse(null);
+        if (user == null && employee == null) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        if (user != null) {
+            UserDetails userDetails = new CustomUserDetails(user);
+            if (!jwtService.isValidateToken(refreshToken, userDetails)) {
+                throw new BadCredentialsException("Invalid refresh token");
+            }
+            user.setRefreshToken(jwtService.generateRefreshToken(userDetails));
+            userRepository.save(user);
+            return jwtService.generateToken(userDetails);
+        }
+        else if (employee != null) {
+            UserDetails userDetails = new CustomEmployeeDetails(employee);
+            if (!jwtService.isValidateToken(refreshToken, userDetails)) {
+                throw new BadCredentialsException("Invalid refresh token");
+            }
+            employee.setRefreshToken(jwtService.generateRefreshToken(userDetails));
+            employeeRepository.save(employee);
+            return jwtService.generateToken(userDetails);
+        }
+
+
         return null;
     }
 

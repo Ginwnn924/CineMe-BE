@@ -28,11 +28,7 @@ public class BookingEntity {
     @JoinColumn(name = "employee_id")
     private EmployeeEntity employee;
 
-    @OneToMany(mappedBy = "booking", cascade = {
-            CascadeType.PERSIST,
-            CascadeType.REMOVE,
-            CascadeType.DETACH
-    })
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<BookingCombo> listCombo;
 
 

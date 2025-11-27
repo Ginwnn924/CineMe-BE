@@ -2,16 +2,21 @@ package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.dto.request.CreateScheduleRequest;
 import com.project.CineMe_BE.dto.request.RecomendScheduleRequest;
+import com.project.CineMe_BE.dto.response.CreateScheduleResponse;
 import com.project.CineMe_BE.dto.response.RecommendScheduleResponse;
 import com.project.CineMe_BE.entity.ShowtimeEntity;
 import com.project.CineMe_BE.repository.ShowtimeRepository;
+import com.project.CineMe_BE.security.CustomEmployeeDetails;
+import com.project.CineMe_BE.security.CustomUserDetails;
 import com.project.CineMe_BE.service.ScheduleService;
 import com.project.CineMe_BE.utils.DateFormatUltil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,9 +29,13 @@ public class ScheduleController {
     private final ScheduleService scheduleService;
     private final LocalizationUtils localizationUtils;
     @GetMapping("/search")
-    public ResponseEntity<APIResponse> searchSchedules(@RequestParam UUID theaterId,
-                                                       @RequestParam(required = false) String date) {
+    public ResponseEntity<APIResponse> searchSchedules(@RequestParam(required = false) UUID theaterId,
+                                                       @RequestParam(required = false) String date,
+                                                       @AuthenticationPrincipal CustomEmployeeDetails principal) {
 
+        if (principal != null) {
+            theaterId = principal.getEmployee().getTheater().getId();
+        }
         return ResponseEntity.status(200)
                 .body(APIResponse.builder()
                         .message(localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_GET_ALL_SUCCESS))
@@ -34,13 +43,25 @@ public class ScheduleController {
                         .build());
     }
 
-    @GetMapping("/recommend")
-    public ResponseEntity<APIResponse> generateSchedules(@RequestBody RecomendScheduleRequest request) {
-        List<RecommendScheduleResponse> demo = scheduleService.recommendSchedules(request);
-        return ResponseEntity.status(200)
+    @PostMapping("/create")
+    public ResponseEntity<APIResponse> createSchedules(@RequestBody List<CreateScheduleRequest> requests) {
+//        UUID theaterId = principal.getEmployee().getTheater().getId();
+        List<CreateScheduleResponse> createdSchedules = scheduleService.createSchedulesBatch(requests);
+        
+        return ResponseEntity.status(201)
                 .body(APIResponse.builder()
-                        .message("Gợi ý lịch chiếu thành công")
-                        .data(demo)
+                        .message(localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_CREATE_SUCCESS))
+                        .data(createdSchedules)
                         .build());
     }
+
+//    @GetMapping("/recommend")
+//    public ResponseEntity<APIResponse> generateSchedules(@RequestBody RecomendScheduleRequest request) {
+//        List<RecommendScheduleResponse> demo = scheduleService.recommendSchedules(request);
+//        return ResponseEntity.status(200)
+//                .body(APIResponse.builder()
+//                        .message("Gợi ý lịch chiếu thành công")
+//                        .data(demo)
+//                        .build());
+//    }
 }

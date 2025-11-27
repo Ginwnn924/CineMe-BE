@@ -7,16 +7,18 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, OAuth2User {
     private UserEntity userEntity;
 
     public UUID getId() {
@@ -38,5 +40,13 @@ public class CustomUserDetails implements UserDetails {
         return userEntity.getEmail();
     }
 
+    @Override
+    public String getName() {
+        return userEntity.getFullName();
+    }
 
+    @Override
+    public Map<String, Object> getAttributes() {
+        return Map.of();
+    }
 }

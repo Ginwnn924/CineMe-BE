@@ -29,7 +29,7 @@ public class PaymentController {
 
     @PostMapping("/client")
     public ResponseEntity<APIResponse> createBookingClient(@RequestBody BookingRequest bookingRequest, HttpServletRequest request) {
-        String paymentUrl = bookingService.createBooking(bookingRequest, PaymentMethod.VNPAY, request);
+        String paymentUrl = bookingService.createBookingWithEWallet(bookingRequest, request);
         APIResponse apiResponse = new APIResponse();
         int statusCode = 200;
         if (paymentUrl == null ) {
@@ -46,19 +46,18 @@ public class PaymentController {
 
     @PostMapping("/admin")
     public ResponseEntity<APIResponse> createBookingAdmin(@RequestBody BookingRequest bookingRequest, HttpServletRequest request) {
-        String paymentUrl = bookingService.createBooking(bookingRequest, PaymentMethod.MOMO, request);
         APIResponse apiResponse = new APIResponse();
-        int statusCode = 200;
-        if (paymentUrl == null ) {
-            statusCode = 400;
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_FAILED));
+        if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
+            bookingService.createBookingWithCash(bookingRequest, request);
+            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_CREATE_SUCCESS));
         }
         else {
+            String paymentUrl = bookingService.createBookingWithEWallet(bookingRequest, request);
             apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_SUCCESS));
             apiResponse.setData(paymentUrl);
         }
-        apiResponse.setStatusCode(statusCode);
-        return ResponseEntity.status(statusCode).body(apiResponse);
+        apiResponse.setStatusCode(200);
+        return ResponseEntity.ok().body(apiResponse);
     }
 
 

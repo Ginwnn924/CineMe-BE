@@ -1,6 +1,8 @@
 package com.project.CineMe_BE.service;
 
+import com.project.CineMe_BE.dto.request.CreateScheduleRequest;
 import com.project.CineMe_BE.dto.request.RecomendScheduleRequest;
+import com.project.CineMe_BE.dto.response.CreateScheduleResponse;
 import com.project.CineMe_BE.dto.response.RecommendScheduleResponse;
 import com.project.CineMe_BE.dto.response.ScheduleResponse;
 
@@ -12,5 +14,9 @@ public interface ScheduleService {
 
     List<ScheduleResponse> findByTheaterIdAndDate(UUID theaterId, LocalDate date);
 
-    List<RecommendScheduleResponse> recommendSchedules(RecomendScheduleRequest request);
+//    List<RecommendScheduleResponse> recommendSchedules(RecomendScheduleRequest request);
+//
+    List<CreateScheduleResponse> createSchedules(CreateScheduleRequest request);
+
+    List<CreateScheduleResponse> createSchedulesBatch(List<CreateScheduleRequest> requests);
 }

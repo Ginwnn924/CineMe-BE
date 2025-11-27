@@ -50,6 +50,7 @@ public class MessageKey {
     public static final String SEAT_NOT_FOUND = "seat.not_found";
     public static final String SEAT_GET_DETAILS = "seat.get_details";
     public static final String SEAT_GET_LIST = "seat.get_all";
+    public static final String SEAT_NOT_AVAILABLE = "seat.not_available";
 
     // SeatType
     public static final String SEAT_TYPE_CREATE_SUCCESS = "seat_type.create_success";
@@ -95,12 +96,14 @@ public class MessageKey {
     public static final String USER_UPDATE_SUCCESS = "user.update_success";
     public static final String USER_LOCK_SUCCESS = "user.lock_success";
     public static final String USER_UNLOCK_SUCCESS = "user.unlock_success";
+
     // Payment
     public static final String PAYMENT_CREATE_URL_SUCCESS = "payment.create_url_success";
     public static final String PAYMENT_CREATE_URL_FAILED = "payment.create_url_failed";
 
     // Schedule
     public static final String SCHEDULE_GET_ALL_SUCCESS = "schedule.get_all_success";
+    public static final String SCHEDULE_CREATE_SUCCESS = "schedule.create_success";
 
     // Role
     public static final String ROLE_NOT_FOUND = "role.not_found";
@@ -110,7 +113,7 @@ public class MessageKey {
     public static final String AUTH_REGISTER_SUCCESS = "auth.register_success";
     public static final String AUTH_LOGOUT_SUCCESS = "auth.logout_success";
     public static final String AUTH_LOGIN_FAILED = "auth.login_failed";
-
+    public static final String AUTH_REFRESH_TOKEN_SUCCESS = "auth.refresh_token_success";
 
     // Country
     public static final String COUNTRY_GET_ALL_SUCCESS = "country.get_all_success";
@@ -118,6 +121,7 @@ public class MessageKey {
     // Booking
     public static final String BOOKING_NOT_FOUND = "booking.not_found";
     public static final String BOOKING_GET_SUCCESS = "booking.get_success";
+    public static final String BOOKING_CREATE_SUCCESS = "booking.create_success";
 
 
     // Product

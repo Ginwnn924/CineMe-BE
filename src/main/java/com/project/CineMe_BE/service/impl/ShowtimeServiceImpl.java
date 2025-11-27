@@ -56,7 +56,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (isShowtimeConflict(showtime)) {
             throw new DataNotValid(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CONFLICT));
         }
-        ScheduleEntity schedule = scheduleRepository.findByMovieIdAndDate(showtime.getMovieId(), showtime.getDate())
+        ScheduleEntity schedule = scheduleRepository.findFirstByMovieIdAndDate(showtime.getMovieId(), showtime.getDate())
                 .orElseGet(() -> {
                     ScheduleEntity newSchedule = ScheduleEntity.builder()
                             .date(showtime.getDate())
@@ -92,7 +92,7 @@ public class ShowtimeServiceImpl implements ShowtimeService {
         if (isShowtimeConflict(showtime)) {
             throw new DataNotValid(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CONFLICT));
         }
-        ScheduleEntity schedule = scheduleRepository.findByMovieIdAndDate(showtime.getMovieId(), showtime.getDate())
+        ScheduleEntity schedule = scheduleRepository.findFirstByMovieIdAndDate(showtime.getMovieId(), showtime.getDate())
                 .orElseGet(() -> {
                     ScheduleEntity newSchedule = ScheduleEntity.builder()
                             .date(showtime.getDate())
