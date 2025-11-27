@@ -6,6 +6,7 @@ import com.project.CineMe_BE.dto.response.BookingResponse;
 import com.project.CineMe_BE.enums.PaymentMethod;
 import com.project.CineMe_BE.exception.PaymentFailedException;
 import com.project.CineMe_BE.producer.BookingProducer;
+import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.*;
 import com.project.CineMe_BE.repository.projection.BookingProjection;
 import com.project.CineMe_BE.repository.projection.PaymentProjection;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -56,6 +58,9 @@ public class BookingServiceImpl implements BookingService {
 //    private final UserRankService userRankService;
     private final UserService userService;
     private final RedissonClient redissonClient;
+    private final EmailProducer emailProducer;
+
+
 
 
     private BookingEntity createBooking(BookingRequest bookingRequest,
@@ -88,6 +93,7 @@ public class BookingServiceImpl implements BookingService {
         long price = listBookingSeats.stream()
                 .mapToLong(BookingSeatEntity::getPrice)
                 .sum();
+        System.out.println(price);
         List<BookingCombo> listBookingCombos = new ArrayList<>();
         if (bookingRequest.getListCombo() != null) {
             List<ComboEntity> listCombo = comboRepository.findAllById(bookingRequest.getListCombo().keySet());
@@ -111,7 +117,9 @@ public class BookingServiceImpl implements BookingService {
         booking.setListCombo(listBookingCombos);
         booking.setTotalPrice(price);
         booking.setBookingSeats(listBookingSeats);
+
         bookingRepository.save(booking);
+
         return booking;
     }
 
@@ -160,6 +168,11 @@ public class BookingServiceImpl implements BookingService {
                 }
             }
 
+            List<String> seatNumbers = seatsRepository.findAllById(selectedSeats).stream()
+                    .map(SeatsEntity::getSeatNumber)
+                    .collect(Collectors.toList());
+
+
 
             BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
             PaymentEntity payment = PaymentEntity.builder()
@@ -170,8 +183,17 @@ public class BookingServiceImpl implements BookingService {
                     .build();
 //            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
             booking.setStatus(BookingStatusEnum.CONFIRMED.name());
+
+            String qrCode = generateQRCode(booking);
+            booking.setQrcode(qrCode);
             bookingRepository.save(booking);
             paymentRepository.save(payment);
+
+            if (user != null) {
+                emailProducer.sendEmailConfirm(user.getEmail(), booking, seatNumbers);
+            }
+
+
         }
         catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -272,6 +294,17 @@ public class BookingServiceImpl implements BookingService {
 //            userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
 
             paymentRepository.save(payment);
+            List<String> seatNumbers = seatsRepository.findAllById(
+                            booking.getBookingSeats().stream()
+                                    .map(bs -> bs.getSeat().getId())
+                                    .collect(Collectors.toList())
+                    ).stream()
+                    .map(SeatsEntity::getSeatNumber)
+                    .collect(Collectors.toList());
+
+            String email = booking.getUser().getEmail();
+
+            emailProducer.sendEmailConfirm(email, booking, seatNumbers);
             return bookingId;
         }
         return null;
@@ -312,6 +345,8 @@ public class BookingServiceImpl implements BookingService {
                     .transactionId(request.getParameter("vnp_TransactionNo"))
                     .build();
 
+
+
             // Update user rank after successful payment
             try {
 //                userRankService.updateUserRankAfterPayment(booking.getUser().getId(), booking.getTotalPrice());
@@ -322,7 +357,20 @@ public class BookingServiceImpl implements BookingService {
                 // Don't throw exception to avoid payment confirmation failure
             }
 
+            List<String> seatNumbers = seatsRepository.findAllById(
+                            booking.getBookingSeats().stream()
+                                    .map(bs -> bs.getSeat().getId())
+                                    .collect(Collectors.toList())
+                    ).stream()
+                    .map(SeatsEntity::getSeatNumber)
+                    .collect(Collectors.toList());
+
+            String email = booking.getUser().getEmail();
+
+            emailProducer.sendEmailConfirm(email, booking, seatNumbers);
+
             paymentRepository.save(payment);
+
             return bookingId;
         }
         throw new PaymentFailedException("Payment failed");

@@ -1,44 +1,57 @@
 package com.project.CineMe_BE.service.impl;
 
 import com.project.CineMe_BE.service.EmailService;
+import io.minio.GetObjectArgs;
+import io.minio.MinioClient;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
     private final JavaMailSender javaMailSender;
+    private final MinioClient minioClient;
 
 
     @Override
-    public void sendEmailConfirm(String to, String body) {
+    public void sendEmailConfirm(String to, Map<String, String> body) {
         try {
-            String template = Files.readString(Paths.get("src/main/resources/templates/booking.html"));
-            String html = template
-                    .replace("[[ORDER_CODE]]", "ABC123")
-                    .replace("[[MOVIE_TITLE]]", "Movie Title")
-                    .replace("[[CINEMA_NAME]]", "Cinema Name")
-                    .replace("[[SHOW_TIME]]", "2023-10-10 18:00")
-                    .replace("[[SEATS_COMMA_SEPARATED]]", "Seat1, Seat2")
-                    .replace("[[PAYMENT_METHOD]]", "Credit Card")
-                    .replace("[[AMOUNT]]", "100.000 VND")
-                    .replace("[[QR_IMAGE_URL_OR_CID]]", "https://th.bing.com/th/id/R.735ed702a83ab2b6ff968d4495bc894a?rik=hmlsJloZS%2fO%2frg&pid=ImgRaw&r=0");
 
+
+
+
+            ClassPathResource resource = new ClassPathResource("templates/booking.html");
+            String template = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+            String html = template
+                    .replace("[[ORDER_CODE]]", body.get("bookingId"))
+                    .replace("[[MOVIE_TITLE]]", body.get("movieName"))
+                    .replace("[[CINEMA_NAME]]", body.get("theaterName"))
+                    .replace("[[ROOM]]", body.get("roomName"))
+                    .replace("[[SHOW_TIME]]", body.get("showtime"))
+                    .replace("[[SEATS_COMMA_SEPARATED]]", body.get("listSeats"))
+                    .replace("[[PAYMENT_METHOD]]", body.get("paymentMethod"))
+                    .replace("[[AMOUNT]]", body.get("amount"))
+                    .replace("[[QR_IMAGE_URL_OR_CID]]", body.get("qrCode"));
 
             MimeMessage message = javaMailSender.createMimeMessage();
-
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("CineMê");
+            helper.setFrom(new InternetAddress("cineme604@gmail.com", "CineMê", "UTF-8"));
             helper.setTo(to);
             helper.setSubject("HOÁ ĐƠN GIAO DỊCH");
             helper.setText(html, true);
