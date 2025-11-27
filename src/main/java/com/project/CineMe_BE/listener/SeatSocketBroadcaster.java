@@ -26,17 +26,18 @@ public class SeatSocketBroadcaster {
     public boolean lockSeatAndBroadcast(UUID id, ShowtimeEntity showtime, List<UUID> selectedSeats) {
         UUID showtimeId = showtime.getId();
         try {
-            boolean isLocked = seatService.lockSeats(id, showtime, selectedSeats);
+            // boolean isLocked = seatService.lockSeats(id, showtime, selectedSeats);
             MessageSocket data = new MessageSocket(showtimeId, id, selectedSeats);
+            server.getRoomOperations(showtimeId.toString()).sendEvent("seat_locked", data);
 
-            if (isLocked) {
-                log.info("Seats {} for showtime {} locked successfully", selectedSeats, showtimeId);
-                server.getRoomOperations(showtimeId.toString()).sendEvent("seat_locked", data);
-            } else {
-                log.warn("Failed to lock seats {} for showtime {}", selectedSeats, showtimeId);
-                server.getRoomOperations(showtimeId.toString()).sendEvent("seat_lock_failed", data);
-            }
-            return isLocked;
+            // if (isLocked) {
+            //     log.info("Seats {} for showtime {} locked successfully", selectedSeats, showtimeId);
+            //     server.getRoomOperations(showtimeId.toString()).sendEvent("seat_locked", data);
+            // } else {
+            //     log.warn("Failed to lock seats {} for showtime {}", selectedSeats, showtimeId);
+            //     server.getRoomOperations(showtimeId.toString()).sendEvent("seat_lock_failed", data);
+            // }
+            return true;
         } catch (IllegalArgumentException e) {
             log.error("Error locking seats for showtime {}: {}", showtimeId, e.getMessage());
             server.getRoomOperations(showtimeId.toString()).sendEvent("seat_lock_failed",
