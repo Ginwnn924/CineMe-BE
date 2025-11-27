@@ -37,7 +37,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -89,11 +91,13 @@ public class ScheduleServiceImpl implements ScheduleService {
             response.setGenreEn(generEn);
 
 
+            ZoneId zone = ZoneId.of("Asia/Ho_Chi_Minh"); // múi giờ Việt Nam
+             LocalDate today = LocalDate.now(zone); LocalTime now = LocalTime.now(zone);
+
             List<ShowtimeResponse> listShowtimeDTO =  showtimesOfMovie.stream()
                     .map(showtime -> {
                         ShowtimeResponse dto = showtimeResponseMapper.toDto(showtime);
-                        boolean isAvailable = dto.getDate().isAfter(LocalDate.now()) ||
-                                (dto.getDate().isEqual(LocalDate.now()) && dto.getStartTime().isAfter(LocalTime.now()));
+                        boolean isAvailable = dto.getDate().isAfter(today) || (dto.getDate().isEqual(today) && dto.getStartTime().isAfter(now)); dto.setIsAvailable(isAvailable);
                         dto.setIsAvailable(isAvailable);
                         return dto;
                     }).toList();

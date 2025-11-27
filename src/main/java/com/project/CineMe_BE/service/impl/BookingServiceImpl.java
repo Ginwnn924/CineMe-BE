@@ -210,59 +210,79 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public String createBookingWithEWallet(BookingRequest bookingRequest,
                                 HttpServletRequest request) {
-        // Check ghe da dat chua
-        Boolean seatIsLocked = bookingRepository.existsSeatsLockedByShowtime(bookingRequest.getShowtimeId(), bookingRequest.getListSeatId());
-        if (seatIsLocked != null && seatIsLocked) {
-            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_AVAILABLE));
-        }
-        EmployeeEntity employee = null;
-        UserEntity user = null;
-        if (bookingRequest.getEmployeeId() != null) {
-            employee = employeeRepository.findById(bookingRequest.getEmployeeId())
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
-        }
-        if (bookingRequest.getUserId() != null) {
-            user = userRepository.findById(bookingRequest.getUserId())
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
-        }
-        ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
-        Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
-                .stream()
-                .filter(s -> s.getSeatType() != null)
-                .collect(Collectors.toMap(
-                        SeatsEntity::getId,
-                        s -> s.getSeatType().getName()
-                ));
-        List<UUID> selectedSeats = bookingRequest.getListSeatId();
 
-        // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
-        for (UUID seatId : selectedSeats) {
-            if (!listSeats.containsKey(seatId)) {
-                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
+        List<RLock> seatLocks = bookingRequest.getListSeatId().stream()
+                .map(seatId -> redissonClient.getLock("seatLock:" + bookingRequest.getShowtimeId() + ":" + seatId))
+                .toList();
+        RLock multiLock = redissonClient.getMultiLock(seatLocks.toArray(new RLock[0]));
+        boolean locked = false;
+        try {
+            locked = multiLock.tryLock(3, 60, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new DataNotFoundException("Booking thất bại do lock error");
+            }
+            // Check ghe da dat chua
+            Boolean seatIsLocked = bookingRepository.existsSeatsLockedByShowtime(bookingRequest.getShowtimeId(), bookingRequest.getListSeatId());
+            if (seatIsLocked != null && seatIsLocked) {
+                throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_AVAILABLE));
+            }
+            EmployeeEntity employee = null;
+            UserEntity user = null;
+            if (bookingRequest.getEmployeeId() != null) {
+                employee = employeeRepository.findById(bookingRequest.getEmployeeId())
+                        .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.EMPLOYEE_NOT_FOUND)));
+            }
+            if (bookingRequest.getUserId() != null) {
+                user = userRepository.findById(bookingRequest.getUserId())
+                        .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+            }
+            ShowtimeEntity showtime = showtimeRepository.findById(bookingRequest.getShowtimeId())
+                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+            Map<UUID, String> listSeats = seatsRepository.findByRoomId(showtime.getRoom().getId())
+                    .stream()
+                    .filter(s -> s.getSeatType() != null)
+                    .collect(Collectors.toMap(
+                            SeatsEntity::getId,
+                            s -> s.getSeatType().getName()
+                    ));
+            List<UUID> selectedSeats = bookingRequest.getListSeatId();
+
+            // Check ghế có tồn tại trong phòng (Khớp ID vaf seatNumber)
+            for (UUID seatId : selectedSeats) {
+                if (!listSeats.containsKey(seatId)) {
+                    throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SEAT_NOT_FOUND));
+                }
+            }
+
+            boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
+                    user == null ? bookingRequest.getEmployeeId() : bookingRequest.getUserId(),
+                    showtime,
+                    selectedSeats);
+
+
+            BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
+
+            if (isLocked) {
+                if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
+                    bookingProducer.sendBookingDelay(booking.getId());
+                    return paymentService.createPaymentVnpay(booking, request);
+                }
+                // Momo
+                else {
+                    bookingProducer.sendBookingDelay(booking.getId());
+                    return paymentService.createPaymentMomo(booking);
+                }
+            }
+            return null;
+        }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (locked) {
+                multiLock.unlock();
             }
         }
 
-        boolean isLocked = seatSocketBroadcaster.lockSeatAndBroadcast(
-                user == null ? bookingRequest.getEmployeeId() : bookingRequest.getUserId(),
-                showtime,
-                selectedSeats);
-
-
-        BookingEntity booking = createBooking(bookingRequest, employee, user, showtime, listSeats, selectedSeats);
-
-        if (isLocked) {
-            if (PaymentMethod.VNPAY.name().equals(bookingRequest.getPaymentMethod())) {
-                bookingProducer.sendBookingDelay(booking.getId());
-                return paymentService.createPaymentVnpay(booking, request);
-            }
-            // Momo
-            else {
-                bookingProducer.sendBookingDelay(booking.getId());
-                return paymentService.createPaymentMomo(booking);
-            }
-        }
-        return null;
     }
 
     @Override
