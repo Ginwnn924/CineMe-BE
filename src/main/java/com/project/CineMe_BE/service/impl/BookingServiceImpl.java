@@ -275,6 +275,15 @@ public class BookingServiceImpl implements BookingService {
             }
             return null;
         }
+        catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (locked) {
+                multiLock.unlock();
+            }
+        }
+    }
+
 
     @Override
     public UUID verifyPaymentMomo(HttpServletRequest request) {
