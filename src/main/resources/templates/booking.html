@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Xác nhận đặt vé</title>
+    <style>
+        body {
+            margin: 0; padding: 0; background-color: #f4f6f8; font-family: "Helvetica", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            width: 100%; max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 8px;
+            overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .header {
+            background: linear-gradient(90deg,#0d6efd,#6610f2); color: white; padding: 20px;
+            text-align: left;
+        }
+        .brand { font-size: 20px; font-weight: 700; letter-spacing: 0.2px; }
+        .hero { padding: 24px; }
+        .title { font-size: 20px; font-weight: 700; margin: 0 0 8px 0; color: #111; }
+        .subtitle { margin: 0 0 18px 0; color: #555; font-size: 14px; }
+        .details { padding: 0 24px 24px 24px; border-top: 1px solid #eee; }
+        .label { color:#666; font-size:14px; padding:6px 0; }
+        .value { color: #111; font-weight:600; font-size:14px; padding:6px 0; text-align:right; }
+        .qr { text-align:center; padding: 18px 0 8px; }
+        .cta {
+            display:inline-block; background:#0d6efd; color:white; padding:10px 16px; border-radius:6px; text-decoration:none;
+            font-weight:600; margin-top:8px;
+        }
+        .note { font-size:12px; color:#888; padding: 8px 24px 24px 24px; }
+        .footer { font-size:12px; color:#9aa0a6; text-align:center; padding:16px; }
+    </style>
+</head>
+<body>
+<!-- Container -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8; padding:20px 16px;">
+    <tr>
+        <td align="center">
+            <table role="presentation" class="container" cellpadding="0" cellspacing="0" width="100%">
+                <!-- Header -->
+                <tr>
+                    <td class="header">
+                        <span class="brand">CineMê</span>
+                    </td>
+                </tr>
+
+                <!-- Hero -->
+                <tr>
+                    <td class="hero">
+                        <h1 class="title">Đặt vé thành công 🎉</h1>
+                        <p class="subtitle">
+                            Cảm ơn bạn đã đặt vé tại CineMê. Dưới đây là thông tin vé của bạn — vui lòng mang mã QR khi tới rạp.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Details -->
+                <tr>
+                    <td class="details">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; width:100%;">
+                            <tr>
+                                <td class="label" width="40%">Mã đơn hàng</td>
+                                <td class="value">[[ORDER_CODE]]</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Tên phim</td>
+                                <td class="value">[[MOVIE_TITLE]]</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Rạp / Phòng</td>
+                                <td class="value">[[CINEMA_NAME]] / [[ROOM]]</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Suất chiếu</td>
+                                <td class="value">[[SHOW_TIME]]</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Ghế</td>
+                                <td class="value">[[SEATS_COMMA_SEPARATED]]</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Thanh toán</td>
+                                <td class="value">[[PAYMENT_METHOD]] - [[AMOUNT]]</td>
+                            </tr>
+                        </table>
+
+                        <!-- QR area -->
+                        <div class="qr">
+                            <div style="display:inline-block; padding:12px; border-radius:12px; background:#fafafa; border:1px solid #eee;">
+                                <img src="[[QR_IMAGE_URL_OR_CID]]" alt="QR code" width="220" style="display:block; margin:0 auto;">
+                                <div style="font-size:12px; color:#666; margin-top:8px;">Mã QR: xuất trình tại quầy</div>
+                            </div>
+
+                            <div style="margin-top:12px;">
+                                <a href="[[VIEW_TICKET_URL]]" class="cta">Xem vé / Tải vé</a>
+                            </div>
+                        </div>
+
+                        <p class="note">
+                            Lưu ý: Vui lòng đến trước 10-15 phút. Vé mua không hoàn tiền (trừ khi có quy định khác). Mọi thắc mắc liên hệ: <strong>1900-XXXX</strong>.
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td class="footer">
+                        © [[YEAR]] CineMaster — Địa chỉ: 123 Đường Điện Ảnh, TP. HCM<br>
+                        Bạn không muốn nhận email? <a href="[[UNSUBSCRIBE_URL]]">Hủy nhận thông báo</a>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

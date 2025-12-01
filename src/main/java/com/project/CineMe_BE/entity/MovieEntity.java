@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -13,9 +15,10 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MoviesEntity {
+public class MovieEntity {
     @Id
     @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "name_vn")
@@ -26,12 +29,6 @@ public class MoviesEntity {
 
     @Column(name = "director")
     private String director;
-
-    @Column(name = "country_id")
-    private UUID countryId;
-
-    @Column(name = "format_id")
-    private UUID formatId;
 
     @Column(name = "release_date")
     private LocalDateTime releaseDate;
@@ -48,8 +45,6 @@ public class MoviesEntity {
     @Column(name = "image")
     private String image;
 
-    @Column(name = "himage")
-    private String himage;
 
     @Column(name = "trailer")
     private String trailer;
@@ -57,19 +52,38 @@ public class MoviesEntity {
     @Column(name = "status")
     private String status;
 
-    @Column(name = "ratings")
-    private String ratings;
-
     @Column(name = "time")
     private Long time;
 
-    @Column(name = "limitage_id")
-    private UUID limitageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private CountryEntity country;
 
-    @Column(name = "language_id")
-    private UUID languageId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "limitage_id")
+    private LimitageEntity limitage;
+
 
     @Column(name = "sortorder")
     private Long sortorder;
 
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "movie_actor",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "actor_id")
+    )
+    private Set<ActorEntity> listActor;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "movie_genres",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id")
+    )
+    private Set<GenreEntity> listGenre;
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ReviewEntity> listReview;
 }

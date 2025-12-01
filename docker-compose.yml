@@ -1,0 +1,22 @@
+name: CineMe
+
+services:
+  minio:
+    extends:
+      file: ./minio.yml
+      service: minio
+  redis:
+    extends:
+      file: ./redis.yml
+      service: redis
+  rabbitmq:
+    extends:
+      file: ./rabbitmq.yml
+      service: rabbitmq
+  spring-app:
+    extends:
+      file: ./app.yml
+      service: spring-app
+    depends_on:
+      - minio
+      - redis

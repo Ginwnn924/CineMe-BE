@@ -1,5 +1,4 @@
 HELP.md
-target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
@@ -32,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+minio-data/
+target/**
+!target/
+!target/**/*.jar

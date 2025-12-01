@@ -3,7 +3,20 @@ spring:
     import: file:env.properties
   application:
     name: CineMe-BE
-
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -12,12 +25,56 @@ spring:
     hikari:
       maximum-pool-size: 10
 
-  jpa:
-      hibernate:
-          ddl-auto: none
-      show-sql: true
-      properties:
-          hibernate:
-          format_sql: true
-          use_sql_comments: true
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30000 # 5 minutes
+  security:
+    oauth2:
+      client:
+        registration:
+            google:
+                client-id: ${GOOGLE_CLIENT_ID}
+                client-secret: ${GOOGLE_CLIENT_SECRET}
+                redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+                scope:
+                  - openid
+                  - profile
+                  - email
 
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+#        format_sql: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+logging:
+  level:
+    org.hibernate.engine.jdbc.batch.internal.BatchingBatch: DEBUG
