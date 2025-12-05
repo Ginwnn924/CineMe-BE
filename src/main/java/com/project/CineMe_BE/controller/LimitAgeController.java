@@ -5,7 +5,7 @@ import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.LimitAgeRequest;
 import com.project.CineMe_BE.service.LimitAgeService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
-
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +29,7 @@ public class LimitAgeController {
     }
 
     @PostMapping
-    public ResponseEntity<APIResponse> create(@RequestBody LimitAgeRequest request) {
+    public ResponseEntity<APIResponse> create(@Valid @RequestBody LimitAgeRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.LIMIT_AGE_CREATE_SUCCESS))
@@ -38,7 +38,7 @@ public class LimitAgeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @RequestBody LimitAgeRequest request) {
+    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @Valid @RequestBody LimitAgeRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.LIMIT_AGE_UPDATE_SUCCESS))

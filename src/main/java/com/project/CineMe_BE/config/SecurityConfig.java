@@ -40,7 +40,7 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final EmployeeDetailsServiceImpl employeeDetailsService;
     private final JwtAuthenFilter jwtAuthenFilter;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;

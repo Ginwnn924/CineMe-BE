@@ -3,6 +3,7 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.EmployeeRequest;
 import com.project.CineMe_BE.service.EmployeeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
-    //get all endpoint
+    // get all endpoint
 
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllEmployees() {
@@ -24,9 +25,9 @@ public class EmployeeController {
                 .build());
     }
 
-    //create endpoint
+    // create endpoint
     @PostMapping("")
-    public ResponseEntity<APIResponse> createEmployee(@RequestBody EmployeeRequest request) {
+    public ResponseEntity<APIResponse> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         // Logic to create an employee
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(201)
@@ -34,6 +35,5 @@ public class EmployeeController {
                 .data(employeeService.createEmployee(request))
                 .build());
     }
-
 
 }

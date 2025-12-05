@@ -3,6 +3,7 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.PermissionRequest;
 import com.project.CineMe_BE.service.PermissionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/permissions")
 public class PermissionController {
     private final PermissionService permissionService;
+
     @GetMapping
     public ResponseEntity<APIResponse> getAll() {
         return ResponseEntity.ok(APIResponse.builder()
@@ -31,7 +33,7 @@ public class PermissionController {
     }
 
     @PostMapping
-    public ResponseEntity<APIResponse> create(@RequestBody PermissionRequest request) {
+    public ResponseEntity<APIResponse> create(@Valid @RequestBody PermissionRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message("Create permission successfully")

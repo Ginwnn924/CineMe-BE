@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -93,7 +92,6 @@ public class BookingServiceImpl implements BookingService {
         long price = listBookingSeats.stream()
                 .mapToLong(BookingSeatEntity::getPrice)
                 .sum();
-        System.out.println(price);
         List<BookingCombo> listBookingCombos = new ArrayList<>();
         if (bookingRequest.getListCombo() != null) {
             List<ComboEntity> listCombo = comboRepository.findAllById(bookingRequest.getListCombo().keySet());

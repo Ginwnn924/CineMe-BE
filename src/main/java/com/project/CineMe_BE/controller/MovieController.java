@@ -6,6 +6,7 @@ import com.project.CineMe_BE.dto.request.MovieRequest;
 import com.project.CineMe_BE.dto.response.MovieResponse;
 import com.project.CineMe_BE.service.*;
 import com.project.CineMe_BE.utils.LocalizationUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +29,8 @@ public class MovieController {
     private final LocalizationUtils localizationUtils;
     private final ReviewService reviewService;
 
-
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<APIResponse> createMovie(@ModelAttribute MovieRequest request) {
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<APIResponse> createMovie(@Valid @ModelAttribute MovieRequest request) {
         MovieResponse movieResponse = movieService.createMovie(request);
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(201)
@@ -39,8 +39,8 @@ public class MovieController {
                 .build());
     }
 
-    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<APIResponse> updateMovie(@PathVariable UUID id, @ModelAttribute MovieRequest request) {
+    @PutMapping(value = "/{id}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<APIResponse> updateMovie(@PathVariable UUID id, @Valid @ModelAttribute MovieRequest request) {
         MovieResponse movieResponse = movieService.updateMovie(id, request);
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
@@ -57,7 +57,6 @@ public class MovieController {
                 .message(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_DELETE_SUCCESS))
                 .build());
     }
-
 
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllMovie() {
@@ -90,7 +89,7 @@ public class MovieController {
 
     @GetMapping("/recommend")
     public ResponseEntity<APIResponse> getRecommendedMovies(@RequestParam UUID movieId,
-                                                            @RequestParam int topN) {
+            @RequestParam int topN) {
         List<MovieResponse> recommendedMovies = movieService.getRecommendedMovies(movieId, topN);
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)

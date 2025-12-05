@@ -5,6 +5,7 @@ import com.project.CineMe_BE.dto.request.RolePermissionRequest;
 import com.project.CineMe_BE.dto.request.RoleRequest;
 import com.project.CineMe_BE.dto.response.RoleResponse;
 import com.project.CineMe_BE.service.RoleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +18,9 @@ import java.util.UUID;
 @RequestMapping("/api/v1/roles")
 public class RoleController {
     private final RoleService roleService;
+
     @GetMapping
-    ResponseEntity<APIResponse> getAll(){
+    ResponseEntity<APIResponse> getAll() {
         List<RoleResponse> listResponse = roleService.getAllRoles();
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
@@ -38,7 +40,7 @@ public class RoleController {
     }
 
     @PostMapping
-    ResponseEntity<APIResponse> create(@RequestBody RoleRequest request) {
+    ResponseEntity<APIResponse> create(@Valid @RequestBody RoleRequest request) {
         RoleResponse response = roleService.createRole(request);
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
@@ -48,7 +50,7 @@ public class RoleController {
     }
 
     @PostMapping("/permissions")
-    ResponseEntity<APIResponse> updatePermission(@RequestBody RolePermissionRequest request) {
+    ResponseEntity<APIResponse> updatePermission(@Valid @RequestBody RolePermissionRequest request) {
         RoleResponse response = roleService.updateRolePermission(request);
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)

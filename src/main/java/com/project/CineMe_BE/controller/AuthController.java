@@ -9,15 +9,13 @@ import com.project.CineMe_BE.security.JwtService;
 import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.utils.JwtUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,9 +35,8 @@ public class AuthController {
     @Value("${JWT_REFRESH_TOKEN_EXPIRATION}")
     private Integer refreshTokenExpire;
 
-
     @PostMapping("/api/v1/auth/login-client")
-    public ResponseEntity<APIResponse> loginClient(@RequestBody LoginClientRequest request) {
+    public ResponseEntity<APIResponse> loginClient(@Valid @RequestBody LoginClientRequest request) {
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
@@ -47,7 +44,6 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
 
     @GetMapping("/api/v1/auth/logout-client")
     public ResponseEntity<APIResponse> logoutClient(HttpServletRequest request) {
@@ -61,7 +57,7 @@ public class AuthController {
     }
 
     @PostMapping("/api/v1/auth/login-admin")
-    public ResponseEntity<APIResponse> loginAdmin(@RequestBody LoginAdminRequest request) {
+    public ResponseEntity<APIResponse> loginAdmin(@Valid @RequestBody LoginAdminRequest request) {
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
@@ -69,7 +65,6 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok(response);
     }
-
 
     @GetMapping("/api/v1/auth/logout-admin")
     public ResponseEntity<APIResponse> logoutAdmin(HttpServletRequest request) {
@@ -82,10 +77,8 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-
-
     @PostMapping("/api/v1/auth/register")
-    public ResponseEntity<APIResponse> signUp(@RequestBody SignUpRequest request) {
+    public ResponseEntity<APIResponse> signUp(@Valid @RequestBody SignUpRequest request) {
         authService.register(request);
         APIResponse response = APIResponse.builder()
                 .statusCode(201)
@@ -97,7 +90,7 @@ public class AuthController {
 
     @PostMapping("/api/v1/auth/refresh-token")
     public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request,
-                                                     HttpServletResponse response) {
+            HttpServletResponse response) {
 
         Cookie[] cookies = request.getCookies();
         String refreshToken = null;
@@ -124,7 +117,6 @@ public class AuthController {
         clearCookie.setMaxAge(0); //
         response.addCookie(clearCookie);
 
-
         Cookie newCookie = new Cookie("refreshToken", authResponse.getRefreshToken());
         newCookie.setHttpOnly(true);
         newCookie.setPath("/");
@@ -134,29 +126,30 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-//
-//    @GetMapping("/oauth2/callback")
-//    public void handleGoogleCallback(@RequestParam Map<String, String> request, HttpServletResponse response) throws IOException {
-//        String state = authService.oauth2Callback(request);
-//        String redirectUrl = googleRedirectUrl
-//                + "?state=" + state;
-//        response.sendRedirect(redirectUrl);
-//    }
+    //
+    // @GetMapping("/oauth2/callback")
+    // public void handleGoogleCallback(@RequestParam Map<String, String> request,
+    // HttpServletResponse response) throws IOException {
+    // String state = authService.oauth2Callback(request);
+    // String redirectUrl = googleRedirectUrl
+    // + "?state=" + state;
+    // response.sendRedirect(redirectUrl);
+    // }
 
-//    @GetMapping("/api/v1/auth/extract")
-//    public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {
-//        if (!StringUtils.isEmpty(state)) {
-//            Object response = authService.extractState(state);
-//            if (response != null) {
-//                return ResponseEntity.ok(APIResponse.builder()
-//                        .statusCode(200)
-//                        .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
-//                        .data(response)
-//                        .build());
-//            }
-//        }
-//        return ResponseEntity.notFound().build();
-//    }
+    // @GetMapping("/api/v1/auth/extract")
+    // public ResponseEntity<APIResponse> extractToken(@RequestParam String state) {
+    // if (!StringUtils.isEmpty(state)) {
+    // Object response = authService.extractState(state);
+    // if (response != null) {
+    // return ResponseEntity.ok(APIResponse.builder()
+    // .statusCode(200)
+    // .message(localizationUtils.getLocalizedMessage(MessageKey.AUTH_LOGIN_SUCCESS))
+    // .data(response)
+    // .build());
+    // }
+    // }
+    // return ResponseEntity.notFound().build();
+    // }
 
     @PostMapping("/api/v1/auth/forgot-password")
     public ResponseEntity<APIResponse> forgotPassword(@RequestParam final String email) {
@@ -170,12 +163,12 @@ public class AuthController {
 
     @PostMapping("/api/v1/auth/verify-otp")
     public boolean verifyOtp(@RequestParam final String email,
-                             @RequestParam final String otp) {
+            @RequestParam final String otp) {
         return authService.verifyOtp(email, otp);
     }
 
     @PostMapping("/api/v1/auth/reset-password")
-    public ResponseEntity<APIResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<APIResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)

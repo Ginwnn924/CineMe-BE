@@ -5,10 +5,8 @@ import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.LanguageRequest;
 import com.project.CineMe_BE.service.LanguageService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
-
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.cglib.core.Local;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +18,9 @@ import java.util.UUID;
 public class LanguageController {
     private final LanguageService languageService;
     private final LocalizationUtils localizationUtils;
+
     @PostMapping
-    public ResponseEntity<APIResponse> create(@RequestBody LanguageRequest request) {
+    public ResponseEntity<APIResponse> create(@Valid @RequestBody LanguageRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.LANGUAGE_CREATE_SUCCESS))
@@ -30,7 +29,7 @@ public class LanguageController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @RequestBody LanguageRequest request) {
+    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @Valid @RequestBody LanguageRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.LANGUAGE_UPDATE_SUCCESS))

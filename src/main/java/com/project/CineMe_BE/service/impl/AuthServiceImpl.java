@@ -10,35 +10,27 @@ import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.UserRequestMapper;
 import com.project.CineMe_BE.producer.EmailProducer;
 import com.project.CineMe_BE.repository.EmployeeRepository;
-import com.project.CineMe_BE.repository.RoleRepository;
 import com.project.CineMe_BE.repository.UserRepository;
 import com.project.CineMe_BE.security.CustomEmployeeDetails;
 import com.project.CineMe_BE.security.CustomUserDetails;
 import com.project.CineMe_BE.service.AuthService;
 import com.project.CineMe_BE.security.JwtService;
-import com.project.CineMe_BE.service.EmailService;
 import com.project.CineMe_BE.service.RedisService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+
 
 
 @Service
@@ -60,13 +52,10 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager userAuthenticationManager;
     private final JwtService jwtService;
     private final LocalizationUtils localizationUtils;
-    private final RoleRepository roleRepository;
     private final EmployeeRepository employeeRepository;
-    private final RestTemplate restTemplate;
     private final RedisService redisService;
     private final PasswordEncoder passwordEncoder;
     private final UserRequestMapper userRequestMapper;
-    private final EmailService emailService;
     private final EmailProducer emailProducer;
 
 
@@ -81,9 +70,6 @@ public class AuthServiceImpl implements AuthService {
 //    }
 
     public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
-        if (StringUtils.isEmpty(loginClientRequest.getEmail()) || StringUtils.isEmpty(loginClientRequest.getPassword())) {
-            throw new BadCredentialsException("Tài khoản hoặc mật khẩu không được để trống");
-        }
         UserEntity user = userRepository.findByEmail(loginClientRequest.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginClientRequest.getEmail()));
         if (user.getLocked() != null && user.getLocked()) {
@@ -105,9 +91,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse loginAdmin(LoginAdminRequest request) {
-        if (StringUtils.isEmpty(request.getEmail()) || StringUtils.isEmpty(request.getPassword())) {
-            throw new BadCredentialsException("Tài khoản hoặc mật khẩu không được để trống");
-        }
         EmployeeEntity employee = employeeRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new DataNotFoundException("User not found with email: " + request.getEmail()));
         UserDetails userDetails = new CustomEmployeeDetails(employee);
@@ -145,9 +128,6 @@ public class AuthServiceImpl implements AuthService {
         Long ttl = jwtService.getTokenExpire(token);
         Long now = new Date().getTime();
         Long time = (ttl - now) / 1000;
-        System.out.println("TTL: " + ttl);
-        System.out.println("Now: " + now);
-        System.out.println("Time: " + time);
         redisService.set("blacklist:" + token, "", time);
 
         return true;

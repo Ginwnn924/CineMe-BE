@@ -5,10 +5,8 @@ import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.FormatRequest;
 import com.project.CineMe_BE.service.FormatService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
-
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.cglib.core.Local;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +20,7 @@ public class FormatController {
     private final LocalizationUtils localizationUtils;
 
     @PostMapping
-    public ResponseEntity<APIResponse> create(@RequestBody FormatRequest request) {
+    public ResponseEntity<APIResponse> create(@Valid @RequestBody FormatRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_CREATE_SUCCESS))
@@ -31,7 +29,7 @@ public class FormatController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @RequestBody FormatRequest request) {
+    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @Valid @RequestBody FormatRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_UPDATE_SUCCESS))
