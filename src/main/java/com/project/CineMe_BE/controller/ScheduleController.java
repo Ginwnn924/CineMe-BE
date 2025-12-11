@@ -51,15 +51,4 @@ public class ScheduleController {
                         .build());
     }
 
-    // @GetMapping("/recommend")
-    // public ResponseEntity<APIResponse> generateSchedules(@RequestBody
-    // RecomendScheduleRequest request) {
-    // List<RecommendScheduleResponse> demo =
-    // scheduleService.recommendSchedules(request);
-    // return ResponseEntity.status(200)
-    // .body(APIResponse.builder()
-    // .message("Gợi ý lịch chiếu thành công")
-    // .data(demo)
-    // .build());
-    // }
 }

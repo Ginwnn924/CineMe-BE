@@ -2,9 +2,9 @@ package com.project.CineMe_BE.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -16,74 +16,66 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MovieEntity {
-    @Id
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+        @Id
+        @Column(name = "id")
+        @GeneratedValue(strategy = GenerationType.UUID)
+        private UUID id;
 
-    @Column(name = "name_vn")
-    private String nameVn;
+        @Column(name = "name_vn")
+        private String nameVn;
 
-    @Column(name = "name_en")
-    private String nameEn;
+        @Column(name = "name_en")
+        private String nameEn;
 
-    @Column(name = "director")
-    private String director;
+        @Column(name = "director")
+        private String director;
 
-    @Column(name = "release_date")
-    private LocalDateTime releaseDate;
+        @Column(name = "release_date")
+        private LocalDateTime releaseDate;
 
-    @Column(name = "end_date")
-    private LocalDateTime endDate;
+        @Column(name = "end_date")
+        private LocalDateTime endDate;
 
-    @Column(name = "brief_vn")
-    private String briefVn;
+        @Column(name = "brief_vn")
+        private String briefVn;
 
-    @Column(name = "brief_en")
-    private String briefEn;
+        @Column(name = "brief_en")
+        private String briefEn;
 
-    @Column(name = "image")
-    private String image;
+        @Column(name = "image")
+        private String image;
 
+        @Column(name = "trailer")
+        private String trailer;
 
-    @Column(name = "trailer")
-    private String trailer;
+        @Column(name = "status")
+        private String status;
 
-    @Column(name = "status")
-    private String status;
+        @Column(name = "time")
+        private Long time;
 
-    @Column(name = "time")
-    private Long time;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "country_id")
+        private CountryEntity country;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "country_id")
-    private CountryEntity country;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "limitage_id")
+        private LimitageEntity limitage;
 
+        @Column(name = "sortorder")
+        private Long sortorder;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "limitage_id")
-    private LimitageEntity limitage;
+        @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+        @JoinTable(name = "movie_actor", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "actor_id"))
+        @BatchSize(size = 10)
+        private Set<ActorEntity> listActor;
 
+        @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+        @JoinTable(name = "movie_genres", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
+        @BatchSize(size = 10)
+        private Set<GenreEntity> listGenre;
 
-    @Column(name = "sortorder")
-    private Long sortorder;
-
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name = "movie_actor",
-            joinColumns = @JoinColumn(name = "movie_id"),
-            inverseJoinColumns = @JoinColumn(name = "actor_id")
-    )
-    private Set<ActorEntity> listActor;
-
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name = "movie_genres",
-            joinColumns = @JoinColumn(name = "movie_id"),
-            inverseJoinColumns = @JoinColumn(name = "genre_id")
-    )
-    private Set<GenreEntity> listGenre;
-
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ReviewEntity> listReview;
+        @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+        @BatchSize(size = 20)
+        private Set<ReviewEntity> listReview;
 }

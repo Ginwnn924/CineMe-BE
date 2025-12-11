@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SeatServiceImpl implements SeatService{
+public class SeatServiceImpl implements SeatService {
     private final RoomRepository roomRepository;
     private final SeatResponseMapper seatResponseMapper;
     private final SeatsRepository seatsRepository;
@@ -49,17 +49,17 @@ public class SeatServiceImpl implements SeatService{
         this.defaultSeatTypeId = seatTypeRepository.findByName("Standard")
                 .orElseThrow(() -> new RuntimeException("Default seat type STANDARD not found in DB"))
                 .getId();
-//        this.coupleSeatTypeId = seatTypeRepository.findByName("Couple")
-//                .orElseThrow(() -> new RuntimeException("Default seat type COUPLE not found in DB"))
-//                .getId();
+        // this.coupleSeatTypeId = seatTypeRepository.findByName("Couple")
+        // .orElseThrow(() -> new RuntimeException("Default seat type COUPLE not found
+        // in DB"))
+        // .getId();
     }
 
     private UUID getDefaultSeatTypeId() {
         return defaultSeatTypeId;
     }
 
-
-    //getRoom Entity by roomId
+    // getRoom Entity by roomId
     private RoomsEntity getRoomById(UUID roomId) {
         return roomRepository.findById(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found with id: " + roomId));
@@ -92,7 +92,8 @@ public class SeatServiceImpl implements SeatService{
     @Override
     public Map<UUID, List<UUID>> getSeatsByBookingId(UUID bookingId) {
         BookingEntity booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.BOOKING_NOT_FOUND)));
         List<UUID> listSeatId = seatsRepository.findByBookingId(bookingId).stream()
                 .map(SeatsEntity::getId)
                 .toList();
@@ -104,10 +105,16 @@ public class SeatServiceImpl implements SeatService{
     @Override
     public List<SeatResponse> getSeatsByShowtime(UUID showtimeId) {
         ShowtimeEntity showtime = showtimeRepository.findById(showtimeId)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_NOT_FOUND)));
         LocalDate date = showtime.getSchedule().getDate();
         List<SeatsEntity> listSeats = seatsRepository.findByShowtimeId(showtimeId);
         Map<String, Long> listRules = pricingRuleService.getPricingRulesByDayOfWeek(date);
+
+
+        // Batch fetch booked seat IDs (1 query instead of N+1)
+        Set<UUID> bookedSeatIds = bookingRepository.getSeatsLockedByShowtime(showtimeId);
+
         return listSeats.stream()
                 .map(seat -> {
                     SeatResponse response = seatResponseMapper.toDto(seat);
@@ -115,9 +122,8 @@ public class SeatServiceImpl implements SeatService{
                         long price = listRules.getOrDefault(seat.getSeatType().getName(), 0L);
                         response.setPrice(price);
 
-                        boolean isBooked = seat.getBookingSeats().stream()
-                                .anyMatch(bs -> bs.getBooking().getShowtime().getId().equals(showtimeId)
-                                        && (BookingStatusEnum.CONFIRMED.name().equals(bs.getBooking().getStatus()) || BookingStatusEnum.PENDING.name().equals(bs.getBooking().getStatus())));
+                        // O(1) lookup instead of N+1 queries
+                        boolean isBooked = bookedSeatIds.contains(seat.getId());
                         response.setStatus(isBooked ? StatusSeat.BOOKED.name() : StatusSeat.AVAILABLE.name());
                         return response;
                     }
@@ -125,9 +131,6 @@ public class SeatServiceImpl implements SeatService{
                     return response;
                 }).toList();
     }
-
-
-
 
     private boolean lockSeat(UUID showtimeId, UUID seatId, UUID userId) {
         String redisKey = "seat-lock:" + showtimeId + ":" + seatId;
@@ -148,17 +151,13 @@ public class SeatServiceImpl implements SeatService{
                 boolean isDeleted = redisTemplate.delete("seat-lock:" + showtimeId + ":" + seatId);
                 log.info("Rollback seat {}: {}", seatId, isDeleted);
                 throw new IllegalArgumentException("Seat " + seatId + " is not available or already locked.");
-            }
-            else if (isLocked == false)
+            } else if (isLocked == false)
                 return false;
         }
         // insert database
 
         return true;
     }
-
-
-
 
     @Override
     @Cacheable(value = CacheName.SEAT, key = "#roomId")

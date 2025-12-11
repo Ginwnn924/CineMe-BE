@@ -15,6 +15,7 @@ import com.project.CineMe_BE.repository.ActorRepository;
 import com.project.CineMe_BE.repository.GenreRepository;
 import com.project.CineMe_BE.repository.MovieRepository;
 import com.project.CineMe_BE.repository.ReviewRepository;
+import com.project.CineMe_BE.repository.projection.ReviewProjection;
 import com.project.CineMe_BE.service.MinioService;
 import com.project.CineMe_BE.service.MovieService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
@@ -54,24 +55,23 @@ public class MovieServiceImpl implements MovieService {
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
     public MovieResponse createMovie(MovieRequest request) {
         MovieEntity movie = movieRequestMapper.toEntity(request);
-        Set<ActorEntity> listActor = request.getListActorId().stream()
-                .map(actorId -> {
-                    ActorEntity actor = actorRepository.findById(actorId)
-                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));;
-                    return actor;
-                })
-                .collect(Collectors.toSet());
-        Set<GenreEntity> listGenre = request.getListGenreId().stream()
-                .map(genreId -> {
-                    GenreEntity genre = genreRepository.findById(genreId)
-                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND)));;
-                    return genre;
-                })
-                .collect(Collectors.toSet());
+
+        List<UUID> actorIds = request.getListActorId();
+        List<ActorEntity> actors = actorRepository.findAllById(actorIds);
+        // Validate: tất cả actors phải tồn tại
+        if (actors.size() != actorIds.size()) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND));
+        }
+        Set<ActorEntity> listActor = new HashSet<>(actors);
+
+        List<UUID> genreIds = request.getListGenreId();
+        List<GenreEntity> genres = genreRepository.findAllById(genreIds);
+        if (genres.size() != genreIds.size()) {
+            throw new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND));
+        }
+        Set<GenreEntity> listGenre = new HashSet<>(genres);
         movie.setListGenre(listGenre);
         movie.setListActor(listActor);
-
-
 
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());
@@ -90,27 +90,29 @@ public class MovieServiceImpl implements MovieService {
     @CachePut(value = CacheName.MOVIE, key = "#id")
     public MovieResponse updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
-        if (request.getListGenreId() != null) {
-            Set<GenreEntity> listGenre = request.getListGenreId().stream()
-                    .map(genreId -> {
-                        GenreEntity genre = genreRepository.findById(genreId)
-                                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND)));;
-                        return genre;
-                    })
-                    .collect(Collectors.toSet());
-            movie.setListGenre(listGenre);
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
+
+        if (request.getListGenreId() != null && !request.getListGenreId().isEmpty()) {
+            List<UUID> genreIds = request.getListGenreId();
+            List<GenreEntity> genres = genreRepository.findAllById(genreIds);
+            if (genres.size() != genreIds.size()) {
+                throw new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.GENRE_NOT_FOUND));
+            }
+            movie.setListGenre(new HashSet<>(genres));
         }
-        if (request.getListActorId() != null) {
-            Set<ActorEntity> listActor = request.getListActorId().stream()
-                    .map(actorId -> {
-                        ActorEntity actor = actorRepository.findById(actorId)
-                                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND)));
-                        return actor;
-                        })
-                    .collect(Collectors.toSet());
-            movie.setListActor(listActor);
+
+        if (request.getListActorId() != null && !request.getListActorId().isEmpty()) {
+            List<UUID> actorIds = request.getListActorId();
+            List<ActorEntity> actors = actorRepository.findAllById(actorIds);
+            if (actors.size() != actorIds.size()) {
+                throw new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.ACTOR_NOT_FOUND));
+            }
+            movie.setListActor(new HashSet<>(actors));
         }
+
         movieRequestMapper.update(movie, request);
         if (request.getImage() != null) {
             String imgUrl = minioService.upload(request.getImage());
@@ -135,7 +137,8 @@ public class MovieServiceImpl implements MovieService {
     @Cacheable(value = CacheName.MOVIE, key = "#id")
     public MovieResponse getMovieDetail(UUID id) {
         MovieEntity movie = movieRepository.getMovieDetail(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
         return movieResponseMapper.toDto(movie);
     }
 
@@ -143,15 +146,15 @@ public class MovieServiceImpl implements MovieService {
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
     public void deleteMovie(UUID id) {
         MovieEntity movie = movieRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
         movieRepository.delete(movie);
 
     }
 
-
     @Override
     public List<MovieResponse> getRecommendedMovies(UUID movieId, int topN) {
-        UUID userId =  UUID.fromString("90b6075e-33a0-43d0-bc87-e291d71bbce3");
+        UUID userId = UUID.fromString("90b6075e-33a0-43d0-bc87-e291d71bbce3");
         Map<UUID, Double> cbf = contentBasedFiltering(movieId);
         Map<UUID, Double> cf = collaborativeFiltering(userId);
         // Kết hợp kết quả từ cả hai phương pháp bằng cách trung binh cộng điểm số
@@ -161,9 +164,10 @@ public class MovieServiceImpl implements MovieService {
             double avg = (cbf.getOrDefault(entry.getKey(), 0.0) * 10.0 + entry.getValue()) / 2.0;
             combinedScores.put(entry.getKey(), avg);
         }
-//        for (Map.Entry<UUID, Double> entry : combinedScores.entrySet()) {
-//            System.out.println("Movie ID: " + entry.getKey() + " => Score: " + entry.getValue());
-//        }
+        // for (Map.Entry<UUID, Double> entry : combinedScores.entrySet()) {
+        // System.out.println("Movie ID: " + entry.getKey() + " => Score: " +
+        // entry.getValue());
+        // }
         // Lấy top N movie có điểm số cao nhất
         List<UUID> recommendedMovieIds = combinedScores.entrySet().stream()
                 .sorted(Map.Entry.<UUID, Double>comparingByValue().reversed())
@@ -178,21 +182,23 @@ public class MovieServiceImpl implements MovieService {
 
     // Item-based Collaborative Filtering
     public Map<UUID, Double> collaborativeFiltering(UUID userIdRq) {
-        List<ReviewEntity> listReview = reviewRepository.findAll();
+        List<ReviewProjection> listReview = reviewRepository.findAllForRecommendation();
         Map<UUID, Map<UUID, Double>> userItemMatrix = new HashMap<>();
-        for (ReviewEntity r : listReview) {
+        for (ReviewProjection r : listReview) {
             userItemMatrix
-                    .computeIfAbsent(r.getUser().getId(), k -> new HashMap<>())
-                    .put(r.getMovie().getId(), r.getRating());
+                    .computeIfAbsent(r.getUserId(), k -> new HashMap<>())
+                    .put(r.getMovieId(), r.getRating());
         }
         Map<UUID, Double> targetRatings = userItemMatrix.get(userIdRq);
-        if (targetRatings == null) return Collections.emptyMap();
+        if (targetRatings == null)
+            return Collections.emptyMap();
 
         // compute mean rating per user
         Map<UUID, Double> userMean = new HashMap<>();
         for (Map.Entry<UUID, Map<UUID, Double>> e : userItemMatrix.entrySet()) {
             double sum = 0;
-            for (double v : e.getValue().values()) sum += v;
+            for (double v : e.getValue().values())
+                sum += v;
             userMean.put(e.getKey(), sum / e.getValue().size());
         }
 
@@ -201,13 +207,16 @@ public class MovieServiceImpl implements MovieService {
         Map<UUID, Double> denom = new HashMap<>();
 
         for (UUID other : userItemMatrix.keySet()) {
-            if (other.equals(userIdRq)) continue;
+            if (other.equals(userIdRq))
+                continue;
             double sim = cosineSimilarity(targetRatings, userItemMatrix.get(other));
-            if (sim <= 0) continue;
+            if (sim <= 0)
+                continue;
 
             for (Map.Entry<UUID, Double> er : userItemMatrix.get(other).entrySet()) {
                 UUID movieId = er.getKey();
-                if (watched.contains(movieId)) continue;
+                if (watched.contains(movieId))
+                    continue;
                 double centered = er.getValue() - userMean.get(other);
                 numer.put(movieId, numer.getOrDefault(movieId, 0.0) + sim * centered);
                 denom.put(movieId, denom.getOrDefault(movieId, 0.0) + Math.abs(sim));
@@ -218,35 +227,37 @@ public class MovieServiceImpl implements MovieService {
         double targetMean = userMean.getOrDefault(userIdRq, 0.0);
         for (UUID movieId : numer.keySet()) {
             double d = denom.getOrDefault(movieId, 0.0);
-            if (d == 0) continue;
+            if (d == 0)
+                continue;
             predictions.put(movieId, targetMean + numer.get(movieId) / d);
         }
 
         return predictions;
     }
 
-
     // Tính cosine similarity giữa 2 user
     private static double cosineSimilarity(Map<UUID, Double> ratings1, Map<UUID, Double> ratings2) {
         Set<UUID> common = new HashSet<>(ratings1.keySet());
         common.retainAll(ratings2.keySet());
 
-        if (common.isEmpty()) return 0.0;
+        if (common.isEmpty())
+            return 0.0;
 
         double dot = 0.0, norm1 = 0.0, norm2 = 0.0;
 
-        for (UUID movie  : common) {
+        for (UUID movie : common) {
             dot += ratings1.get(movie) * ratings2.get(movie);
         }
-        for (double r : ratings1.values()) norm1 += r * r;
-        for (double r : ratings2.values()) norm2 += r * r;
+        for (double r : ratings1.values())
+            norm1 += r * r;
+        for (double r : ratings2.values())
+            norm2 += r * r;
 
         return dot / (Math.sqrt(norm1) * Math.sqrt(norm2));
     }
 
-
     public Map<UUID, Double> contentBasedFiltering(UUID id) {
-        List<MovieEntity> listMovie = movieRepository.findAll();
+        List<MovieEntity> listMovie = movieRepository.findAllForRecommendation();
         Map<String, Integer> df = new HashMap<>();
 
         // 1. Tính document frequency
@@ -256,7 +267,6 @@ public class MovieServiceImpl implements MovieService {
                 df.put(g.getNameEn(), df.getOrDefault(g.getNameEn(), 0) + 1);
             }
         }
-
 
         // 2. Tạo vector TF-IDF cho mỗi movie
         Map<UUID, Map<CharSequence, Double>> movieVectors = new HashMap<>();
@@ -275,7 +285,6 @@ public class MovieServiceImpl implements MovieService {
             movieVectors.put(m.getId(), tfidf);
         }
 
-
         Map<UUID, Map<UUID, Double>> cosineSimMatrix = new HashMap<>();
 
         for (UUID movieId : movieVectors.keySet()) {
@@ -291,19 +300,19 @@ public class MovieServiceImpl implements MovieService {
             cosineSimMatrix.put(movieId, row);
         }
         // print matrix
-//        for (UUID movieId : cosineSimMatrix.keySet()) {
-//            System.out.println("Movie ID: " + movieId);
-//            Map<UUID, Double> row = cosineSimMatrix.get(movieId);
-//            for (Map.Entry<UUID, Double> entry : row.entrySet()) {
-//                System.out.println("   Similar to Movie ID: " + entry.getKey() + " => " + entry.getValue());
-//            }
-//        }
+        // for (UUID movieId : cosineSimMatrix.keySet()) {
+        // System.out.println("Movie ID: " + movieId);
+        // Map<UUID, Double> row = cosineSimMatrix.get(movieId);
+        // for (Map.Entry<UUID, Double> entry : row.entrySet()) {
+        // System.out.println(" Similar to Movie ID: " + entry.getKey() + " => " +
+        // entry.getValue());
+        // }
+        // }
         Map<UUID, Double> similar = cosineSimMatrix.get(id).entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(id)) // bỏ chính nó
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        Map.Entry::getValue
-                ));
+                        Map.Entry::getValue));
         return similar;
     }
 
@@ -333,7 +342,8 @@ public class MovieServiceImpl implements MovieService {
         norm1 = Math.sqrt(norm1);
         norm2 = Math.sqrt(norm2);
 
-        if (norm1 == 0.0 || norm2 == 0.0) return 0.0; // tránh chia 0
+        if (norm1 == 0.0 || norm2 == 0.0)
+            return 0.0; // tránh chia 0
         return dot / (norm1 * norm2);
     }
 }
