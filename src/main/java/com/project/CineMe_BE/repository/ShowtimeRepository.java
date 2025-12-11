@@ -53,15 +53,12 @@ public interface ShowtimeRepository extends JpaRepository<ShowtimeEntity, UUID> 
                         "WHERE s.room.id IN :roomIds AND sc.date = :date")
         List<ShowtimeEntity> findByRoomIdsAndDate(List<UUID> roomIds, LocalDate date);
 
-        @EntityGraph(attributePaths = "room")
-        @Query("SELECT s FROM ShowtimeEntity s " +
+
+        @Query("SELECT DISTINCT s FROM ShowtimeEntity s " +
                         "LEFT JOIN FETCH s.room r " +
-                        "LEFT JOIN FETCH r.seats " +
                         "LEFT JOIN FETCH s.schedule sc " +
                         "LEFT JOIN FETCH sc.movie " +
                         "LEFT JOIN FETCH s.language " +
-                        "LEFT JOIN FETCH s.booking b " +
-                        "LEFT JOIN FETCH b.bookingSeats " +
                         "LEFT JOIN FETCH s.format")
         List<ShowtimeEntity> findAllWithRooms();
 }

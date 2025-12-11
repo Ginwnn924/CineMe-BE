@@ -2,6 +2,7 @@ package com.project.CineMe_BE.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.Date;
 import java.util.List;
@@ -29,8 +30,8 @@ public class BookingEntity {
     private EmployeeEntity employee;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @BatchSize(size = 20)
     private List<BookingCombo> listCombo;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "showtime_id")
@@ -53,6 +54,7 @@ public class BookingEntity {
             CascadeType.REMOVE,
             CascadeType.DETACH
     })
+    @BatchSize(size = 20)
     private Set<BookingSeatEntity> bookingSeats;
 
 }

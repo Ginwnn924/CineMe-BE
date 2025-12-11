@@ -11,6 +11,9 @@ import java.util.UUID;
 
 public interface ReviewRepository extends JpaRepository<ReviewEntity, UUID> {
 
+    @Query("SELECT r FROM ReviewEntity r " +
+            "LEFT JOIN FETCH r.user " +
+            "WHERE r.movie.id = :movieId")
     List<ReviewEntity> findByMovieId(UUID movieId);
 
     @Query("SELECT r.user.id as userId, r.movie.id as movieId, r.rating as rating " +

@@ -12,6 +12,7 @@ import com.project.CineMe_BE.mapper.response.RankResponseMapper;
 import com.project.CineMe_BE.mapper.response.UserResponseMapper;
 import com.project.CineMe_BE.repository.RankRepository;
 import com.project.CineMe_BE.repository.UserRepository;
+import com.project.CineMe_BE.repository.projection.UserListProjection;
 import com.project.CineMe_BE.service.UserService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
@@ -37,25 +38,39 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAll() {
-        List<UserEntity> users = userRepository.findAll();
-        return responseMapper.toListDto(users);
+        List<UserListProjection> users = userRepository.findAllForList();
+        return users.stream()
+                .map(u -> UserResponse.builder()
+                        .id(u.getId())
+                        .fullName(u.getFullName())
+                        .email(u.getEmail())
+                        .phone(u.getPhone())
+                        .provider(u.getProvider())
+                        .createdAt(u.getCreatedAt())
+                        .updatedAt(u.getUpdatedAt())
+                        .locked(u.getLocked())
+                        .build())
+                .toList();
     }
 
     @Override
     public UserResponse getUserInfo(UUID id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
         return responseMapper.toDto(user);
     }
 
     @Override
     public UserRankResponse getUserRankInfo(UUID id) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
 
         RankEntity currentRank = user.getRank();
 
-        Optional<RankEntity> nextRankOptional = rankRepository.findFirstByMinAmountGreaterThanOrderByMinAmountAsc(currentRank.getMinAmount());
+        Optional<RankEntity> nextRankOptional = rankRepository
+                .findFirstByMinAmountGreaterThanOrderByMinAmountAsc(currentRank.getMinAmount());
 
         Long nextThreshold = nextRankOptional
                 .map(RankEntity::getMinAmount)
@@ -78,11 +93,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    //THIS FUNCTION UPDATE USER TO LOCKED OR UNLOCKED
+    // THIS FUNCTION UPDATE USER TO LOCKED OR UNLOCKED
     @Override
     public void updateUserLockStatus(UUID id, boolean isLocked) {
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
 
         user.setLocked(isLocked);
         userRepository.save(user);
@@ -101,7 +117,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
     }
-
 
     private void checkAndUpgradeUserRank(UserEntity user) {
         Long totalSpent = user.getTotalSpent();

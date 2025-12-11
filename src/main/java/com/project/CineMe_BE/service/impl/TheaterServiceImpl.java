@@ -14,6 +14,7 @@ import com.project.CineMe_BE.mapper.response.TheaterResponseMapper;
 import com.project.CineMe_BE.repository.RoomRepository;
 import com.project.CineMe_BE.repository.ShowtimeRepository;
 import com.project.CineMe_BE.repository.TheaterRepository;
+import com.project.CineMe_BE.repository.projection.TheaterListProjection;
 import com.project.CineMe_BE.service.TheaterService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 
@@ -40,10 +41,19 @@ public class TheaterServiceImpl implements TheaterService {
     private final RoomRequestMapper requestMapper;
     private final RoomRepository roomsRepository;
     private final RoomResponseMapper responseMapper;
+
     @Override
     public List<TheaterResponse> getAllTheaters() {
-        List<TheaterEntity> listTheater = theaterRepository.findAll();
-        return theaterResponseMapper.toListDto(listTheater);
+        List<TheaterListProjection> theaters = theaterRepository.findAllForList();
+        return theaters.stream()
+                .map(t -> {
+                    TheaterResponse response = new TheaterResponse();
+                    response.setId(t.getId().toString());
+                    response.setNameVn(t.getNameVn());
+                    response.setNameEn(t.getNameEn());
+                    return response;
+                })
+                .toList();
     }
 
     @Override
@@ -55,9 +65,11 @@ public class TheaterServiceImpl implements TheaterService {
     @Override
     public List<ShowtimeResponse> getShowtimesByTheaterAndRoom(UUID theaterId, UUID roomId, LocalDate date) {
         theaterRepository.findById(theaterId)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.THEATER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.THEATER_NOT_FOUND)));
         roomRepository.findById(roomId)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROOM_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.ROOM_NOT_FOUND)));
         return showtimeRepository.findByTheaterAndRoom(theaterId, roomId, date)
                 .stream()
                 .map(showtimeResponseMapper::toDto)
@@ -79,9 +91,8 @@ public class TheaterServiceImpl implements TheaterService {
         entity.setTheater(TheaterEntity.builder()
                 .id(theaterId)
                 .build());
-        roomsRepository.save(entity);    
+        roomsRepository.save(entity);
         return responseMapper.toDto(entity);
     }
 
-    
 }
