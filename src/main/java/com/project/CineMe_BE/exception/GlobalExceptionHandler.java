@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -103,5 +105,21 @@ public class GlobalExceptionHandler {
                                                 .statusCode(500)
                                                 .message("Đã có lỗi xảy ra, vui lòng thử lại sau")
                                                 .build());
+        }
+        @ExceptionHandler(NoHandlerFoundException.class)
+        public ResponseEntity<APIResponse> handleNotFound(NoHandlerFoundException ex) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(APIResponse.builder()
+                                .statusCode(404)
+                                .message("Tài nguyên không tồn tại")
+                                .build());
+        }
+        @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+        public ResponseEntity<APIResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                        .body(APIResponse.builder()
+                                .statusCode(405)
+                                .message("Phương thức không hợp lệ")
+                                .build());
         }
 }

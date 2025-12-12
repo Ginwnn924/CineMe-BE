@@ -50,6 +50,14 @@ public class MovieServiceImpl implements MovieService {
         return movieResponseMapper.toListDto(listMovie);
     }
 
+
+    @Override
+    @Cacheable(value = CacheName.MOVIE, key = "'trending'")
+    public List<MovieResponse> getTrendingMovies() {
+        List<MovieEntity> listMovie = movieRepository.getTrendingMovies();
+        return movieResponseMapper.toListDto(listMovie);
+    }
+
     @Transactional
     @Override
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
@@ -153,8 +161,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieResponse> getRecommendedMovies(UUID movieId, int topN) {
-        UUID userId = UUID.fromString("90b6075e-33a0-43d0-bc87-e291d71bbce3");
+    public List<MovieResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN) {
         Map<UUID, Double> cbf = contentBasedFiltering(movieId);
         Map<UUID, Double> cf = collaborativeFiltering(userId);
         // Kết hợp kết quả từ cả hai phương pháp bằng cách trung binh cộng điểm số

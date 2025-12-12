@@ -12,8 +12,7 @@ import java.util.UUID;
 @Repository
 public interface MovieRepository extends JpaRepository<MovieEntity, UUID> {
 
-        // ✅ Only JOIN FETCH @ManyToOne (safe from Cartesian Product)
-        // Collections (listActor, listGenre, listReview) will use @BatchSize
+
         @Query("SELECT m FROM MovieEntity m " +
                         "LEFT JOIN FETCH m.country " +
                         "LEFT JOIN FETCH m.limitage")
@@ -34,4 +33,10 @@ public interface MovieRepository extends JpaRepository<MovieEntity, UUID> {
         @Query("SELECT DISTINCT m FROM MovieEntity m " +
                         "LEFT JOIN FETCH m.listGenre")
         List<MovieEntity> findAllForRecommendation();
+
+        @Query("SELECT m FROM MovieEntity m " +
+                        "LEFT JOIN FETCH m.country " +
+                        "LEFT JOIN FETCH m.limitage " +
+                        "WHERE m.releaseDate <= CURRENT_DATE AND m.endDate >= CURRENT_DATE AND m.sortorder = 1")
+        List<MovieEntity> getTrendingMovies();
 }

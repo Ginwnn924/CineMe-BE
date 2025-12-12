@@ -17,6 +17,9 @@ public class MessageKey {
     public static final String MOVIE_GET_ALL_SUCCESS = "movie.get_all_success";
     public static final String MOVIE_GET_DETAILS = "movie.get_details";
     public static final String GET_COMBOBOX_SUCCESS = "movie.getCombobox";
+    public static final String MOVIE_GET_TRENDING_SUCCESS = "movie.get_trending_success";
+    public static final String MOVIE_GET_RECOMMENDED_SUCCESS = "movie.get_recommended_success";
+    public static final String MOVIE_GET_AVAILABLE_SUCCESS = "movie.get_available_success";
 
     // Genre
     public static final String GENRE_CREATE_SUCCESS = "genre.create_success";
