@@ -4,12 +4,17 @@ import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.dto.APIResponse;
 import com.project.CineMe_BE.dto.request.MovieRequest;
+import com.project.CineMe_BE.dto.request.search.MovieSearch;
+import com.project.CineMe_BE.dto.request.search.PageableData;
+import com.project.CineMe_BE.dto.request.search.PaginationRequest;
 import com.project.CineMe_BE.dto.response.MovieResponse;
+import com.project.CineMe_BE.dto.response.PaginationResponse;
 import com.project.CineMe_BE.service.*;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -80,15 +85,86 @@ public class MovieController {
                 .build());
     }
 
-    @PreAuthorize("hasAuthority('movie.view')")
     @GetMapping("/available")
-    public ResponseEntity<APIResponse> getAvailableMovies() {
-        List<MovieResponse> availableMovies = movieService.getAvailableMovies();
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.MOVIE_GET_AVAILABLE_SUCCESS))
-                .data(availableMovies)
-                .build());
+    public ResponseEntity<PaginationResponse<MovieResponse>> getAvailableMovies(
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size) {
+        MovieSearch movieSearch = new MovieSearch();
+        if (page != null && size != null) {
+            movieSearch.setPaginationRequest(PaginationRequest.builder()
+                    .page(page)
+                    .size(size)
+                    .build());
+        }
+        Page<MovieResponse> availableMovies = movieService.getAvailableMovies(movieSearch);
+
+        PageableData pageableData = new PageableData();
+        pageableData.setPageNumber(page)
+                .setPageSize(size)
+                .setTotalPage(availableMovies.getTotalPages())
+                .setTotalRecords((int) availableMovies.getTotalElements());
+
+        PaginationResponse<MovieResponse> paginationResponse = new PaginationResponse<>();
+        paginationResponse.setListContent(availableMovies.getContent());
+        paginationResponse.setPageableData(pageableData);
+        return ResponseEntity.ok(paginationResponse);
+    }
+
+    @PostMapping("/available/search")
+    public ResponseEntity<PaginationResponse<MovieResponse>> searchAvailableMovies(@RequestBody MovieSearch movieSearch) {
+        Page<MovieResponse> availableMovies = movieService.getAvailableMovies(movieSearch);
+
+        PageableData pageableData = new PageableData();
+        pageableData.setPageNumber(movieSearch.getPaginationRequest().getPage())
+                .setPageSize(movieSearch.getPaginationRequest().getSize())
+                .setTotalPage(availableMovies.getTotalPages())
+                .setTotalRecords((int) availableMovies.getTotalElements());
+
+        PaginationResponse<MovieResponse> paginationResponse = new PaginationResponse<>();
+        paginationResponse.setListContent(availableMovies.getContent());
+        paginationResponse.setPageableData(pageableData);
+        return ResponseEntity.ok(paginationResponse);
+    }
+
+    @GetMapping("/coming-soon")
+    public ResponseEntity<PaginationResponse<MovieResponse>> getComingSoonMovies(
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size) {
+        MovieSearch movieSearch = new MovieSearch();
+        if (page != null && size != null) {
+            movieSearch.setPaginationRequest(PaginationRequest.builder()
+                    .page(page)
+                    .size(size)
+                    .build());
+        }
+        Page<MovieResponse> comingSoonMovies = movieService.getComingSoonMovies(movieSearch);
+
+        PageableData pageableData = new PageableData();
+        pageableData.setPageNumber(page)
+                .setPageSize(size)
+                .setTotalPage(comingSoonMovies.getTotalPages())
+                .setTotalRecords((int) comingSoonMovies.getTotalElements());
+
+        PaginationResponse<MovieResponse> paginationResponse = new PaginationResponse<>();
+        paginationResponse.setListContent(comingSoonMovies.getContent());
+        paginationResponse.setPageableData(pageableData);
+        return ResponseEntity.ok(paginationResponse);
+    }
+
+    @PostMapping("/coming-soon/search")
+    public ResponseEntity<PaginationResponse<MovieResponse>> searchComingSoonMovies(@RequestBody MovieSearch movieSearch) {
+        Page<MovieResponse> comingSoonMovies = movieService.getComingSoonMovies(movieSearch);
+
+        PageableData pageableData = new PageableData();
+        pageableData.setPageNumber(movieSearch.getPaginationRequest().getPage())
+                .setPageSize(movieSearch.getPaginationRequest().getSize())
+                .setTotalPage(comingSoonMovies.getTotalPages())
+                .setTotalRecords((int) comingSoonMovies.getTotalElements());
+
+        PaginationResponse<MovieResponse> paginationResponse = new PaginationResponse<>();
+        paginationResponse.setListContent(comingSoonMovies.getContent());
+        paginationResponse.setPageableData(pageableData);
+        return ResponseEntity.ok(paginationResponse);
     }
 
     @GetMapping("/{id}/detail")

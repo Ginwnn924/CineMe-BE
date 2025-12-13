@@ -20,6 +20,7 @@ public class MessageKey {
     public static final String MOVIE_GET_TRENDING_SUCCESS = "movie.get_trending_success";
     public static final String MOVIE_GET_RECOMMENDED_SUCCESS = "movie.get_recommended_success";
     public static final String MOVIE_GET_AVAILABLE_SUCCESS = "movie.get_available_success";
+    public static final String MOVIE_GET_COMING_SOON_SUCCESS = "movie.get_coming_soon_success";
 
     // Genre
     public static final String GENRE_CREATE_SUCCESS = "genre.create_success";

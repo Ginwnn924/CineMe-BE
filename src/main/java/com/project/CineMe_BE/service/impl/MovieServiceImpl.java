@@ -3,6 +3,8 @@ package com.project.CineMe_BE.service.impl;
 import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.MovieRequest;
+import com.project.CineMe_BE.dto.request.search.MovieSearch;
+import com.project.CineMe_BE.dto.request.search.PageableData;
 import com.project.CineMe_BE.dto.response.MovieResponse;
 import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.entity.GenreEntity;
@@ -20,14 +22,19 @@ import com.project.CineMe_BE.service.MinioService;
 import com.project.CineMe_BE.service.MovieService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import com.project.CineMe_BE.utils.StringUtil;
+
+import jakarta.persistence.criteria.JoinType;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.text.similarity.CosineSimilarity;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,11 +52,40 @@ public class MovieServiceImpl implements MovieService {
     private final CosineSimilarity cosine = new CosineSimilarity();
 
     @Override
-    public List<MovieResponse> getAvailableMovies() {
-        List<MovieEntity> listMovie = movieRepository.getAvailableMovies();
-        return movieResponseMapper.toListDto(listMovie);
+    public Page<MovieResponse> getAvailableMovies(MovieSearch movieSearch) {
+        Specification<MovieEntity> availableSpec = (root, query, cb) -> {
+
+
+            LocalDateTime now = LocalDateTime.now();
+            return cb.and(
+                    cb.lessThanOrEqualTo(root.get("releaseDate"), now),
+                    cb.greaterThanOrEqualTo(root.get("endDate"), now));
+        };
+
+        Specification<MovieEntity> mergedSpec = movieSearch.specification()
+                .and(availableSpec);
+
+        return movieRepository
+                .findAll(mergedSpec, movieSearch.getPaginationRequest().pageable())
+                .map(movieResponseMapper::toDto);
     }
 
+    @Override
+    public Page<MovieResponse> getComingSoonMovies(MovieSearch movieSearch) {
+        Specification<MovieEntity> comingSoonSpec = (root, query, cb) -> {
+
+            LocalDateTime now = LocalDateTime.now();
+            return cb.and(
+                    cb.greaterThan(root.get("releaseDate"), now));
+        };
+
+        Specification<MovieEntity> mergedSpec = movieSearch.specification()
+                .and(comingSoonSpec);
+
+        return movieRepository
+                .findAll(mergedSpec, movieSearch.getPaginationRequest().pageable())
+                .map(movieResponseMapper::toDto);
+    }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'trending'")
