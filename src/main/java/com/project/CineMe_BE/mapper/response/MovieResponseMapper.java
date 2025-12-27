@@ -19,6 +19,7 @@ import java.util.Set;
 @Mapper(componentModel = "spring", uses = {GenreResponseMapper.class})
 public interface MovieResponseMapper extends BaseResponseMapper<MovieResponse, MovieEntity> {
 
+    
     @Mapping(target = "limitageNameVn", source = "limitage.nameVn")
     @Mapping(target = "limitageNameEn", source = "limitage.nameEn")
     @Mapping(target = "countryVn", source = "country.nameVn")

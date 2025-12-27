@@ -8,6 +8,7 @@ import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -19,6 +20,7 @@ public class GenreController {
     private final GenreService genreService;
     private final LocalizationUtils localizationUtils;
 
+    @PreAuthorize("hasAuthority('genre.create')")
     @PostMapping
     public ResponseEntity<APIResponse> create(@Valid @RequestBody GenreRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
@@ -28,6 +30,7 @@ public class GenreController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('genre.view')")
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllGenres() {
         return ResponseEntity.ok(APIResponse.builder()
@@ -37,6 +40,7 @@ public class GenreController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('genre.update')")
     @PutMapping("/{id}")
     public ResponseEntity<APIResponse> update(@PathVariable UUID id, @Valid @RequestBody GenreRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
@@ -46,6 +50,7 @@ public class GenreController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('genre.delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<APIResponse> delete(@PathVariable UUID id) {
         genreService.delete(id);

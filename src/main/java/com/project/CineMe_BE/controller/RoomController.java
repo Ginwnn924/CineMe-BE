@@ -11,6 +11,7 @@ import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,7 @@ public class RoomController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasAuthority('room.view')")
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllRooms() {
         List<RoomResponse> rooms = roomService.getAll();
@@ -45,6 +47,7 @@ public class RoomController {
                         .build());
     }
 
+    @PreAuthorize("hasAuthority('seat.create')")
     @PostMapping("/{roomId}/seats")
     public ResponseEntity<APIResponse> createSeats(@Valid @RequestBody SeatRequest seatRequest,
             @PathVariable("roomId") UUID roomId) {

@@ -18,22 +18,14 @@ import java.util.UUID;
 @Repository
 public interface MovieRepository extends JpaRepository<MovieEntity, UUID>, JpaSpecificationExecutor<MovieEntity> {
 
-        @EntityGraph(attributePaths = {"country", "limitage"})
+        @EntityGraph(attributePaths = { "listActor", "listGenre", "country", "limitage", "listReview" })
         Page<MovieEntity> findAll(Specification<MovieEntity> spec, Pageable pageable);
 
-
-        @Query("SELECT m FROM MovieEntity m " +
-                        "LEFT JOIN FETCH m.country " +
-                        "LEFT JOIN FETCH m.limitage")
+        @EntityGraph(attributePaths = { "listActor", "listGenre", "country", "limitage", "listReview" })
         List<MovieEntity> findAll();
 
-
-
-
-        @Query("SELECT m FROM MovieEntity m " +
-                        "LEFT JOIN FETCH m.country " +
-                        "LEFT JOIN FETCH m.limitage " +
-                        "WHERE m.id = :id")
+        @EntityGraph(attributePaths = { "listActor", "listGenre", "country", "limitage", "listReview" })
+        @Query("SELECT m FROM MovieEntity m WHERE m.id = :id")
         Optional<MovieEntity> getMovieDetail(UUID id);
 
         @Query("SELECT DISTINCT m FROM MovieEntity m " +
@@ -45,4 +37,12 @@ public interface MovieRepository extends JpaRepository<MovieEntity, UUID>, JpaSp
                         "LEFT JOIN FETCH m.limitage " +
                         "WHERE m.releaseDate <= CURRENT_DATE AND m.endDate >= CURRENT_DATE AND m.sortorder = 1")
         List<MovieEntity> getTrendingMovies();
+
+        @EntityGraph(attributePaths = { "listActor", "listGenre", "country", "limitage", "listReview" })
+        @Query("SELECT DISTINCT m FROM MovieEntity m " +
+                        "JOIN ScheduleEntity s ON s.movie.id = m.id " +
+                        "JOIN ShowtimeEntity st ON st.schedule.id = s.id " +
+                        "JOIN RoomsEntity r ON r.id = st.room.id " +
+                        "WHERE r.theater.id = :theaterId")
+        List<MovieEntity> findByTheaterId(UUID theaterId);
 }

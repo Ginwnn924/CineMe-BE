@@ -8,7 +8,6 @@ public class MessageKey {
     public static final String ACTOR_NOT_FOUND = "actor.not_found";
     public static final String ACTOR_GET_ALL_SUCCESS = "actor.get_all_success";
 
-
     // Movie
     public static final String MOVIE_CREATE_SUCCESS = "movie.create_success";
     public static final String MOVIE_NOT_FOUND = "movie.not_found";
@@ -37,7 +36,6 @@ public class MessageKey {
     public static final String FORMAT_NOT_FOUND = "format.not_found";
     public static final String FORMAT_GET_DETAILS = "format.get_details";
     public static final String FORMAT_GET_ALL_SUCCESS = "format.get_all_success";
-
 
     // Limit Age
     public static final String LIMIT_AGE_CREATE_SUCCESS = "limit_age.create_success";
@@ -72,12 +70,9 @@ public class MessageKey {
     public static final String LANGUAGE_GET_DETAILS = "language.get_details";
     public static final String LANGUAGE_GET_ALL_SUCCESS = "language.get_all_success";
 
-
-
     // Theater
     public static final String THEATER_GET_ALL_SUCCESS = "theater.get_all_success";
     public static final String THEATER_NOT_FOUND = "theater.not_found";
-
 
     // Room
 
@@ -127,7 +122,6 @@ public class MessageKey {
     public static final String BOOKING_GET_SUCCESS = "booking.get_success";
     public static final String BOOKING_CREATE_SUCCESS = "booking.create_success";
 
-
     // Product
     public static final String PRODUCT_CREATE_SUCCESS = "product.create_success";
     public static final String PRODUCT_UPDATE_SUCCESS = "product.update_success";
@@ -153,7 +147,6 @@ public class MessageKey {
     // Password
     public static final String PASSWORD_RESET_SUCCESS = "password.reset_success";
     public static final String PASSWORD_CHANGE_SUCCESS = "password.change_success";
-
 
     // Employee
     public static final String EMPLOYEE_NOT_FOUND = "employee.not_found";

@@ -4,6 +4,7 @@ HELP.md
 !**/src/test/**/target/
 env.properties
 .cursor/**
+.kiro/**
 
 
 ### STS ###

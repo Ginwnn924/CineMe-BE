@@ -28,7 +28,6 @@ public class JwtServiceImpl implements JwtService {
     @Value("${JWT_SECRET_KEY}")
     private String secretKey;
 
-
     @Override
     public AuthResponse generateToken(UserDetails user) {
         String accessToken = generateAccessToken(user);
@@ -62,16 +61,20 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
+    public UUID extractTheaterId(String token) {
+        String theaterIdStr = extractClaims(token, claims -> (String) claims.get("theaterId"));
+        return theaterIdStr != null ? UUID.fromString(theaterIdStr) : null;
+    }
+
+    @Override
     public boolean isValidateToken(String token, UserDetails userDetails) {
         try {
             String username = extractEmail(token);
             return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return false;
         }
     }
-
 
     @Override
     public Long getTokenExpire(String token) {
@@ -81,25 +84,17 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-//        List<String> permissions = userDetails.getAuthorities()
-//                .stream()
-//                .map(GrantedAuthority::getAuthority)
-//                .collect(Collectors.toList());
-//
-//        claims.put("permissions", permissions);
-//        claims.put("userId", userDetails.getId());
-
+        
         if (userDetails instanceof CustomUserDetails cu) {
             claims.put("role", "CUSTOMER");
             claims.put("userId", cu.getUserEntity().getId().toString());
-        }
-        else if (userDetails instanceof CustomEmployeeDetails ce) {
+        } else if (userDetails instanceof CustomEmployeeDetails ce) {
             claims.put("role", "EMPLOYEE");
             claims.put("userId", ce.getEmployee().getId().toString());
+            claims.put("theaterId", ce.getEmployee().getTheater().getId().toString());
         }
         return generateToken(claims, userDetails);
     }
-
 
     private String generateToken(Map<String, Object> claims, UserDetails userDetails) {
         log.info("Permission: {}", userDetails.getAuthorities());
@@ -142,7 +137,6 @@ public class JwtServiceImpl implements JwtService {
     public Date extractExpiration(String token) {
         return extractClaims(token, Claims::getExpiration);
     }
-
 
     private Key getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);

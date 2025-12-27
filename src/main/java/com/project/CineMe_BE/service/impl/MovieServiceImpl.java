@@ -49,12 +49,10 @@ public class MovieServiceImpl implements MovieService {
     private final ReviewRepository reviewRepository;
     private final ActorRepository actorRepository;
     private final GenreRepository genreRepository;
-    private final CosineSimilarity cosine = new CosineSimilarity();
 
     @Override
     public Page<MovieResponse> getAvailableMovies(MovieSearch movieSearch) {
         Specification<MovieEntity> availableSpec = (root, query, cb) -> {
-
 
             LocalDateTime now = LocalDateTime.now();
             return cb.and(
@@ -174,6 +172,13 @@ public class MovieServiceImpl implements MovieService {
     @Cacheable(value = CacheName.MOVIE, key = "'all'")
     public List<MovieResponse> getAllMovie() {
         List<MovieEntity> listMovie = movieRepository.findAll();
+        return movieResponseMapper.toListDto(listMovie);
+    }
+
+    @Override
+    @Cacheable(value = CacheName.MOVIE, key = "'theater_' + #theaterId")
+    public List<MovieResponse> getAllMovieByTheaterId(UUID theaterId) {
+        List<MovieEntity> listMovie = movieRepository.findByTheaterId(theaterId);
         return movieResponseMapper.toListDto(listMovie);
     }
 

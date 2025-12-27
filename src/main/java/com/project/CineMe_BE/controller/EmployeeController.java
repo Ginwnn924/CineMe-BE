@@ -6,6 +6,7 @@ import com.project.CineMe_BE.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,8 +14,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
-    // get all endpoint
+    
 
+    @PreAuthorize("hasAuthority('employee.view')")
     @GetMapping("")
     public ResponseEntity<APIResponse> getAllEmployees() {
         // Logic to get all employees
@@ -26,6 +28,7 @@ public class EmployeeController {
     }
 
     // create endpoint
+    @PreAuthorize("hasAuthority('employee.create')")
     @PostMapping("")
     public ResponseEntity<APIResponse> createEmployee(@Valid @RequestBody EmployeeRequest request) {
         // Logic to create an employee

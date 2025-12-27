@@ -39,7 +39,7 @@ public class BookingController {
                         .build());
     }
 
-    @PreAuthorize("#userId == authentication.principal.getId()")
+    @PreAuthorize("#userId == authentication.principal.getId() or hasAuthority('booking.view')")
     @GetMapping("{userId}/history")
     public ResponseEntity<APIResponse> getBookingHistory(@PathVariable UUID userId) {
         return ResponseEntity.ok(APIResponse.builder()

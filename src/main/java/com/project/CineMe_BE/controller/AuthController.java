@@ -28,9 +28,8 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
     private final LocalizationUtils localizationUtils;
-    private final EmailProducer emailProducer;
-    private final JwtService jwtService;
-    private final RabbitTemplate rabbitTemplate;
+    private final JwtUtil jwtUtil;
+
 
     @Value("${JWT_REFRESH_TOKEN_EXPIRATION}")
     private Integer refreshTokenExpire;
@@ -47,7 +46,7 @@ public class AuthController {
 
     @GetMapping("/api/v1/auth/logout-client")
     public ResponseEntity<APIResponse> logoutClient(HttpServletRequest request) {
-        String token = JwtUtil.splitToken(request);
+        String token = jwtUtil.extractRoleFromRequest(request);
         authService.logout(token);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)
@@ -68,7 +67,7 @@ public class AuthController {
 
     @GetMapping("/api/v1/auth/logout-admin")
     public ResponseEntity<APIResponse> logoutAdmin(HttpServletRequest request) {
-        String token = JwtUtil.splitToken(request);
+        String token = jwtUtil.extractRoleFromRequest(request);
         authService.logout(token);
         APIResponse response = APIResponse.builder()
                 .statusCode(200)

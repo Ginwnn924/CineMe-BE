@@ -67,15 +67,12 @@ public class MovieEntity {
 
         @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
         @JoinTable(name = "movie_actor", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "actor_id"))
-        @BatchSize(size = 10)
         private Set<ActorEntity> listActor;
 
         @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
         @JoinTable(name = "movie_genres", joinColumns = @JoinColumn(name = "movie_id"), inverseJoinColumns = @JoinColumn(name = "genre_id"))
-        @BatchSize(size = 10)
         private Set<GenreEntity> listGenre;
 
         @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-        @BatchSize(size = 20)
         private Set<ReviewEntity> listReview;
 }

@@ -13,62 +13,66 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1/showtimes")
 @RequiredArgsConstructor
 public class ShowtimeController {
-    private final ShowtimeService showtimeService;
-    private final SeatService seatService;
-    private final LocalizationUtils localizationUtils;
-    private final RedisTemplate<String, String> redisTemplate;
+        private final ShowtimeService showtimeService;
+        private final SeatService seatService;
+        private final LocalizationUtils localizationUtils;
 
-    @GetMapping("/all")
-    public ResponseEntity<APIResponse> getAllShowtimes() {
-        List<ShowtimeResponse> listShowtimes = showtimeService.getAllShowtimes();
-        return ResponseEntity.ok(
-                APIResponse.builder()
-                        .statusCode(200)
-                        .message(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_GET_ALL_SUCCESS))
-                        .data(listShowtimes)
-                        .build());
-    }
+        @PreAuthorize("hasAuthority('showtime.view')")
+        @GetMapping("/all")
+        public ResponseEntity<APIResponse> getAllShowtimes() {
+                List<ShowtimeResponse> listShowtimes = showtimeService.getAllShowtimes();
+                return ResponseEntity.ok(
+                                APIResponse.builder()
+                                                .statusCode(200)
+                                                .message(localizationUtils.getLocalizedMessage(
+                                                                MessageKey.SHOWTIME_GET_ALL_SUCCESS))
+                                                .data(listShowtimes)
+                                                .build());
+        }
 
-    @PostMapping("")
-    public ResponseEntity<APIResponse> createShowtime(@Valid @RequestBody ShowtimeRequest request) {
-        showtimeService.createShowtime(request);
-        return ResponseEntity.status(201).body(APIResponse.builder()
-                .statusCode(201)
-                .message("Showtime created successfully")
-                .build());
-    }
+        @PreAuthorize("hasAuthority('showtime.create')")
+        @PostMapping("")
+        public ResponseEntity<APIResponse> createShowtime(@Valid @RequestBody ShowtimeRequest request) {
+                showtimeService.createShowtime(request);
+                return ResponseEntity.status(201).body(APIResponse.builder()
+                                .statusCode(201)
+                                .message(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CREATE_SUCCESS))
+                                .data(request)
+                                .build());
+        }
 
-    @GetMapping("")
-    public ResponseEntity<APIResponse> getShowtimesByMovieIdAdndTheaterIdAndDate(@RequestParam UUID movieId,
-            @RequestParam UUID theaterId,
-            @RequestParam(required = true) String date) {
-        List<ShowtimeResponse> listShowtimes = showtimeService.getShowtimesByMovieIdAndTheaterIdAndDate(movieId,
-                theaterId, DateFormatUltil.formatDate(date));
-        return ResponseEntity.ok(
-                APIResponse.builder()
-                        .statusCode(200)
-                        .message(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_GET_ALL_SUCCESS))
-                        .data(listShowtimes)
-                        .build());
-    }
+        @GetMapping("")
+        public ResponseEntity<APIResponse> getShowtimesByMovieIdAdndTheaterIdAndDate(@RequestParam UUID movieId,
+                        @RequestParam UUID theaterId,
+                        @RequestParam(required = true) String date) {
+                List<ShowtimeResponse> listShowtimes = showtimeService.getShowtimesByMovieIdAndTheaterIdAndDate(movieId,
+                                theaterId, DateFormatUltil.formatDate(date));
+                return ResponseEntity.ok(
+                                APIResponse.builder()
+                                                .statusCode(200)
+                                                .message(localizationUtils.getLocalizedMessage(
+                                                                MessageKey.SHOWTIME_GET_ALL_SUCCESS))
+                                                .data(listShowtimes)
+                                                .build());
+        }
 
-    @GetMapping("/{id}/seats")
-    public ResponseEntity<APIResponse> getSeatsByShowtimeId(@PathVariable UUID id) {
-        List<SeatResponse> listSeats = seatService.getSeatsByShowtime(id);
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .data(listSeats)
-                .message("Seats for showtime " + id + " retrieved successfully")
-                .build());
-    }
+        @GetMapping("/{id}/seats")
+        public ResponseEntity<APIResponse> getSeatsByShowtimeId(@PathVariable UUID id) {
+                List<SeatResponse> listSeats = seatService.getSeatsByShowtime(id);
+                return ResponseEntity.ok(APIResponse.builder()
+                                .statusCode(200)
+                                .data(listSeats)
+                                .message("Seats for showtime " + id + " retrieved successfully")
+                                .build());
+        }
 
 }

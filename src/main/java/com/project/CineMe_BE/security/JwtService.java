@@ -5,6 +5,7 @@ import com.project.CineMe_BE.entity.UserEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Date;
+import java.util.UUID;
 
 public interface JwtService {
 
@@ -17,6 +18,8 @@ public interface JwtService {
     String extractEmail(String token);
 
     String extractRole(String token);
+
+    UUID extractTheaterId(String token);
 
     boolean isValidateToken(String token, UserDetails userDetails);
 

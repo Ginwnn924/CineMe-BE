@@ -49,7 +49,7 @@ spring:
     show-sql: true
     properties:
       hibernate:
-#        format_sql: true
+        format_sql: true
         jdbc:
           batch_size: 50
         order_inserts: true

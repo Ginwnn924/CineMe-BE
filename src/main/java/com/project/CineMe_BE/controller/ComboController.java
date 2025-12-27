@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class ComboController {
     private final ComboService comboService;
     private final LocalizationUtils localizationUtils;
+
     @GetMapping
     public ResponseEntity<APIResponse> getAllCombos() {
 
@@ -42,7 +44,8 @@ public class ComboController {
                 .build());
     }
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PreAuthorize("hasAuthority('combo.create')")
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<APIResponse> createCombo(@Valid @ModelAttribute ComboRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
@@ -51,8 +54,9 @@ public class ComboController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('combo.update')")
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> updateCombo(@PathVariable UUID id,@Valid @ModelAttribute ComboRequest request) {
+    public ResponseEntity<APIResponse> updateCombo(@PathVariable UUID id, @Valid @ModelAttribute ComboRequest request) {
         return ResponseEntity.ok(APIResponse.builder()
                 .statusCode(200)
                 .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS))
@@ -60,6 +64,7 @@ public class ComboController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('combo.delete')")
     @DeleteMapping("/{id}")
     public ResponseEntity<APIResponse> deleteCombo(@PathVariable UUID id) {
         comboService.deleteCombo(id);
@@ -69,6 +74,7 @@ public class ComboController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('combo.update')")
     @PutMapping("/{id}/items")
     public ResponseEntity<APIResponse> updateComboItems(
             @PathVariable UUID id,
@@ -80,4 +86,3 @@ public class ComboController {
                 .build());
     }
 }
-

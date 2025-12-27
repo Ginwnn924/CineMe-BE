@@ -12,7 +12,11 @@ import org.springframework.data.domain.Page;
 public interface MovieService {
 
     public MovieResponse createMovie(MovieRequest request);
+
     public List<MovieResponse> getAllMovie();
+
+    public List<MovieResponse> getAllMovieByTheaterId(UUID theaterId);
+
     public MovieResponse getMovieDetail(UUID id);
 
     public void deleteMovie(UUID id);

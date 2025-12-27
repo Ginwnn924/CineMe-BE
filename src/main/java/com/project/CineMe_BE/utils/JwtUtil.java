@@ -1,25 +1,39 @@
 package com.project.CineMe_BE.utils;
 
-import com.project.CineMe_BE.dto.response.AuthResponse;
-import com.project.CineMe_BE.security.CustomEmployeeDetails;
-import com.project.CineMe_BE.security.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.project.CineMe_BE.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
 
+@Component
+@RequiredArgsConstructor
 public class JwtUtil {
 
-    public static String splitToken(HttpServletRequest request) {
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (!StringUtils.isEmpty(authHeader) && StringUtils.startsWith(authHeader, "Bearer ")) {
-            return authHeader.substring(7);
+    private final JwtService jwtService;
+
+    public UUID extractTheaterIdFromRequest(HttpServletRequest request) {
+        String token = extractTokenFromRequest(request);
+        if (token != null) {
+            return jwtService.extractTheaterId(token);
         }
-        throw new BadCredentialsException("Invalid token");
+        return null;
     }
 
+    public String extractRoleFromRequest(HttpServletRequest request) {
+        String token = extractTokenFromRequest(request);
+        if (token != null) {
+            return jwtService.extractRole(token);
+        }
+        return null;
+    }
 
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
 }

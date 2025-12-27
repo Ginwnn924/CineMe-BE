@@ -8,6 +8,7 @@ import com.project.CineMe_BE.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class RoleController {
     private final RoleService roleService;
 
+    @PreAuthorize("hasAuthority('role.view')")
     @GetMapping
     ResponseEntity<APIResponse> getAll() {
         List<RoleResponse> listResponse = roleService.getAllRoles();
@@ -29,6 +31,7 @@ public class RoleController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('role.view')")
     @GetMapping("/{id}")
     ResponseEntity<APIResponse> getById(@PathVariable("id") UUID id) {
         RoleResponse response = roleService.getRoleById(id);
@@ -39,6 +42,7 @@ public class RoleController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('role.create')")
     @PostMapping
     ResponseEntity<APIResponse> create(@Valid @RequestBody RoleRequest request) {
         RoleResponse response = roleService.createRole(request);
@@ -49,6 +53,7 @@ public class RoleController {
                 .build());
     }
 
+    @PreAuthorize("hasAuthority('role.update')")
     @PostMapping("/permissions")
     ResponseEntity<APIResponse> updatePermission(@Valid @RequestBody RolePermissionRequest request) {
         RoleResponse response = roleService.updateRolePermission(request);

@@ -24,14 +24,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Date;
-
-
 
 @Service
 @Slf4j
@@ -42,7 +41,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${GOOGLE_CLIENT_SECRET}")
     private String googleClientSecret;
-
 
     @Value("${GOOGLE_REDIRECT_URI}")
     private String googleRedirectUri;
@@ -59,27 +57,18 @@ public class AuthServiceImpl implements AuthService {
     private final EmailProducer emailProducer;
 
 
-//    @Override
-//    public AuthResponse login(LoginAdminRequest loginAdminRequest) {
-//        UserEntity user = userRepository.findByEmail(loginAdminRequest.getEmail())
-//                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginAdminRequest.getEmail()));
-//        //Kiểm tra user có bị locked khum
-//        if (user.getIsLocked() != null && user.getIsLocked()) {
-//            throw new BadCredentialsException("Tài khoản đã bị khóa");
-//        }
-//    }
-
     public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
         UserEntity user = userRepository.findByEmail(loginClientRequest.getEmail())
-                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + loginClientRequest.getEmail()));
+                .orElseThrow(
+                        () -> new DataNotFoundException("User not found with email: " + loginClientRequest.getEmail()));
         if (user.getLocked() != null && user.getLocked()) {
             throw new BadCredentialsException("Tài khoản đã bị khóa");
         }
         UserDetails userDetails = new CustomUserDetails(user);
         try {
-            userAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginClientRequest.getEmail(), loginClientRequest.getPassword()));
-        }
-        catch (Exception e) {
+            userAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    loginClientRequest.getEmail(), loginClientRequest.getPassword()));
+        } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
@@ -91,20 +80,22 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse loginAdmin(LoginAdminRequest request) {
-        EmployeeEntity employee = employeeRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DataNotFoundException("User not found with email: " + request.getEmail()));
-        UserDetails userDetails = new CustomEmployeeDetails(employee);
         try {
-            employeeAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        }
-        catch (Exception e) {
+            Authentication authentication = employeeAuthenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+            CustomEmployeeDetails userDetails = (CustomEmployeeDetails) authentication.getPrincipal();
+
+            EmployeeEntity employee = userDetails.getEmployee();
+
+            AuthResponse authResponse = jwtService.generateToken(userDetails);
+            employee.setRefreshToken(authResponse.getRefreshToken());
+            employeeRepository.save(employee);
+            return authResponse;
+        } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        AuthResponse authResponse = jwtService.generateToken(userDetails);
-        employee.setRefreshToken(authResponse.getRefreshToken());
-        employeeRepository.save(employee);
-        return authResponse;
+
     }
 
     @Override
@@ -112,15 +103,16 @@ public class AuthServiceImpl implements AuthService {
         String email = jwtService.extractEmail(token);
         String role = jwtService.extractRole(token);
 
-        if("CUSTOMER".equals(role)) {
+        if ("CUSTOMER".equals(role)) {
             UserEntity user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                    .orElseThrow(() -> new DataNotFoundException(
+                            localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
             user.setRefreshToken(null);
             userRepository.save(user);
-        }
-        else {
+        } else {
             EmployeeEntity employee = employeeRepository.findByEmail(email)
-                    .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                    .orElseThrow(() -> new DataNotFoundException(
+                            localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
             employee.setRefreshToken(null);
             employeeRepository.save(employee);
         }
@@ -133,11 +125,11 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
-
     @Override
     public void forgotPassword(String email) {
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
         emailProducer.sendEmailOtp(user);
     }
 
@@ -162,8 +154,7 @@ public class AuthServiceImpl implements AuthService {
             user.setRefreshToken(jwtService.generateRefreshToken(userDetails));
             userRepository.save(user);
             return jwtService.generateToken(userDetails);
-        }
-        else if (employee != null) {
+        } else if (employee != null) {
             UserDetails userDetails = new CustomEmployeeDetails(employee);
             if (!jwtService.isValidateToken(refreshToken, userDetails)) {
                 throw new BadCredentialsException("Invalid refresh token");
@@ -173,10 +164,8 @@ public class AuthServiceImpl implements AuthService {
             return jwtService.generateToken(userDetails);
         }
 
-
         return null;
     }
-
 
     @Override
     public void register(SignUpRequest request) {
@@ -188,32 +177,33 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(entity);
     }
 
-//    @Override
-//    @Transactional
-//    public String oauth2Callback(Map<String, String> request) {
-//        Map<String, String> userInfo = extractUserGoogle(request);
-//        String email = userInfo.get("email");
-//        String name = userInfo.get("name");
-//        UserEntity user = userRepository.findByEmail(email)
-//                .orElseGet(() -> {
-////                    RoleEntity role = roleRepository.findByName(RoleEnum.USER.name())
-////                            .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROLE_NOT_FOUND)));
-//                    UserEntity newUser = UserEntity.builder()
-//                                            .email(email)
-//                                            .fullName(name)
-//                                            .createdAt(LocalDateTime.now())
-//                                            .updatedAt(LocalDateTime.now())
-////                                            .role(role)
-//                                            .provider(ProviderEnum.GOOGLE.name())
-//                                        .build();
-//                    return userRepository.save(newUser);
-//                });
-//        UserDetails userDetails = new CustomUserDetails(user);
-//        AuthResponse authResponse = generateToken(userDetails);
-//        String state = generateState();
-//        redisService.set("state:" + state, authResponse, 5);
-//        return state;
-//    }
+    // @Override
+    // @Transactional
+    // public String oauth2Callback(Map<String, String> request) {
+    // Map<String, String> userInfo = extractUserGoogle(request);
+    // String email = userInfo.get("email");
+    // String name = userInfo.get("name");
+    // UserEntity user = userRepository.findByEmail(email)
+    // .orElseGet(() -> {
+    //// RoleEntity role = roleRepository.findByName(RoleEnum.USER.name())
+    //// .orElseThrow(() -> new
+    // DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.ROLE_NOT_FOUND)));
+    // UserEntity newUser = UserEntity.builder()
+    // .email(email)
+    // .fullName(name)
+    // .createdAt(LocalDateTime.now())
+    // .updatedAt(LocalDateTime.now())
+    //// .role(role)
+    // .provider(ProviderEnum.GOOGLE.name())
+    // .build();
+    // return userRepository.save(newUser);
+    // });
+    // UserDetails userDetails = new CustomUserDetails(user);
+    // AuthResponse authResponse = generateToken(userDetails);
+    // String state = generateState();
+    // redisService.set("state:" + state, authResponse, 5);
+    // return state;
+    // }
 
     @Override
     public Object extractState(String state) {
@@ -224,44 +214,44 @@ public class AuthServiceImpl implements AuthService {
         return result;
     }
 
-//    private String generateState() {
-//        return UUID.randomUUID().toString();
-//    }
+    // private String generateState() {
+    // return UUID.randomUUID().toString();
+    // }
 
-
-//    private Map<String, String> extractUserGoogle(Map<String, String> requestParams) {
-//        String tokenUrl = "https://oauth2.googleapis.com/token";
-//
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-//
-//        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-//        body.add("code", requestParams.get("code").toString());
-//        body.add("client_id", googleClientId);
-//        body.add("client_secret", googleClientSecret);
-//        body.add("redirect_uri", googleRedirectUri);
-//        body.add("grant_type", "authorization_code");
-//
-//        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
-//
-//        ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl, request, Map.class);
-//        String accessToken = (String) tokenResponse.getBody().get("access_token");
-//
-//        // Call google api lấy thông tin người dùng
-//        HttpHeaders userInfoHeaders = new HttpHeaders();
-//        userInfoHeaders.setBearerAuth(accessToken);
-//        HttpEntity<Void> userInfoRequest = new HttpEntity<>(userInfoHeaders);
-//
-//        ResponseEntity<Map> userInfoResponse = restTemplate.exchange(
-//                "https://www.googleapis.com/oauth2/v2/userinfo",
-//                HttpMethod.GET,
-//                userInfoRequest,
-//                Map.class
-//        );
-//        return userInfoResponse.getBody();
-//    }
-
-
+    // private Map<String, String> extractUserGoogle(Map<String, String>
+    // requestParams) {
+    // String tokenUrl = "https://oauth2.googleapis.com/token";
+    //
+    // HttpHeaders headers = new HttpHeaders();
+    // headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    //
+    // MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+    // body.add("code", requestParams.get("code").toString());
+    // body.add("client_id", googleClientId);
+    // body.add("client_secret", googleClientSecret);
+    // body.add("redirect_uri", googleRedirectUri);
+    // body.add("grant_type", "authorization_code");
+    //
+    // HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body,
+    // headers);
+    //
+    // ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl,
+    // request, Map.class);
+    // String accessToken = (String) tokenResponse.getBody().get("access_token");
+    //
+    // // Call google api lấy thông tin người dùng
+    // HttpHeaders userInfoHeaders = new HttpHeaders();
+    // userInfoHeaders.setBearerAuth(accessToken);
+    // HttpEntity<Void> userInfoRequest = new HttpEntity<>(userInfoHeaders);
+    //
+    // ResponseEntity<Map> userInfoResponse = restTemplate.exchange(
+    // "https://www.googleapis.com/oauth2/v2/userinfo",
+    // HttpMethod.GET,
+    // userInfoRequest,
+    // Map.class
+    // );
+    // return userInfoResponse.getBody();
+    // }
 
     @Override
     public boolean verifyOtp(String email, String otp) {
@@ -275,7 +265,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void resetPassword(ResetPasswordRequest request) {
         UserEntity user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new DataNotFoundException(localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
+                .orElseThrow(() -> new DataNotFoundException(
+                        localizationUtils.getLocalizedMessage(MessageKey.USER_NOT_FOUND)));
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
