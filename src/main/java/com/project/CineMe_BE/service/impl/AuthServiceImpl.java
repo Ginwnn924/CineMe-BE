@@ -58,24 +58,24 @@ public class AuthServiceImpl implements AuthService {
 
 
     public AuthResponse loginClient(LoginClientRequest loginClientRequest) {
-        UserEntity user = userRepository.findByEmail(loginClientRequest.getEmail())
-                .orElseThrow(
-                        () -> new DataNotFoundException("User not found with email: " + loginClientRequest.getEmail()));
-        if (user.getLocked() != null && user.getLocked()) {
-            throw new BadCredentialsException("Tài khoản đã bị khóa");
-        }
-        UserDetails userDetails = new CustomUserDetails(user);
         try {
-            userAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+            Authentication authentication = userAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     loginClientRequest.getEmail(), loginClientRequest.getPassword()));
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            UserEntity user = userDetails.getUserEntity();
+            if (user.getLocked() != null && user.getLocked()) {
+                throw new BadCredentialsException("Tài khoản đã bị khóa");
+            }
+            AuthResponse authResponse = jwtService.generateToken(userDetails);
+            user.setRefreshToken(authResponse.getRefreshToken());
+            userRepository.save(user);
+            return authResponse;
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
             throw new BadCredentialsException("Sai tài khoản hoặc mật khẩu");
         }
-        AuthResponse authResponse = jwtService.generateToken(userDetails);
-        user.setRefreshToken(authResponse.getRefreshToken());
-        userRepository.save(user);
-        return authResponse;
+        
     }
 
     @Override
