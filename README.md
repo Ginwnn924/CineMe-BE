@@ -29,6 +29,10 @@
 -   **Ticket Verification**: **Scan QR Codes** to check in customers at the theater.
 -   **Staff Management**: Manage employees and assign granular permissions (RBAC).
 
+##  Reference
+- Frontend: **[Here](https://github.com/MPIO1002/CINEME)**
+- Algo Genetic **[Here](https://github.com/Ginwnn924/schedule)**
+  
 ## 🛠️ Technology Stack
 
 The project is built using a robust, enterprise-grade technology stack:
