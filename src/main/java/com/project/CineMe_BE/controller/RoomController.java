@@ -43,11 +43,10 @@ public class RoomController {
 
     @PreAuthorize("hasAuthority('seat.create')")
     @PostMapping("/{roomId}/seats")
-    public ResponseEntity<CommonResult<Boolean>> createSeats(@Valid @RequestBody SeatRequest seatRequest,
+    public ResponseEntity<CommonResult<Void>> createSeats(@Valid @RequestBody SeatRequest seatRequest,
             @PathVariable("roomId") UUID roomId) {
-        Boolean isCreated = seatService.create(seatRequest, roomId);
+        seatService.create(seatRequest, roomId);
         return ResponseEntity.status(201).body(CommonResult.created(
-                localizationUtils.getLocalizedMessage(MessageKey.SEAT_CREATE_SUCCESS),
-                isCreated));
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_CREATE_SUCCESS)));
     }
 }

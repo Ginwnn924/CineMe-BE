@@ -1,66 +1,122 @@
-# CineMê
+# 🎬 CineMê - Movie Theater Ticketing System
 
-## Objective
+## 📖 Project Overview
+**CineMe_BE** is a comprehensive backend solution for a modern Movie Theater Ticketing System. It aims to provide a seamless booking experience for users while offering powerful management tools for theater owners. The system supports bilingual interfaces (Vietnamese/English) and integrates advanced features like **AI-based Movie Recommendations** and **Genetic Algorithms for Schedule Optimization**.
 
-The CineMê project aims to build a complete movie theater ticketing system that supports bilingual use (Vi/En) and leverages modern, widely-used technologies.
+## ✨ Key Features
 
-## Introduction
+### 👤 For Customers (End-Users)
+-   **Authentication**: Register/Login via Email or Google (OAuth2).
+-   **Movie Discovery**:
+    -   View "Now Showing" and "Coming Soon" movies.
+    -   **Personalized Recommendations**: Get movie suggestions based on booking history and preferences.
+    -   Search movies by genre, actor, or simple text search.
+-   **Booking Flow**:
+    -   View details: Trailer, Plot, Cast, Reviews.
+    -   Check showtimes by Theater & Date.
+    -   **Real-time Seat Selection**: Choose seats visually with status updates (Available/Booked/Locked).
+    -   Add Combos (Popcorn/Drinks).
+-   **Payment**: Secure online payment integration (VNPay/MoMo support ready structure).
+-   **My Account**: Manage profile, change password, view **Booking History** and E-Tickets (QR Code).
 
-CineMe_BE is a backend system designed to support the management and operation of an online movie ticket booking service. The system provides APIs to handle core functionalities such as booking/canceling tickets, managing booking history, processing payments, and displaying seat availability in real-time.
+### 🛡️ For Admins & Staff (Web Portal)
+-   **Dashboard**: View statistics on revenue, ticket sales, and trending movies.
+-   **Movie Management**: CRUD operations for Movies, Genres, Actors, Formats (2D/3D/IMAX).
+-   **Theater Management**: Manage branches, rooms, and seat layouts (customizable matrices).
+-   **Showtime Scheduling**:
+    -   Manual scheduling.
+    -   **Auto-Scheduling**: Use Genetic Algorithm to automatically generate optimal showtimes based on movie ratings and duration constraints.
+-   **Ticket Verification**: **Scan QR Codes** to check in customers at the theater.
+-   **Staff Management**: Manage employees and assign granular permissions (RBAC).
 
-The system uses JWT combined with Redis for authentication and flexible role-based access control (RBAC), and also supports Google login. Images are stored on the server via MinIO.
+## 🛠️ Technology Stack
 
-CineMe_BE applies advanced algorithms to enhance user experience:
+The project is built using a robust, enterprise-grade technology stack:
 
-- Genetic Algorithm: Generates optimal movie schedules based on constraints such as ratings and categories.
+| Component | Technology | Version | Description |
+| :--- | :--- | :--- | :--- |
+| **Core Framework** | **Java Spring Boot** | 3.3.3 | Main backend framework for RESTful APIs. |
+| **Database** | **PostgreSQL** | 16 | Relational database for structured data. |
+| **Caching** | **Redis** | 7-alpine | Caching frequent data (movies, configs) & JWT Blacklist. |
+| **Message Queue** | **RabbitMQ** | 3.x | Async processing (Email sending, notifications). |
+| **Storage** | **MinIO** | Latest | S3-compatible object storage for images/posters. |
+| **Security** | **Spring Security** | 3.4.2 | JWT Auth, OAuth2, Role-Based Access Control. |
+| **Real-time** | **Socket.IO** | 2.x | Real-time seat updates and notifications. |
+| **API Docs** | **OpenAPI / Swagger** | 3.0 | Auto-generated API documentation. |
+| **Build Tool** | **Maven** | 3.x | Dependency and build management. |
+| **Containerization**| **Docker** | - | Containerizing DB, Redis, MinIO services. |
 
-- Hybrid Recommendation: Suggests movies to users based on preferences and viewing history.
+## 🚀 Getting Started
 
-The system leverages popular technologies: Java SpringBoot, PostgreSQL, Docker, RabbitMQ, WebSocket, Redis, MinIO.
+Follow these steps to set up and run the project locally.
 
-User-facing APIs include: homepage, movie recommendations, search (cinema, movie, showtime, etc.), ticket booking, online payment, personal information, booking history, and account recovery.
+### Prerequisites
+-   **Java Development Kit (JDK) 21**
+-   **Maven** (or use the included `./mvnw` wrapper)
+-   **Docker Desktop** (Recommended for running PostgreSQL, Redis, MinIO)
 
-Admin-facing APIs include: employee management, ticket management, showtime management, movie management, cinema management, and role/permission management,...
+### Installation Steps
 
-## Dependency
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/Ginwnn924/CineMe-BE.git
+    cd CineMe-BE
+    ```
 
-| Dependency                          | Version     | Link                                                                                                        |
-| ----------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
-| Spring Boot Starter Parent          | 3.3.3       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent/3.3.3)     |
-| Spring Boot Starter Web             | 3.3.3       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web)              |
-| Spring Boot Starter Data JPA        | 3.3.3       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa)         |
-| Spring Boot Starter Validation      | 3.4.3       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-validation/3.4.3) |
-| Spring Boot Starter Security        | 3.4.2       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-security/3.4.2)   |
-| Spring Boot Starter Data Redis      | 3.4.5       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis/3.4.5) |
-| Spring Boot Starter Cache           | 3.4.5       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-cache/3.4.5)      |
-| PostgreSQL                          | runtime     | [mvnrepo](https://mvnrepository.com/artifact/org.postgresql/postgresql)                                     |
-| Lombok                              | 1.18.30     | [mvnrepo](https://mvnrepository.com/artifact/org.projectlombok/lombok/1.18.30)                              |
-| MapStruct                           | 1.5.5.Final | [mvnrepo](https://mvnrepository.com/artifact/org.mapstruct/mapstruct/1.5.5.Final)                           |
-| MapStruct Processor                 | 1.5.5.Final | [mvnrepo](https://mvnrepository.com/artifact/org.mapstruct/mapstruct-processor/1.5.5.Final)                 |
-| MinIO                               | 8.5.17      | [mvnrepo](https://mvnrepository.com/artifact/io.minio/minio/8.5.17)                                         |
-| SpringDoc OpenAPI Starter WebMVC UI | 2.6.0       | [mvnrepo](https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui/2.6.0)       |
-| JJWT (JSON Web Token) API           | 0.12.6      | [mvnrepo](https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api/0.12.6)                               |
-| JJWT Impl                           | 0.12.6      | [mvnrepo](https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-impl/0.12.6)                              |
-| JJWT Jackson                        | 0.12.6      | [mvnrepo](https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-jackson/0.12.6)                           |
-| Spring Test                         | test        | [mvnrepo](https://mvnrepository.com/artifact/org.springframework/spring-test)                               |
-| Spring Security OAuth2 Client       | -           | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-client)    |
-| Spring Security OAuth2 JOSE         | -           | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-jose)      |
-| Spring Boot Starter Mail            | 3.4.3       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-mail/3.4.3)       |
-| Spring Boot Starter AMQP            | 3.4.2       | [mvnrepo](https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp/3.4.2)       |
-| Netty SocketIO                      | 2.0.13      | [mvnrepo](https://mvnrepository.com/artifact/com.corundumstudio.socketio/netty-socketio/2.0.13)             |
-| ZXing Core                          | 3.3.0       | [mvnrepo](https://mvnrepository.com/artifact/com.google.zxing/core/3.3.0)                                   |
-| ZXing JavaSE                        | 3.3.0       | [mvnrepo](https://mvnrepository.com/artifact/com.google.zxing/javase/3.3.0)                                 |
-| Jackson Datatype JSR310             | -           | [mvnrepo](https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310)        |
-| Apache Commons Text                 | 1.10.0      | [mvnrepo](https://mvnrepository.com/artifact/org.apache.commons/commons-text/1.10.0)                        |
-| dotenv-java                         | 3.0.0       | [mvnrepo](https://mvnrepository.com/artifact/io.github.cdimascio/dotenv-java/3.0.0)                         |
-| JJWT (core)                         | 0.12.0      | [mvnrepo](https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt/0.12.0)                                   |
+2.  **Start Infrastructure Services (Docker)**
+    Use the provided `docker-compose.yml` (if available) or start PostgreSQL, Redis, and MinIO instances manually.
+    ```bash
+    # Example if docker-compose.yaml is present in root
+    docker-compose up -d
+    ```
 
-## Technology
+3.  **Configure Environment Variables**
+    Check `src/main/resources/application.properties` (or `.env` file) to match your local setup:
+    -   `spring.datasource.url`: JDBC URL for PostgreSQL.
+    -   `spring.data.redis.host`: Redis host.
+    -   `minio.url`: MinIO endpoint.
 
-| Technology / Library | Version      |
-| -------------------- | ------------ |
-| JDK                  | 21           |
-| PostgreSQL           | 16           |
-| MinIO                | latest       |
-| RabbitMQ             | 3-management |
-| Redis                | 7-alpine     |
+4.  **Build the Project**
+    ```bash
+    ./mvnw clean compile
+    ```
+
+5.  **Run the Application**
+    ```bash
+    ./mvnw spring-boot:run
+    ```
+
+## 📖 Usage & API Documentation
+
+Once the application is running (default port `8080`):
+
+### 1. Explore APIs (Swagger UI)
+Visit **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)** to explore all available endpoints.
+-   **Public APIs**: Login, Register, View Movies/Showtimes (No token required).
+-   **Protected APIs**: Booking, Profile, Admin Stats (Require `Bearer Token`).
+
+### 2. Typical User Flow (via API)
+1.  **Login**: `POST /api/v1/auth/login` -> Receive `accessToken`.
+2.  **Authorize**: Click "Authorize" in Swagger button -> Paste `Bearer <your_access_token>`.
+3.  **Find Movie**: `GET /api/v1/movies/available`.
+4.  **Get Showtimes**: `GET /api/v1/showtimes?movieId=...`.
+5.  **Book Ticket**: `POST /api/v1/bookings` with selected seat IDs.
+
+## 📂 Project Structure
+
+```bash
+src/main/java/com/project/CineMe_BE/
+├── api/             # API Response wrappers (CommonResult)
+├── config/          # Configurations (Security, Redis, OpenAPI...)
+├── controller/      # REST API Controllers (Clean & Standardized)
+├── consumer/        # RabbitMQ Consumers (Email/Notification)
+├── dto/             # Data Transfer Objects (Request/Response)
+├── entity/          # JPA Entities
+├── repository/      # Database Repositories
+├── service/         # Business Logic
+├── security/        # Auth Logic (JWT, Filters)
+└── utils/           # Utilities (Date, String, QR, OTP...)
+```
+
+---
+*Built with ❤️ by the CineMe Team.*

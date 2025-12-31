@@ -20,6 +20,7 @@ public class MessageKey {
     public static final String MOVIE_GET_RECOMMENDED_SUCCESS = "movie.get_recommended_success";
     public static final String MOVIE_GET_AVAILABLE_SUCCESS = "movie.get_available_success";
     public static final String MOVIE_GET_COMING_SOON_SUCCESS = "movie.get_coming_soon_success";
+    public static final String MOVIE_GET_REVIEWS_SUCCESS = "movie.get_reviews_success";
 
     // Genre
     public static final String GENRE_CREATE_SUCCESS = "genre.create_success";
@@ -150,6 +151,11 @@ public class MessageKey {
 
     // Employee
     public static final String EMPLOYEE_NOT_FOUND = "employee.not_found";
+    public static final String EMPLOYEE_CREATE_SUCCESS = "employee.create_success";
+    public static final String EMPLOYEE_UPDATE_SUCCESS = "employee.update_success";
+    public static final String EMPLOYEE_DELETE_SUCCESS = "employee.delete_success";
+    public static final String EMPLOYEE_GET_DETAILS = "employee.get_details";
+    public static final String EMPLOYEE_GET_ALL_SUCCESS = "employee.get_all_success";
 
     // Rank
     public static final String RANK_NOT_FOUND = "rank.not_found";

@@ -40,20 +40,18 @@ public class RoleController {
 
     @PreAuthorize("hasAuthority('role.create')")
     @PostMapping
-    ResponseEntity<CommonResult<RoleResponse>> create(@Valid @RequestBody RoleRequest request) {
-        RoleResponse response = roleService.createRole(request);
+    ResponseEntity<CommonResult<Void>> create(@Valid @RequestBody RoleRequest request) {
+        roleService.createRole(request);
         return ResponseEntity.status(201).body(CommonResult.created(
-                "Create role successfully",
-                response));
+                "Create role successfully"));
     }
 
     @PreAuthorize("hasAuthority('role.update')")
     @PostMapping("/permissions")
-    ResponseEntity<CommonResult<RoleResponse>> updatePermission(@Valid @RequestBody RolePermissionRequest request) {
-        RoleResponse response = roleService.updateRolePermission(request);
+    ResponseEntity<CommonResult<Void>> updatePermission(@Valid @RequestBody RolePermissionRequest request) {
+        roleService.updateRolePermission(request);
         return ResponseEntity.ok(CommonResult.success(
-                "Update role permissions successfully",
-                response));
+                "Update role permissions successfully"));
     }
 
 }

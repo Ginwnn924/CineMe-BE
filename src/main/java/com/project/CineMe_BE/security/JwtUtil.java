@@ -1,6 +1,5 @@
-package com.project.CineMe_BE.utils;
+package com.project.CineMe_BE.security;
 
-import com.project.CineMe_BE.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

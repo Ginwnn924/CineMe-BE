@@ -2,7 +2,6 @@ package com.project.CineMe_BE.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.project.CineMe_BE.dto.request.MomoRequestPayment;
 import com.project.CineMe_BE.entity.BookingEntity;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;

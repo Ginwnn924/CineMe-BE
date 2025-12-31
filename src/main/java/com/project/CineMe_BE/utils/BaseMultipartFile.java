@@ -14,7 +14,7 @@ public class BaseMultipartFile implements MultipartFile {
         this.name = name;
         this.originalFilename = originalFilename;
         this.contentType = contentType;
-        this.content = content;
+        this.content = content != null ? content.clone() : new byte[0];
     }
 
     @Override

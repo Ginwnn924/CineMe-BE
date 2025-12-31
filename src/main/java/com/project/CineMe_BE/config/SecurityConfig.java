@@ -74,8 +74,7 @@ public class SecurityConfig {
                                 .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(auth -> auth
-                                .baseUri("/oauth2/authorize")
-                        )
+                                .baseUri("/oauth2/authorize"))
                         .redirectionEndpoint(redir -> redir
                                 .baseUri("/oauth2/callback/*"))
                         .userInfoEndpoint(userInfo -> userInfo
@@ -85,8 +84,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenFilter, UsernamePasswordAuthenticationFilter.class);
-        // .exceptionHandling(ex -> ex.authenticationEntryPoint(new
-        // AuthJwtEntryPoint()));
 
         return http.build();
     }

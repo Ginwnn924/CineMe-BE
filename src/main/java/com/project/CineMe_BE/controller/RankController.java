@@ -1,5 +1,8 @@
 package com.project.CineMe_BE.controller;
 
+import java.util.List;
+import com.project.CineMe_BE.dto.response.RankResponse;
+
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.RankRequest;
@@ -21,33 +24,33 @@ public class RankController {
     private final LocalizationUtils localizationUtils;
 
     @GetMapping
-    public ResponseEntity<CommonResult<Object>> getAllRanks() {
+    public ResponseEntity<CommonResult<List<RankResponse>>> getAllRanks() {
         return ResponseEntity.ok(CommonResult.success(
                 localizationUtils.getLocalizedMessage(MessageKey.RANK_GET_ALL_SUCCESS),
                 rankService.getAllRanks()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CommonResult<Object>> getRankById(@PathVariable UUID id) {
+    public ResponseEntity<CommonResult<RankResponse>> getRankById(@PathVariable UUID id) {
         return ResponseEntity.ok(CommonResult.success(
                 localizationUtils.getLocalizedMessage(MessageKey.RANK_GET_DETAILS),
                 rankService.getRankById(id)));
     }
 
     @PostMapping
-    public ResponseEntity<CommonResult<Object>> createRank(@Valid @RequestBody RankRequest request) {
+    public ResponseEntity<CommonResult<Void>> createRank(@Valid @RequestBody RankRequest request) {
+        rankService.createRank(request);
         return ResponseEntity.status(201).body(CommonResult.created(
-                localizationUtils.getLocalizedMessage(MessageKey.RANK_CREATE_SUCCESS),
-                rankService.createRank(request)));
+                localizationUtils.getLocalizedMessage(MessageKey.RANK_CREATE_SUCCESS)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonResult<Object>> updateRank(
+    public ResponseEntity<CommonResult<Void>> updateRank(
             @PathVariable UUID id,
             @Valid @RequestBody RankRequest request) {
+        rankService.updateRank(id, request);
         return ResponseEntity.ok(CommonResult.success(
-                localizationUtils.getLocalizedMessage(MessageKey.RANK_UPDATE_SUCCESS),
-                rankService.updateRank(id, request)));
+                localizationUtils.getLocalizedMessage(MessageKey.RANK_UPDATE_SUCCESS)));
     }
 
     // @DeleteMapping("/{id}")

@@ -4,6 +4,7 @@ import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.ActorRequest;
 import com.project.CineMe_BE.dto.response.ActorResponse;
+import com.project.CineMe_BE.dto.response.ActorSimpleResponse;
 import com.project.CineMe_BE.service.ActorService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.annotation.Nonnull;
@@ -27,14 +28,14 @@ public class ActorController {
 
         @PreAuthorize("hasAuthority('actor.view')")
         @GetMapping("")
-        public ResponseEntity<CommonResult<Object>> getAllActors() {
+        public ResponseEntity<CommonResult<List<ActorSimpleResponse>>> getAllActors() {
                 return ResponseEntity.ok(CommonResult.success(
                                 localizationUtils.getLocalizedMessage(MessageKey.ACTOR_GET_ALL_SUCCESS),
                                 actorService.getAll()));
         }
 
         @GetMapping("/{id}/detail")
-        public ResponseEntity<CommonResult<Object>> getActorById(@PathVariable @Nonnull UUID id) {
+        public ResponseEntity<CommonResult<ActorResponse>> getActorById(@PathVariable @Nonnull UUID id) {
                 return ResponseEntity.ok(CommonResult.success(
                                 localizationUtils.getLocalizedMessage(MessageKey.ACTOR_GET_DETAIL),
                                 actorService.getActorById(id)));
@@ -42,10 +43,10 @@ public class ActorController {
 
         @PreAuthorize("hasAuthority('actor.create')")
         @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-        public ResponseEntity<CommonResult<Object>> createActor(@Valid @ModelAttribute ActorRequest actor) {
+        public ResponseEntity<CommonResult<Void>> createActor(@Valid @ModelAttribute ActorRequest actor) {
+                actorService.createActor(actor);
                 return ResponseEntity.status(HttpStatus.CREATED).body(CommonResult.created(
-                                localizationUtils.getLocalizedMessage(MessageKey.ACTOR_CREATE_SUCCESS),
-                                actorService.createActor(actor)));
+                                localizationUtils.getLocalizedMessage(MessageKey.ACTOR_CREATE_SUCCESS)));
         }
 
         @PreAuthorize("hasAuthority('actor.delete')")
@@ -58,10 +59,10 @@ public class ActorController {
 
         @PreAuthorize("hasAuthority('actor.update')")
         @PutMapping(value = "/{id}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-        public ResponseEntity<CommonResult<Object>> updateActor(@PathVariable @Nonnull UUID id,
+        public ResponseEntity<CommonResult<Void>> updateActor(@PathVariable @Nonnull UUID id,
                         @Valid @ModelAttribute ActorRequest actor) {
+                actorService.updateActor(id, actor);
                 return ResponseEntity.ok(CommonResult.success(
-                                localizationUtils.getLocalizedMessage(MessageKey.ACTOR_UPDATE_SUCCESS),
-                                actorService.updateActor(id, actor)));
+                                localizationUtils.getLocalizedMessage(MessageKey.ACTOR_UPDATE_SUCCESS)));
         }
 }

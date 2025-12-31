@@ -24,15 +24,15 @@ public class GenreController {
 
     @PreAuthorize("hasAuthority('genre.create')")
     @PostMapping
-    public ResponseEntity<CommonResult<Object>> create(@Valid @RequestBody GenreRequest request) {
+    public ResponseEntity<CommonResult<Void>> create(@Valid @RequestBody GenreRequest request) {
+        genreService.create(request);
         return ResponseEntity.status(201).body(CommonResult.created(
-                localizationUtils.getLocalizedMessage(MessageKey.GENRE_CREATE_SUCCESS),
-                genreService.create(request)));
+                localizationUtils.getLocalizedMessage(MessageKey.GENRE_CREATE_SUCCESS)));
     }
 
     @PreAuthorize("hasAuthority('genre.view')")
     @GetMapping("")
-    public ResponseEntity<CommonResult<Object>> getAllGenres() {
+    public ResponseEntity<CommonResult<List<GenreResponse>>> getAllGenres() {
         return ResponseEntity.ok(CommonResult.success(
                 localizationUtils.getLocalizedMessage(MessageKey.GENRE_GET_ALL_SUCCESS),
                 genreService.getAll()));
@@ -40,11 +40,11 @@ public class GenreController {
 
     @PreAuthorize("hasAuthority('genre.update')")
     @PutMapping("/{id}")
-    public ResponseEntity<CommonResult<Object>> update(@PathVariable UUID id,
+    public ResponseEntity<CommonResult<Void>> update(@PathVariable UUID id,
             @Valid @RequestBody GenreRequest request) {
+        genreService.update(request, id);
         return ResponseEntity.ok(CommonResult.success(
-                localizationUtils.getLocalizedMessage(MessageKey.GENRE_UPDATE_SUCCESS),
-                genreService.update(request, id)));
+                localizationUtils.getLocalizedMessage(MessageKey.GENRE_UPDATE_SUCCESS)));
     }
 
     @PreAuthorize("hasAuthority('genre.delete')")

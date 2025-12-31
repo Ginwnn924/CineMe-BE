@@ -10,7 +10,6 @@ import com.project.CineMe_BE.constant.CacheName;
 import com.project.CineMe_BE.service.PricingRuleService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import com.project.CineMe_BE.utils.SeatGenerator;
-import com.project.CineMe_BE.utils.SeatGeneratorUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -110,7 +109,6 @@ public class SeatServiceImpl implements SeatService {
         LocalDate date = showtime.getSchedule().getDate();
         List<SeatsEntity> listSeats = seatsRepository.findByShowtimeId(showtimeId);
         Map<String, Long> listRules = pricingRuleService.getPricingRulesByDayOfWeek(date);
-
 
         // Batch fetch booked seat IDs (1 query instead of N+1)
         Set<UUID> bookedSeatIds = bookingRepository.getSeatsLockedByShowtime(showtimeId);

@@ -25,7 +25,7 @@ import com.project.CineMe_BE.repository.RoomRepository;
 import com.project.CineMe_BE.repository.ScheduleRepository;
 import com.project.CineMe_BE.repository.ShowtimeRepository;
 import com.project.CineMe_BE.service.ScheduleService;
-import com.project.CineMe_BE.utils.DateFormatUltil;
+import com.project.CineMe_BE.utils.DateFormatUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
@@ -115,7 +115,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         @Override
         @Transactional
         public List<CreateScheduleResponse> createSchedules(CreateScheduleRequest request) {
-                LocalDate scheduleDate = DateFormatUltil.formatDate(request.getDate());
+                LocalDate scheduleDate = DateFormatUtil.formatDate(request.getDate());
 
                 // Gom lai de batch fetch
                 Set<UUID> roomIds = new HashSet<>();

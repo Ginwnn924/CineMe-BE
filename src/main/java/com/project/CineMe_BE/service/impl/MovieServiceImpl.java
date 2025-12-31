@@ -54,7 +54,7 @@ public class MovieServiceImpl implements MovieService {
     private final GenreRepository genreRepository;
 
     @Override
-    public Page<MovieDetailsResponse> getAvailableMovies(MovieSearch movieSearch) {
+    public Page<MovieResponse> getAvailableMovies(MovieSearch movieSearch) {
         Specification<MovieEntity> availableSpec = (root, query, cb) -> {
 
             LocalDateTime now = LocalDateTime.now();
@@ -68,11 +68,11 @@ public class MovieServiceImpl implements MovieService {
 
         return movieRepository
                 .findAll(mergedSpec, movieSearch.getPaginationRequest().pageable())
-                .map(movieDetailsResponseMapper::toDto);
-    }   
+                .map(movieResponseMapper::toDto);
+    }
 
     @Override
-    public Page<MovieDetailsResponse> getComingSoonMovies(MovieSearch movieSearch) {
+    public Page<MovieResponse> getComingSoonMovies(MovieSearch movieSearch) {
         Specification<MovieEntity> comingSoonSpec = (root, query, cb) -> {
 
             LocalDateTime now = LocalDateTime.now();
@@ -85,20 +85,20 @@ public class MovieServiceImpl implements MovieService {
 
         return movieRepository
                 .findAll(mergedSpec, movieSearch.getPaginationRequest().pageable())
-                .map(movieDetailsResponseMapper::toDto);
+                .map(movieResponseMapper::toDto);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'trending'")
-    public List<MovieDetailsResponse> getTrendingMovies() {
+    public List<MovieResponse> getTrendingMovies() {
         List<MovieEntity> listMovie = movieRepository.getTrendingMovies();
-        return movieDetailsResponseMapper.toListDto(listMovie);
+        return movieResponseMapper.toListDto(listMovie);
     }
 
     @Transactional
     @Override
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
-    public MovieDetailsResponse createMovie(MovieRequest request) {
+    public void createMovie(MovieRequest request) {
         MovieEntity movie = movieRequestMapper.toEntity(request);
 
         List<UUID> actorIds = request.getListActorId();
@@ -126,14 +126,13 @@ public class MovieServiceImpl implements MovieService {
             String trailerUrl = minioService.upload(request.getTrailer());
             movie.setTrailer(StringUtil.splitUrlResource(trailerUrl));
         }
-        MovieEntity savedMovie = movieRepository.save(movie);
-        return movieDetailsResponseMapper.toDto(savedMovie);
+        movieRepository.save(movie);
     }
 
     @Override
     @Transactional
     @CachePut(value = CacheName.MOVIE, key = "#id")
-    public MovieDetailsResponse updateMovie(UUID id, MovieRequest request) {
+    public void updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
@@ -167,22 +166,21 @@ public class MovieServiceImpl implements MovieService {
             String trailerUrl = minioService.upload(request.getTrailer());
             movie.setTrailer(StringUtil.splitUrlResource(trailerUrl));
         }
-        MovieEntity updatedMovie = movieRepository.save(movie);
-        return movieDetailsResponseMapper.toDto(updatedMovie);
+        movieRepository.save(movie);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'all'")
-    public List<MovieDetailsResponse> getAllMovie() {
+    public List<MovieResponse> getAllMovie() {
         List<MovieEntity> listMovie = movieRepository.findAll();
-        return movieDetailsResponseMapper.toListDto(listMovie);
+        return movieResponseMapper.toListDto(listMovie);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'theater_' + #theaterId")
-    public List<MovieDetailsResponse> getAllMovieByTheaterId(UUID theaterId) {
+    public List<MovieResponse> getAllMovieByTheaterId(UUID theaterId) {
         List<MovieEntity> listMovie = movieRepository.findByTheaterId(theaterId);
-        return movieDetailsResponseMapper.toListDto(listMovie);
+        return movieResponseMapper.toListDto(listMovie);
     }
 
     @Override
@@ -201,11 +199,10 @@ public class MovieServiceImpl implements MovieService {
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
         movieRepository.delete(movie);
-
     }
 
     @Override
-    public List<MovieDetailsResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN) {
+    public List<MovieResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN) {
         Map<UUID, Double> cbf = contentBasedFiltering(movieId);
         Map<UUID, Double> cf = collaborativeFiltering(userId);
         // Kết hợp kết quả từ cả hai phương pháp bằng cách trung binh cộng điểm số
@@ -227,7 +224,7 @@ public class MovieServiceImpl implements MovieService {
                 .collect(Collectors.toList());
         List<MovieEntity> listRecommendedMovies = movieRepository.findAllById(recommendedMovieIds);
         return listRecommendedMovies.stream()
-                .map(movieDetailsResponseMapper::toDto)
+                .map(movieResponseMapper::toDto)
                 .collect(Collectors.toList());
     }
 

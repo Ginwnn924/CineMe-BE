@@ -38,27 +38,24 @@ public class SeatTypeController {
     }
 
     @PostMapping
-    public ResponseEntity<CommonResult<SeatTypeResponse>> create(@Valid @RequestBody SeatTypeRequest seatTypeRequest) {
-        SeatTypeResponse seatTypeResponse = service.create(seatTypeRequest);
+    public ResponseEntity<CommonResult<Void>> create(@Valid @RequestBody SeatTypeRequest seatTypeRequest) {
+        service.create(seatTypeRequest);
         return ResponseEntity.status(201).body(CommonResult.created(
-                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_CREATE_SUCCESS),
-                seatTypeResponse));
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_CREATE_SUCCESS)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonResult<SeatTypeResponse>> update(@Valid @RequestBody SeatTypeRequest seatTypeRequest,
+    public ResponseEntity<CommonResult<Void>> update(@Valid @RequestBody SeatTypeRequest seatTypeRequest,
             @PathVariable("id") UUID id) {
-        SeatTypeResponse seatTypeResponse = service.update(id, seatTypeRequest);
+        service.update(id, seatTypeRequest);
         return ResponseEntity.ok(CommonResult.success(
-                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_UPDATE_SUCCESS),
-                seatTypeResponse));
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_UPDATE_SUCCESS)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CommonResult<Boolean>> delete(@PathVariable("id") UUID id) {
-        boolean isDeleted = service.delete(id);
+    public ResponseEntity<CommonResult<Void>> delete(@PathVariable("id") UUID id) {
+        service.delete(id);
         return ResponseEntity.ok(CommonResult.success(
-                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_DELETE_SUCCESS),
-                isDeleted));
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_DELETE_SUCCESS)));
     }
 }

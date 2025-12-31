@@ -22,11 +22,10 @@ public class ProductController {
     private final LocalizationUtils localizationUtils;
 
     @PostMapping("")
-    public ResponseEntity<CommonResult<ProductResponse>> createProduct(@Valid @RequestBody ProductRequest request) {
-        ProductResponse response = productService.create(request);
+    public ResponseEntity<CommonResult<Void>> createProduct(@Valid @RequestBody ProductRequest request) {
+        productService.create(request);
         return ResponseEntity.status(201).body(CommonResult.created(
-                localizationUtils.getLocalizedMessage(MessageKey.PRODUCT_CREATE_SUCCESS),
-                response));
+                localizationUtils.getLocalizedMessage(MessageKey.PRODUCT_CREATE_SUCCESS)));
     }
 
     @GetMapping("/{id}")
@@ -46,12 +45,11 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonResult<ProductResponse>> updateProduct(@PathVariable UUID id,
+    public ResponseEntity<CommonResult<Void>> updateProduct(@PathVariable UUID id,
             @Valid @RequestBody ProductRequest request) {
-        ProductResponse response = productService.update(id, request);
+        productService.update(id, request);
         return ResponseEntity.ok(CommonResult.success(
-                localizationUtils.getLocalizedMessage(MessageKey.PRODUCT_UPDATE_SUCCESS),
-                response));
+                localizationUtils.getLocalizedMessage(MessageKey.PRODUCT_UPDATE_SUCCESS)));
     }
 
     @DeleteMapping("/{id}")

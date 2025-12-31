@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.CineMe_BE.dto.response.CountryResponse;
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/countries")
@@ -19,7 +22,7 @@ public class CountryController {
     private final LocalizationUtils localizationUtils;
 
     @GetMapping("")
-    public ResponseEntity<CommonResult<Object>> getAllCountries() {
+    public ResponseEntity<CommonResult<List<CountryResponse>>> getAllCountries() {
         return ResponseEntity.ok(CommonResult.success(
                 localizationUtils.getLocalizedMessage(MessageKey.COUNTRY_GET_ALL_SUCCESS),
                 countryService.getAll()));

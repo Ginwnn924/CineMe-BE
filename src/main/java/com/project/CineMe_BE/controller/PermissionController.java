@@ -1,5 +1,8 @@
 package com.project.CineMe_BE.controller;
 
+import java.util.List;
+import com.project.CineMe_BE.dto.response.PermissionResponse;
+
 import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.PermissionRequest;
 import com.project.CineMe_BE.service.PermissionService;
@@ -15,23 +18,23 @@ public class PermissionController {
     private final PermissionService permissionService;
 
     @GetMapping
-    public ResponseEntity<CommonResult<Object>> getAll() {
+    public ResponseEntity<CommonResult<List<PermissionResponse>>> getAll() {
         return ResponseEntity.ok(CommonResult.success(
                 "Get all permissions successfully",
                 permissionService.getAll()));
     }
 
     @GetMapping("/{key}")
-    public ResponseEntity<CommonResult<Object>> getByKey(@PathVariable("key") String key) {
+    public ResponseEntity<CommonResult<PermissionResponse>> getByKey(@PathVariable("key") String key) {
         return ResponseEntity.ok(CommonResult.success(
                 "Get permission by key successfully",
                 permissionService.getByKey(key)));
     }
 
     @PostMapping
-    public ResponseEntity<CommonResult<Object>> create(@Valid @RequestBody PermissionRequest request) {
+    public ResponseEntity<CommonResult<Void>> create(@Valid @RequestBody PermissionRequest request) {
+        permissionService.create(request);
         return ResponseEntity.status(201).body(CommonResult.created(
-                "Create permission successfully",
-                permissionService.create(request)));
+                "Create permission successfully"));
     }
 }

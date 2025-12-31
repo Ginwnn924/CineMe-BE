@@ -1,12 +1,13 @@
 package com.project.CineMe_BE.controller;
 
+import com.project.CineMe_BE.dto.response.ScheduleResponse;
+
 import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.CreateScheduleRequest;
-import com.project.CineMe_BE.dto.response.CreateScheduleResponse;
 import com.project.CineMe_BE.security.CustomEmployeeDetails;
 import com.project.CineMe_BE.service.ScheduleService;
-import com.project.CineMe_BE.utils.DateFormatUltil;
+import com.project.CineMe_BE.utils.DateFormatUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,8 @@ public class ScheduleController {
     private final LocalizationUtils localizationUtils;
 
     @GetMapping("/search")
-    public ResponseEntity<CommonResult<Object>> searchSchedules(@RequestParam(required = false) UUID theaterId,
+    public ResponseEntity<CommonResult<List<ScheduleResponse>>> searchSchedules(
+            @RequestParam(required = false) UUID theaterId,
             @RequestParam(required = false) String date,
             @AuthenticationPrincipal CustomEmployeeDetails principal) {
 
@@ -34,18 +36,15 @@ public class ScheduleController {
         }
         return ResponseEntity.ok(CommonResult.success(
                 localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_GET_ALL_SUCCESS),
-                scheduleService.findByTheaterIdAndDate(theaterId, DateFormatUltil.formatDate(date))));
+                scheduleService.findByTheaterIdAndDate(theaterId, DateFormatUtil.formatDate(date))));
     }
 
     @PostMapping("/create")
-    public ResponseEntity<CommonResult<List<CreateScheduleResponse>>> createSchedules(
+    public ResponseEntity<CommonResult<Void>> createSchedules(
             @Valid @RequestBody List<CreateScheduleRequest> requests) {
-        // UUID theaterId = principal.getEmployee().getTheater().getId();
-        List<CreateScheduleResponse> createdSchedules = scheduleService.createSchedulesBatch(requests);
-
+        scheduleService.createSchedulesBatch(requests);
         return ResponseEntity.status(201).body(CommonResult.created(
-                localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_CREATE_SUCCESS),
-                createdSchedules));
+                localizationUtils.getLocalizedMessage(MessageKey.SCHEDULE_CREATE_SUCCESS)));
     }
 
 }

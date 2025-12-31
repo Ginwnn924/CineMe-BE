@@ -6,7 +6,7 @@ import com.project.CineMe_BE.dto.request.RoomRequest;
 import com.project.CineMe_BE.dto.response.RoomResponse;
 import com.project.CineMe_BE.dto.response.TheaterResponse;
 import com.project.CineMe_BE.service.TheaterService;
-import com.project.CineMe_BE.utils.DateFormatUltil;
+import com.project.CineMe_BE.utils.DateFormatUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class TheaterController {
         public ResponseEntity<CommonResult<List<TheaterResponse>>> getTheatersByMovieAndDate(@RequestParam UUID movieId,
                         @RequestParam String date) {
                 List<TheaterResponse> listTheater = theaterService.getAllTheatersByMovieAndDate(movieId,
-                                DateFormatUltil.formatDate(date));
+                                DateFormatUtil.formatDate(date));
                 return ResponseEntity.ok(CommonResult.success(
                                 localizationUtils.getLocalizedMessage(MessageKey.THEATER_GET_ALL_SUCCESS),
                                 listTheater));
@@ -67,10 +67,10 @@ public class TheaterController {
 
         @PreAuthorize("hasAuthority('room.create')")
         @PostMapping("/{theaterId}/rooms")
-        public ResponseEntity<CommonResult<Object>> create(@PathVariable UUID theaterId,
+        public ResponseEntity<CommonResult<Void>> create(@PathVariable UUID theaterId,
                         @Valid @RequestBody RoomRequest request) {
+                theaterService.createRoom(theaterId, request);
                 return ResponseEntity.status(201).body(CommonResult.created(
-                                localizationUtils.getLocalizedMessage(MessageKey.ROOM_CREATE_SUCCESS),
-                                theaterService.createRoom(theaterId, request)));
+                                localizationUtils.getLocalizedMessage(MessageKey.ROOM_CREATE_SUCCESS)));
         }
 }

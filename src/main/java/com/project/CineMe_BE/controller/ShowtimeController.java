@@ -7,7 +7,7 @@ import com.project.CineMe_BE.dto.response.SeatResponse;
 import com.project.CineMe_BE.dto.response.ShowtimeResponse;
 import com.project.CineMe_BE.service.SeatService;
 import com.project.CineMe_BE.service.ShowtimeService;
-import com.project.CineMe_BE.utils.DateFormatUltil;
+import com.project.CineMe_BE.utils.DateFormatUtil;
 import com.project.CineMe_BE.utils.LocalizationUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +37,11 @@ public class ShowtimeController {
 
         @PreAuthorize("hasAuthority('showtime.create')")
         @PostMapping("")
-        public ResponseEntity<CommonResult<ShowtimeRequest>> createShowtime(
+        public ResponseEntity<CommonResult<Void>> createShowtime(
                         @Valid @RequestBody ShowtimeRequest request) {
                 showtimeService.createShowtime(request);
                 return ResponseEntity.status(201).body(CommonResult.created(
-                                localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CREATE_SUCCESS),
-                                request));
+                                localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CREATE_SUCCESS)));
         }
 
         @GetMapping("")
@@ -51,7 +50,7 @@ public class ShowtimeController {
                         @RequestParam UUID theaterId,
                         @RequestParam(required = true) String date) {
                 List<ShowtimeResponse> listShowtimes = showtimeService.getShowtimesByMovieIdAndTheaterIdAndDate(movieId,
-                                theaterId, DateFormatUltil.formatDate(date));
+                                theaterId, DateFormatUtil.formatDate(date));
                 return ResponseEntity.ok(CommonResult.success(
                                 localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_GET_ALL_SUCCESS),
                                 listShowtimes));

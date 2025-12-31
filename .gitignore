@@ -3,8 +3,7 @@ HELP.md
 !**/src/main/**/target/
 !**/src/test/**/target/
 env.properties
-.cursor/**
-.kiro/**
+
 
 
 ### STS ###
