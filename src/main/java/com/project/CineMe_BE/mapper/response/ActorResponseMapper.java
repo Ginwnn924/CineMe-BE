@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.mapper.response;
 
 import com.project.CineMe_BE.dto.response.ActorResponse;
-import com.project.CineMe_BE.dto.response.MovieResponse;
+import com.project.CineMe_BE.dto.response.MovieDetailsResponse;
 import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.mapper.BaseResponseMapper;
 import com.project.CineMe_BE.utils.StringUtil;
@@ -22,7 +22,7 @@ public interface ActorResponseMapper extends BaseResponseMapper<ActorResponse, A
                 .img(entity.getImg() != null ? StringUtil.mapImg(entity.getImg()) : null)
                 .listMovie(entity.getListMovie() != null ? entity.getListMovie().stream()
                         .map(movie -> {
-                            return MovieResponse.builder()
+                            return MovieDetailsResponse.builder()
                                     .id(movie.getId())
                                     .nameEn(movie.getNameEn())
                                     .nameVn(movie.getNameVn())

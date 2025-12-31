@@ -5,6 +5,7 @@ import com.project.CineMe_BE.constant.MessageKey;
 import com.project.CineMe_BE.dto.request.MovieRequest;
 import com.project.CineMe_BE.dto.request.search.MovieSearch;
 import com.project.CineMe_BE.dto.request.search.PageableData;
+import com.project.CineMe_BE.dto.response.MovieDetailsResponse;
 import com.project.CineMe_BE.dto.response.MovieResponse;
 import com.project.CineMe_BE.entity.ActorEntity;
 import com.project.CineMe_BE.entity.GenreEntity;
@@ -12,6 +13,7 @@ import com.project.CineMe_BE.entity.MovieEntity;
 import com.project.CineMe_BE.entity.ReviewEntity;
 import com.project.CineMe_BE.exception.DataNotFoundException;
 import com.project.CineMe_BE.mapper.request.MovieRequestMapper;
+import com.project.CineMe_BE.mapper.response.MovieDetailsResponseMapper;
 import com.project.CineMe_BE.mapper.response.MovieResponseMapper;
 import com.project.CineMe_BE.repository.ActorRepository;
 import com.project.CineMe_BE.repository.GenreRepository;
@@ -44,6 +46,7 @@ public class MovieServiceImpl implements MovieService {
     private final LocalizationUtils localizationUtils;
     private final MovieRepository movieRepository;
     private final MovieResponseMapper movieResponseMapper;
+    private final MovieDetailsResponseMapper movieDetailsResponseMapper;
     private final MovieRequestMapper movieRequestMapper;
     private final MinioService minioService;
     private final ReviewRepository reviewRepository;
@@ -51,7 +54,7 @@ public class MovieServiceImpl implements MovieService {
     private final GenreRepository genreRepository;
 
     @Override
-    public Page<MovieResponse> getAvailableMovies(MovieSearch movieSearch) {
+    public Page<MovieDetailsResponse> getAvailableMovies(MovieSearch movieSearch) {
         Specification<MovieEntity> availableSpec = (root, query, cb) -> {
 
             LocalDateTime now = LocalDateTime.now();
@@ -65,11 +68,11 @@ public class MovieServiceImpl implements MovieService {
 
         return movieRepository
                 .findAll(mergedSpec, movieSearch.getPaginationRequest().pageable())
-                .map(movieResponseMapper::toDto);
-    }
+                .map(movieDetailsResponseMapper::toDto);
+    }   
 
     @Override
-    public Page<MovieResponse> getComingSoonMovies(MovieSearch movieSearch) {
+    public Page<MovieDetailsResponse> getComingSoonMovies(MovieSearch movieSearch) {
         Specification<MovieEntity> comingSoonSpec = (root, query, cb) -> {
 
             LocalDateTime now = LocalDateTime.now();
@@ -82,20 +85,20 @@ public class MovieServiceImpl implements MovieService {
 
         return movieRepository
                 .findAll(mergedSpec, movieSearch.getPaginationRequest().pageable())
-                .map(movieResponseMapper::toDto);
+                .map(movieDetailsResponseMapper::toDto);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'trending'")
-    public List<MovieResponse> getTrendingMovies() {
+    public List<MovieDetailsResponse> getTrendingMovies() {
         List<MovieEntity> listMovie = movieRepository.getTrendingMovies();
-        return movieResponseMapper.toListDto(listMovie);
+        return movieDetailsResponseMapper.toListDto(listMovie);
     }
 
     @Transactional
     @Override
     @CacheEvict(value = CacheName.MOVIE, allEntries = true)
-    public MovieResponse createMovie(MovieRequest request) {
+    public MovieDetailsResponse createMovie(MovieRequest request) {
         MovieEntity movie = movieRequestMapper.toEntity(request);
 
         List<UUID> actorIds = request.getListActorId();
@@ -124,13 +127,13 @@ public class MovieServiceImpl implements MovieService {
             movie.setTrailer(StringUtil.splitUrlResource(trailerUrl));
         }
         MovieEntity savedMovie = movieRepository.save(movie);
-        return movieResponseMapper.toDto(savedMovie);
+        return movieDetailsResponseMapper.toDto(savedMovie);
     }
 
     @Override
     @Transactional
     @CachePut(value = CacheName.MOVIE, key = "#id")
-    public MovieResponse updateMovie(UUID id, MovieRequest request) {
+    public MovieDetailsResponse updateMovie(UUID id, MovieRequest request) {
         MovieEntity movie = movieRepository.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
@@ -165,30 +168,30 @@ public class MovieServiceImpl implements MovieService {
             movie.setTrailer(StringUtil.splitUrlResource(trailerUrl));
         }
         MovieEntity updatedMovie = movieRepository.save(movie);
-        return movieResponseMapper.toDto(updatedMovie);
+        return movieDetailsResponseMapper.toDto(updatedMovie);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'all'")
-    public List<MovieResponse> getAllMovie() {
+    public List<MovieDetailsResponse> getAllMovie() {
         List<MovieEntity> listMovie = movieRepository.findAll();
-        return movieResponseMapper.toListDto(listMovie);
+        return movieDetailsResponseMapper.toListDto(listMovie);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "'theater_' + #theaterId")
-    public List<MovieResponse> getAllMovieByTheaterId(UUID theaterId) {
+    public List<MovieDetailsResponse> getAllMovieByTheaterId(UUID theaterId) {
         List<MovieEntity> listMovie = movieRepository.findByTheaterId(theaterId);
-        return movieResponseMapper.toListDto(listMovie);
+        return movieDetailsResponseMapper.toListDto(listMovie);
     }
 
     @Override
     @Cacheable(value = CacheName.MOVIE, key = "#id")
-    public MovieResponse getMovieDetail(UUID id) {
+    public MovieDetailsResponse getMovieDetail(UUID id) {
         MovieEntity movie = movieRepository.getMovieDetail(id)
                 .orElseThrow(() -> new DataNotFoundException(
                         localizationUtils.getLocalizedMessage(MessageKey.MOVIE_NOT_FOUND)));
-        return movieResponseMapper.toDto(movie);
+        return movieDetailsResponseMapper.toDto(movie);
     }
 
     @Override
@@ -202,7 +205,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN) {
+    public List<MovieDetailsResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN) {
         Map<UUID, Double> cbf = contentBasedFiltering(movieId);
         Map<UUID, Double> cf = collaborativeFiltering(userId);
         // Kết hợp kết quả từ cả hai phương pháp bằng cách trung binh cộng điểm số
@@ -224,7 +227,7 @@ public class MovieServiceImpl implements MovieService {
                 .collect(Collectors.toList());
         List<MovieEntity> listRecommendedMovies = movieRepository.findAllById(recommendedMovieIds);
         return listRecommendedMovies.stream()
-                .map(movieResponseMapper::toDto)
+                .map(movieDetailsResponseMapper::toDto)
                 .collect(Collectors.toList());
     }
 

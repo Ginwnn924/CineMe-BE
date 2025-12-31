@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.FormatRequest;
 import com.project.CineMe_BE.service.FormatService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
@@ -20,38 +20,31 @@ public class FormatController {
     private final LocalizationUtils localizationUtils;
 
     @PostMapping
-    public ResponseEntity<APIResponse> create(@Valid @RequestBody FormatRequest request) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_CREATE_SUCCESS))
-                .data(formatService.create(request))
-                .build());
+    public ResponseEntity<CommonResult<Object>> create(@Valid @RequestBody FormatRequest request) {
+        return ResponseEntity.status(201).body(CommonResult.created(
+                localizationUtils.getLocalizedMessage(MessageKey.FORMAT_CREATE_SUCCESS),
+                formatService.create(request)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> update(@PathVariable UUID id, @Valid @RequestBody FormatRequest request) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_UPDATE_SUCCESS))
-                .data(formatService.update(request, id))
-                .build());
+    public ResponseEntity<CommonResult<Object>> update(@PathVariable UUID id,
+            @Valid @RequestBody FormatRequest request) {
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.FORMAT_UPDATE_SUCCESS),
+                formatService.update(request, id)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<APIResponse> delete(@PathVariable UUID id) {
+    public ResponseEntity<CommonResult<Void>> delete(@PathVariable UUID id) {
         formatService.delete(id);
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_DELETE_SUCCESS))
-                .build());
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.FORMAT_DELETE_SUCCESS)));
     }
 
     @GetMapping("")
-    public ResponseEntity<APIResponse> getAllFormats() {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.FORMAT_GET_ALL_SUCCESS))
-                .data(formatService.getAll())
-                .build());
+    public ResponseEntity<CommonResult<Object>> getAllFormats() {
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.FORMAT_GET_ALL_SUCCESS),
+                formatService.getAll()));
     }
 }

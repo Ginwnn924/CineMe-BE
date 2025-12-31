@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.SeatRequest;
 import com.project.CineMe_BE.dto.response.RoomResponse;
 import com.project.CineMe_BE.dto.response.SeatResponse;
@@ -25,38 +25,29 @@ public class RoomController {
     private final RoomService roomService;
 
     @GetMapping("/{roomId}")
-    public ResponseEntity<APIResponse> getSeatsByRoomId(@PathVariable("roomId") UUID roomId) {
+    public ResponseEntity<CommonResult<List<SeatResponse>>> getSeatsByRoomId(@PathVariable("roomId") UUID roomId) {
         List<SeatResponse> result = seatService.getSeatsByRoomId(roomId);
-        APIResponse response = APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_GET_LIST))
-                .data(result)
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_GET_LIST),
+                result));
     }
 
     @PreAuthorize("hasAuthority('room.view')")
     @GetMapping("")
-    public ResponseEntity<APIResponse> getAllRooms() {
+    public ResponseEntity<CommonResult<List<RoomResponse>>> getAllRooms() {
         List<RoomResponse> rooms = roomService.getAll();
-        return ResponseEntity.ok(
-                APIResponse.builder()
-                        .statusCode(200)
-                        .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS))
-                        .data(rooms)
-                        .build());
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS),
+                rooms));
     }
 
     @PreAuthorize("hasAuthority('seat.create')")
     @PostMapping("/{roomId}/seats")
-    public ResponseEntity<APIResponse> createSeats(@Valid @RequestBody SeatRequest seatRequest,
+    public ResponseEntity<CommonResult<Boolean>> createSeats(@Valid @RequestBody SeatRequest seatRequest,
             @PathVariable("roomId") UUID roomId) {
         Boolean isCreated = seatService.create(seatRequest, roomId);
-        APIResponse response = APIResponse.builder()
-                .statusCode(201)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_CREATE_SUCCESS))
-                .data(isCreated)
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(201).body(CommonResult.created(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_CREATE_SUCCESS),
+                isCreated));
     }
 }

@@ -13,8 +13,7 @@ public interface PricingRuleRequestMapper extends BaseRequestMapper<PricingRuleR
     @Mapping(target = "id", ignore = true)
     PricingRuleEntity toEntity(PricingRuleRequest request);
 
-//    @Mapping(target = "seatType", ignore = true)
-//    @Mapping(target = "id", ignore = true)
-//    void update(PricingRuleEntity entity, PricingRuleRequest request);
+    // @Mapping(target = "seatType", ignore = true)
+    // @Mapping(target = "id", ignore = true)
+    // void update(PricingRuleEntity entity, PricingRuleRequest request);
 }
-

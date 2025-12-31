@@ -7,7 +7,7 @@ import com.project.CineMe_BE.mapper.BaseResponseMapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public interface SeatResponseMapper extends BaseResponseMapper<SeatResponse , SeatsEntity > {
+public interface SeatResponseMapper extends BaseResponseMapper<SeatResponse, SeatsEntity> {
     @Mapping(target = "seatType", source = "seatType.name")
     @Mapping(target = "color", source = "seatType.color")
     SeatResponse toDto(SeatsEntity entity);

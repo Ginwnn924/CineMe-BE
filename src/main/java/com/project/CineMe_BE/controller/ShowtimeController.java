@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.ShowtimeRequest;
 import com.project.CineMe_BE.dto.response.SeatResponse;
 import com.project.CineMe_BE.dto.response.ShowtimeResponse;
@@ -28,51 +28,41 @@ public class ShowtimeController {
 
         @PreAuthorize("hasAuthority('showtime.view')")
         @GetMapping("/all")
-        public ResponseEntity<APIResponse> getAllShowtimes() {
+        public ResponseEntity<CommonResult<List<ShowtimeResponse>>> getAllShowtimes() {
                 List<ShowtimeResponse> listShowtimes = showtimeService.getAllShowtimes();
-                return ResponseEntity.ok(
-                                APIResponse.builder()
-                                                .statusCode(200)
-                                                .message(localizationUtils.getLocalizedMessage(
-                                                                MessageKey.SHOWTIME_GET_ALL_SUCCESS))
-                                                .data(listShowtimes)
-                                                .build());
+                return ResponseEntity.ok(CommonResult.success(
+                                localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_GET_ALL_SUCCESS),
+                                listShowtimes));
         }
 
         @PreAuthorize("hasAuthority('showtime.create')")
         @PostMapping("")
-        public ResponseEntity<APIResponse> createShowtime(@Valid @RequestBody ShowtimeRequest request) {
+        public ResponseEntity<CommonResult<ShowtimeRequest>> createShowtime(
+                        @Valid @RequestBody ShowtimeRequest request) {
                 showtimeService.createShowtime(request);
-                return ResponseEntity.status(201).body(APIResponse.builder()
-                                .statusCode(201)
-                                .message(localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CREATE_SUCCESS))
-                                .data(request)
-                                .build());
+                return ResponseEntity.status(201).body(CommonResult.created(
+                                localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_CREATE_SUCCESS),
+                                request));
         }
 
         @GetMapping("")
-        public ResponseEntity<APIResponse> getShowtimesByMovieIdAdndTheaterIdAndDate(@RequestParam UUID movieId,
+        public ResponseEntity<CommonResult<List<ShowtimeResponse>>> getShowtimesByMovieIdAdndTheaterIdAndDate(
+                        @RequestParam UUID movieId,
                         @RequestParam UUID theaterId,
                         @RequestParam(required = true) String date) {
                 List<ShowtimeResponse> listShowtimes = showtimeService.getShowtimesByMovieIdAndTheaterIdAndDate(movieId,
                                 theaterId, DateFormatUltil.formatDate(date));
-                return ResponseEntity.ok(
-                                APIResponse.builder()
-                                                .statusCode(200)
-                                                .message(localizationUtils.getLocalizedMessage(
-                                                                MessageKey.SHOWTIME_GET_ALL_SUCCESS))
-                                                .data(listShowtimes)
-                                                .build());
+                return ResponseEntity.ok(CommonResult.success(
+                                localizationUtils.getLocalizedMessage(MessageKey.SHOWTIME_GET_ALL_SUCCESS),
+                                listShowtimes));
         }
 
         @GetMapping("/{id}/seats")
-        public ResponseEntity<APIResponse> getSeatsByShowtimeId(@PathVariable UUID id) {
+        public ResponseEntity<CommonResult<List<SeatResponse>>> getSeatsByShowtimeId(@PathVariable UUID id) {
                 List<SeatResponse> listSeats = seatService.getSeatsByShowtime(id);
-                return ResponseEntity.ok(APIResponse.builder()
-                                .statusCode(200)
-                                .data(listSeats)
-                                .message("Seats for showtime " + id + " retrieved successfully")
-                                .build());
+                return ResponseEntity.ok(CommonResult.success(
+                                "Seats for showtime " + id + " retrieved successfully",
+                                listSeats));
         }
 
 }

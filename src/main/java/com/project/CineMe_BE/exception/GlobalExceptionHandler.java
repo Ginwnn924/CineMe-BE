@@ -1,6 +1,6 @@
 package com.project.CineMe_BE.exception;
 
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,106 +20,76 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
         @ExceptionHandler(DataNotFoundException.class)
-        public ResponseEntity<APIResponse> handleDataNotFoundException(DataNotFoundException ex) {
+        public ResponseEntity<CommonResult<Void>> handleDataNotFoundException(DataNotFoundException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                .body(APIResponse.builder()
-                                                .statusCode(404)
-                                                .message(ex.getMessage())
-                                                .build());
+                                .body(CommonResult.notFound(ex.getMessage()));
         }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
-        public ResponseEntity<APIResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        public ResponseEntity<CommonResult<Void>> handleValidationExceptions(MethodArgumentNotValidException ex) {
                 String errorMessage = ex.getBindingResult().getFieldError() != null
                                 ? ex.getBindingResult().getFieldError().getDefaultMessage()
                                 : "Validation error";
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(APIResponse.builder()
-                                                .statusCode(400)
-                                                .message(errorMessage)
-                                                .build());
+                                .body(CommonResult.badRequest(errorMessage));
         }
 
         @ExceptionHandler(MaxUploadSizeExceededException.class)
-        public ResponseEntity<APIResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        public ResponseEntity<CommonResult<Void>> handleMaxUploadSizeExceededException(
+                        MaxUploadSizeExceededException ex) {
                 return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
-                                .body(APIResponse.builder()
-                                                .statusCode(413)
-                                                .message("File size exceeds the maximum limit")
-                                                .build());
+                                .body(CommonResult.error(413, "File size exceeds the maximum limit"));
         }
 
         @ExceptionHandler(DataNotValid.class)
-        public ResponseEntity<APIResponse> handleDataNotValidException(DataNotValid ex) {
+        public ResponseEntity<CommonResult<Void>> handleDataNotValidException(DataNotValid ex) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(APIResponse.builder()
-                                                .statusCode(400)
-                                                .message(ex.getMessage())
-                                                .build());
+                                .body(CommonResult.badRequest(ex.getMessage()));
         }
 
         @ExceptionHandler(BadCredentialsException.class)
-        public ResponseEntity<APIResponse> handleBadCredentialsException(BadCredentialsException ex) {
+        public ResponseEntity<CommonResult<Void>> handleBadCredentialsException(BadCredentialsException ex) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body(APIResponse.builder()
-                                                .statusCode(401)
-                                                .message(ex.getMessage())
-                                                .build());
+                                .body(CommonResult.unauthorized(ex.getMessage()));
         }
 
         @ExceptionHandler(PaymentFailedException.class)
-        public ResponseEntity<APIResponse> handlePaymentFailedException(PaymentFailedException ex) {
+        public ResponseEntity<CommonResult<?>> handlePaymentFailedException(PaymentFailedException ex) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(APIResponse.builder()
-                                                .statusCode(400)
-                                                .message(ex.getMessage())
-                                                .build());
+                                .body(CommonResult.badRequest(ex.getMessage()));
         }
 
         @ExceptionHandler(ConstraintViolationException.class)
-        public ResponseEntity<APIResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        public ResponseEntity<CommonResult<Void>> handleConstraintViolationException(ConstraintViolationException ex) {
                 String errorMessage = ex.getConstraintViolations().stream()
                                 .map(violation -> violation.getMessage())
                                 .collect(Collectors.joining(", "));
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(APIResponse.builder()
-                                                .statusCode(400)
-                                                .message(errorMessage)
-                                                .build());
+                                .body(CommonResult.badRequest(errorMessage));
         }
 
         @ExceptionHandler(AccessDeniedException.class)
-        public ResponseEntity<APIResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        public ResponseEntity<CommonResult<Void>> handleAccessDeniedException(AccessDeniedException ex) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body(APIResponse.builder()
-                                                .statusCode(403)
-                                                .message("Bạn không có quyền thực hiện hành động này")
-                                                .build());
+                                .body(CommonResult.forbidden("Bạn không có quyền thực hiện hành động này"));
         }
 
         @ExceptionHandler(Exception.class)
-        public ResponseEntity<APIResponse> handleGenericException(Exception ex) {
+        public ResponseEntity<CommonResult<Void>> handleGenericException(Exception ex) {
                 log.error("Unexpected error: ", ex);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body(APIResponse.builder()
-                                                .statusCode(500)
-                                                .message("Đã có lỗi xảy ra, vui lòng thử lại sau")
-                                                .build());
+                                .body(CommonResult.serverError("Đã có lỗi xảy ra, vui lòng thử lại sau"));
         }
+
         @ExceptionHandler(NoHandlerFoundException.class)
-        public ResponseEntity<APIResponse> handleNotFound(NoHandlerFoundException ex) {
+        public ResponseEntity<CommonResult<Void>> handleNotFound(NoHandlerFoundException ex) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(APIResponse.builder()
-                                .statusCode(404)
-                                .message("Tài nguyên không tồn tại")
-                                .build());
+                                .body(CommonResult.notFound("Tài nguyên không tồn tại"));
         }
+
         @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-        public ResponseEntity<APIResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        public ResponseEntity<CommonResult<Void>> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
                 return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
-                        .body(APIResponse.builder()
-                                .statusCode(405)
-                                .message("Phương thức không hợp lệ")
-                                .build());
+                                .body(CommonResult.error(405, "Phương thức không hợp lệ"));
         }
 }

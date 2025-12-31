@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.RoomRequest;
 import com.project.CineMe_BE.dto.response.RoomResponse;
 import com.project.CineMe_BE.dto.response.TheaterResponse;
@@ -24,71 +24,53 @@ public class TheaterController {
         private final TheaterService theaterService;
         private final LocalizationUtils localizationUtils;
 
-        @PreAuthorize("hasAuthority('theater.view')")
         @GetMapping("")
-        public ResponseEntity<APIResponse> getTheaters() {
+        public ResponseEntity<CommonResult<List<TheaterResponse>>> getTheaters() {
                 List<TheaterResponse> listTheater = theaterService.getAllTheaters();
-                return ResponseEntity.ok(
-                                APIResponse.builder()
-                                                .statusCode(200)
-                                                .message(localizationUtils.getLocalizedMessage(
-                                                                MessageKey.THEATER_GET_ALL_SUCCESS))
-                                                .data(listTheater)
-                                                .build());
+                return ResponseEntity.ok(CommonResult.success(
+                                localizationUtils.getLocalizedMessage(MessageKey.THEATER_GET_ALL_SUCCESS),
+                                listTheater));
         }
 
         @GetMapping("/search")
-        public ResponseEntity<APIResponse> getTheatersByMovieAndDate(@RequestParam UUID movieId,
+        public ResponseEntity<CommonResult<List<TheaterResponse>>> getTheatersByMovieAndDate(@RequestParam UUID movieId,
                         @RequestParam String date) {
                 List<TheaterResponse> listTheater = theaterService.getAllTheatersByMovieAndDate(movieId,
                                 DateFormatUltil.formatDate(date));
-                return ResponseEntity.ok(
-                                APIResponse.builder()
-                                                .statusCode(200)
-                                                .message(localizationUtils.getLocalizedMessage(
-                                                                MessageKey.THEATER_GET_ALL_SUCCESS))
-                                                .data(listTheater)
-                                                .build());
+                return ResponseEntity.ok(CommonResult.success(
+                                localizationUtils.getLocalizedMessage(MessageKey.THEATER_GET_ALL_SUCCESS),
+                                listTheater));
         }
 
         @GetMapping("/{id}/rooms")
-        public ResponseEntity<APIResponse> getRoomsByTheaterId(@PathVariable UUID id) {
+        public ResponseEntity<CommonResult<List<RoomResponse>>> getRoomsByTheaterId(@PathVariable UUID id) {
                 List<RoomResponse> listRoom = theaterService.getRoomsByTheaterId(id);
-                return ResponseEntity.ok(
-                                APIResponse.builder()
-                                                .statusCode(200)
-                                                .message(localizationUtils
-                                                                .getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS))
-                                                .data(listRoom)
-                                                .build());
+                return ResponseEntity.ok(CommonResult.success(
+                                localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS),
+                                listRoom));
         }
 
         // Khi lay data ben admin
         // Can fix lai endpoint
         // @GetMapping("/{theaterId}/rooms/{roomId}/showtimes")
-        // public ResponseEntity<APIResponse> getRoomsByTheaterId(@PathVariable UUID
+        // public ResponseEntity<CommonResult<List<ShowtimeResponse>>>
+        // getRoomsByTheaterId(@PathVariable UUID
         // theaterId,
         // @PathVariable UUID roomId,
         // @RequestParam(required = false) LocalDate date) {
         // List<ShowtimeResponse> listShowtimes =
         // theaterService.getShowtimesByTheaterAndRoom(theaterId, roomId, date);
-        // return ResponseEntity.ok(
-        // APIResponse.builder()
-        // .statusCode(200)
-        // .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS))
-        // .data(listShowtimes)
-        // .build()
-        // );
+        // return ResponseEntity.ok(CommonResult.success(
+        // localizationUtils.getLocalizedMessage(MessageKey.ROOM_GET_ALL_SUCCESS),
+        // listShowtimes));
         // }
 
         @PreAuthorize("hasAuthority('room.create')")
         @PostMapping("/{theaterId}/rooms")
-        public ResponseEntity<APIResponse> create(@PathVariable UUID theaterId,
+        public ResponseEntity<CommonResult<Object>> create(@PathVariable UUID theaterId,
                         @Valid @RequestBody RoomRequest request) {
-                return ResponseEntity.ok(APIResponse.builder()
-                                .statusCode(201)
-                                .message(localizationUtils.getLocalizedMessage(MessageKey.ROOM_CREATE_SUCCESS))
-                                .data(theaterService.createRoom(theaterId, request))
-                                .build());
+                return ResponseEntity.status(201).body(CommonResult.created(
+                                localizationUtils.getLocalizedMessage(MessageKey.ROOM_CREATE_SUCCESS),
+                                theaterService.createRoom(theaterId, request)));
         }
 }

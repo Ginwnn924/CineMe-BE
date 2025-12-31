@@ -2,7 +2,7 @@ package com.project.CineMe_BE.service;
 
 import com.project.CineMe_BE.dto.request.MovieRequest;
 import com.project.CineMe_BE.dto.request.search.MovieSearch;
-import com.project.CineMe_BE.dto.response.MovieResponse;
+import com.project.CineMe_BE.dto.response.MovieDetailsResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -11,23 +11,23 @@ import org.springframework.data.domain.Page;
 
 public interface MovieService {
 
-    public MovieResponse createMovie(MovieRequest request);
+    public MovieDetailsResponse createMovie(MovieRequest request);
 
-    public List<MovieResponse> getAllMovie();
+    public List<MovieDetailsResponse> getAllMovie();
 
-    public List<MovieResponse> getAllMovieByTheaterId(UUID theaterId);
+    public List<MovieDetailsResponse> getAllMovieByTheaterId(UUID theaterId);
 
-    public MovieResponse getMovieDetail(UUID id);
+    public MovieDetailsResponse getMovieDetail(UUID id);
 
     public void deleteMovie(UUID id);
 
-    public MovieResponse updateMovie(UUID id, MovieRequest request);
+    public MovieDetailsResponse updateMovie(UUID id, MovieRequest request);
 
-    public Page<MovieResponse> getAvailableMovies(MovieSearch movieSearch);
+    public Page<MovieDetailsResponse> getAvailableMovies(MovieSearch movieSearch);
 
-    public Page<MovieResponse> getComingSoonMovies(MovieSearch movieSearch);
+    public Page<MovieDetailsResponse> getComingSoonMovies(MovieSearch movieSearch);
 
-    public List<MovieResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN);
+    public List<MovieDetailsResponse> getRecommendedMovies(UUID movieId, UUID userId, int topN);
 
-    public List<MovieResponse> getTrendingMovies();
+    public List<MovieDetailsResponse> getTrendingMovies();
 }

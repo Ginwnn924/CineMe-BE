@@ -3,8 +3,9 @@ package com.project.CineMe_BE.controller;
 import com.project.CineMe_BE.config.MomoConfig;
 import com.project.CineMe_BE.dto.request.MomoRequestPayment;
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.BookingRequest;
+import com.project.CineMe_BE.dto.response.PaymentResponse;
 import com.project.CineMe_BE.enums.PaymentMethod;
 import com.project.CineMe_BE.service.BookingService;
 import com.project.CineMe_BE.utils.LocalizationUtils;
@@ -25,69 +26,56 @@ public class PaymentController {
     private final LocalizationUtils localizationUtils;
     private final MomoConfig momoConfig;
 
-
-
     @PostMapping("/client")
-    public ResponseEntity<APIResponse> createBookingClient(@RequestBody BookingRequest bookingRequest, HttpServletRequest request) {
+    public ResponseEntity<CommonResult<String>> createBookingClient(@RequestBody BookingRequest bookingRequest,
+            HttpServletRequest request) {
         String paymentUrl = bookingService.createBookingWithEWallet(bookingRequest, request);
-        APIResponse apiResponse = new APIResponse();
-        int statusCode = 200;
-        if (paymentUrl == null ) {
-            statusCode = 400;
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_FAILED));
+        if (paymentUrl == null) {
+            return ResponseEntity.badRequest().body(CommonResult.badRequest(
+                    localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_FAILED)));
         }
-        else {
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_SUCCESS));
-            apiResponse.setData(paymentUrl);
-        }
-        apiResponse.setStatusCode(statusCode);
-        return ResponseEntity.status(statusCode).body(apiResponse);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_SUCCESS),
+                paymentUrl));
     }
 
     @PostMapping("/admin")
-    public ResponseEntity<APIResponse> createBookingAdmin(@RequestBody BookingRequest bookingRequest, HttpServletRequest request) {
-        APIResponse apiResponse = new APIResponse();
+    public ResponseEntity<CommonResult<Object>> createBookingAdmin(@RequestBody BookingRequest bookingRequest,
+            HttpServletRequest request) {
         if (PaymentMethod.CASH.name().equals(bookingRequest.getPaymentMethod())) {
             bookingService.createBookingWithCash(bookingRequest, request);
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.BOOKING_CREATE_SUCCESS));
-        }
-        else {
+            return ResponseEntity.ok(CommonResult.success(
+                    localizationUtils.getLocalizedMessage(MessageKey.BOOKING_CREATE_SUCCESS)));
+        } else {
             String paymentUrl = bookingService.createBookingWithEWallet(bookingRequest, request);
-            apiResponse.setMessage(localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_SUCCESS));
-            apiResponse.setData(paymentUrl);
+            return ResponseEntity.ok(CommonResult.success(
+                    localizationUtils.getLocalizedMessage(MessageKey.PAYMENT_CREATE_URL_SUCCESS),
+                    paymentUrl));
         }
-        apiResponse.setStatusCode(200);
-        return ResponseEntity.ok().body(apiResponse);
     }
 
-
     @GetMapping("/vnpay/callback")
-    public ResponseEntity<APIResponse> vnpayCallback(HttpServletRequest request) {
+    public ResponseEntity<CommonResult<PaymentResponse>> vnpayCallback(HttpServletRequest request) {
         UUID idBooking = bookingService.verifyPaymentVNPay(request);
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message("Payment successful")
-                .data(bookingService.getBookingInfo(idBooking))
-                .build());
+        return ResponseEntity.ok(CommonResult.success(
+                "Payment successful",
+                bookingService.getBookingInfo(idBooking)));
     }
 
     @GetMapping("/momo/callback")
-    public ResponseEntity<APIResponse> momoCallback(HttpServletRequest request) {
+    public ResponseEntity<CommonResult<PaymentResponse>> momoCallback(HttpServletRequest request) {
         UUID idBooking = bookingService.verifyPaymentMomo(request);
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message("Payment successful")
-                .data(bookingService.getBookingInfo(idBooking))
-                .build());
+        return ResponseEntity.ok(CommonResult.success(
+                "Payment successful",
+                bookingService.getBookingInfo(idBooking)));
     }
 
     @PostMapping("/momo/create")
-    public String createMomoPayment(@RequestBody MomoRequestPayment momoRequestPayment, HttpServletRequest request, HttpServletResponse response) throws IOException {
-//        String payUrl = momoConfig.process(momoRequestPayment).getPayUrl();
-//        return payUrl;
+    public String createMomoPayment(@RequestBody MomoRequestPayment momoRequestPayment, HttpServletRequest request,
+            HttpServletResponse response) throws IOException {
+        // String payUrl = momoConfig.process(momoRequestPayment).getPayUrl();
+        // return payUrl;
         return null;
     }
-
-
 
 }

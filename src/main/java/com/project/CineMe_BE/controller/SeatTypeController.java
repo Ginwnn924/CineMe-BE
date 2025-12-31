@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.SeatTypeRequest;
 import com.project.CineMe_BE.dto.response.SeatTypeResponse;
 import com.project.CineMe_BE.service.SeatTypeService;
@@ -22,53 +22,43 @@ public class SeatTypeController {
     private final LocalizationUtils localizationUtils;
 
     @GetMapping
-    public ResponseEntity<APIResponse> getAll() {
+    public ResponseEntity<CommonResult<List<SeatTypeResponse>>> getAll() {
         List<SeatTypeResponse> seatTypeResponseList = service.getAll();
-        APIResponse response = APIResponse.builder()
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_GET_ALL_SUCCESS))
-                .data(seatTypeResponseList)
-                .build();
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_GET_ALL_SUCCESS),
+                seatTypeResponseList));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<APIResponse> getById(@PathVariable("id") UUID id) {
+    public ResponseEntity<CommonResult<SeatTypeResponse>> getById(@PathVariable("id") UUID id) {
         SeatTypeResponse seatTypeResponse = service.getById(id);
-        APIResponse response = APIResponse.builder()
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_GET_DETAILS))
-                .data(seatTypeResponse)
-                .build();
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_GET_DETAILS),
+                seatTypeResponse));
     }
 
     @PostMapping
-    public ResponseEntity<APIResponse> create(@Valid @RequestBody SeatTypeRequest seatTypeRequest) {
+    public ResponseEntity<CommonResult<SeatTypeResponse>> create(@Valid @RequestBody SeatTypeRequest seatTypeRequest) {
         SeatTypeResponse seatTypeResponse = service.create(seatTypeRequest);
-        APIResponse response = APIResponse.builder()
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_CREATE_SUCCESS))
-                .data(seatTypeResponse)
-                .build();
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.status(201).body(CommonResult.created(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_CREATE_SUCCESS),
+                seatTypeResponse));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> update(@Valid @RequestBody SeatTypeRequest seatTypeRequest,
+    public ResponseEntity<CommonResult<SeatTypeResponse>> update(@Valid @RequestBody SeatTypeRequest seatTypeRequest,
             @PathVariable("id") UUID id) {
         SeatTypeResponse seatTypeResponse = service.update(id, seatTypeRequest);
-        APIResponse response = APIResponse.builder()
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_UPDATE_SUCCESS))
-                .data(seatTypeResponse)
-                .build();
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_UPDATE_SUCCESS),
+                seatTypeResponse));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<APIResponse> delete(@PathVariable("id") UUID id) {
+    public ResponseEntity<CommonResult<Boolean>> delete(@PathVariable("id") UUID id) {
         boolean isDeleted = service.delete(id);
-        APIResponse response = APIResponse.builder()
-                .message(localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_DELETE_SUCCESS))
-                .data(isDeleted)
-                .build();
-        return ResponseEntity.status(200).body(response);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.SEAT_TYPE_DELETE_SUCCESS),
+                isDeleted));
     }
 }
