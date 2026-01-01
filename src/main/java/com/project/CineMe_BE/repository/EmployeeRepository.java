@@ -16,10 +16,7 @@ public interface EmployeeRepository extends JpaRepository<EmployeeEntity, UUID> 
     List<EmployeeEntity> findAllWithRoleAndTheater();
 
   
-    @Query("SELECT e FROM EmployeeEntity e " +
-            "JOIN FETCH e.role r " +
-            "JOIN FETCH r.listPermissions " +
-            "WHERE e.email = ?1 ")
+    @EntityGraph(attributePaths = {"role", "theater","role.listPermissions"})
     Optional<EmployeeEntity> findByEmail(String email);
 
     Optional<EmployeeEntity> findByRefreshToken(String refreshToken);

@@ -1,5 +1,7 @@
 package com.project.CineMe_BE.dto.request;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,6 +13,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RolePermissionRequest {
+    @NotNull(message = "Vui lòng chọn vai trò")
     private UUID roleId;
+
+    @NotEmpty(message = "Vui lòng chọn ít nhất một quyền")
     private List<String> keys;
 }

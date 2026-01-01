@@ -1,6 +1,5 @@
 package com.project.CineMe_BE.config;
 
-
 import com.project.CineMe_BE.filter.JwtAuthenFilter;
 import com.project.CineMe_BE.security.CustomOAuth2UserService;
 import com.project.CineMe_BE.security.EmployeeDetailsServiceImpl;
@@ -40,38 +39,51 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final EmployeeDetailsServiceImpl employeeDetailsService;
     private final JwtAuthenFilter jwtAuthenFilter;
-    private final RedisTemplate redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final PasswordEncoder passwordEncoder;
     private final OAuthLoginSuccessHandler oAuthLoginSuccessHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(
                         request -> request
-                                .anyRequest().permitAll()
-                )
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                .requestMatchers("/api/v1/payment/**").permitAll()
+                                .requestMatchers("/oauth2/**").permitAll()
+                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                .requestMatchers("/api/v1/movies/trending").permitAll()
+                                .requestMatchers("/api/v1/movies/available/**").permitAll()
+                                .requestMatchers("/api/v1/movies/coming-soon/**").permitAll()
+                                .requestMatchers("/api/v1/movies/*/detail").permitAll()
+                                .requestMatchers("/api/v1/movies/recommend").permitAll()
+                                .requestMatchers("/api/v1/movies/*/reviews").permitAll()
+                                .requestMatchers("/api/v1/theaters").permitAll()
+                                .requestMatchers("/api/v1/theaters/search").permitAll()
+                                .requestMatchers("/api/v1/theaters/*/rooms").permitAll()
+                                .requestMatchers("/api/v1/schedules/search").permitAll()
+                                .requestMatchers("/api/v1/showtimes").permitAll()
+                                .requestMatchers("/api/v1/showtimes/*/seats").permitAll()
+                                .requestMatchers("/api/v1/combos").permitAll()
+                                .requestMatchers("/api/v1/combos/*").permitAll()
+                                .requestMatchers("/api/v1/rooms/*").permitAll()
+                                .requestMatchers("/api/v1/bookings/*/info").permitAll()
+                                .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(auth -> auth
-                                        .baseUri("/oauth2/authorize")
-                                // Nếu dùng cookie lưu redirect_uri:
-                                // .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository())
-                        )
+                                .baseUri("/oauth2/authorize"))
                         .redirectionEndpoint(redir -> redir
                                 .baseUri("/oauth2/callback/*"))
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService))
                         .successHandler(oAuthLoginSuccessHandler))
                 .formLogin(login -> login.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Khong luu token o phia server
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenFilter, UsernamePasswordAuthenticationFilter.class);
-//                .exceptionHandling(ex -> ex.authenticationEntryPoint(new AuthJwtEntryPoint()));
-
-
 
         return http.build();
     }
@@ -106,7 +118,7 @@ public class SecurityConfig {
 
     // 1️⃣ Provider cho SecurityFilterChain (dùng cho JWT authentication)
     @Bean
-    public AuthenticationProvider authenticationProvider(){
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
@@ -136,6 +148,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
 
 }

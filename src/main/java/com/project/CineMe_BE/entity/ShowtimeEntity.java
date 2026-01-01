@@ -2,13 +2,17 @@ package com.project.CineMe_BE.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalTime;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "showtimes")
+@Table(name = "showtimes", indexes = {
+    @Index(name = "idx_showtime_schedule", columnList = "schedule_id"),
+    @Index(name = "idx_showtime_room", columnList = "room_id")
+})
 @Getter
 @Setter
 @Builder
@@ -19,15 +23,16 @@ public class ShowtimeEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "schedule_id")
     private ScheduleEntity schedule;
 
     @Column(name = "start_time")
     private LocalTime startTime;
 
-//    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)
-//    Set<TicketPriceEntity> ticketPrices;
+    // @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval =
+    // true)
+    // Set<TicketPriceEntity> ticketPrices;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
@@ -42,8 +47,8 @@ public class ShowtimeEntity {
     private FormatEntity format;
 
     @OneToMany(mappedBy = "showtime")
+    @BatchSize(size = 20)
     private Set<BookingEntity> booking;
-
 
     @Column(name = "private_key")
     private String privateKey;

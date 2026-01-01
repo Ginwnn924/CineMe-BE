@@ -1,7 +1,7 @@
 package com.project.CineMe_BE.controller;
 
 import com.project.CineMe_BE.constant.MessageKey;
-import com.project.CineMe_BE.dto.APIResponse;
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.ComboRequest;
 import com.project.CineMe_BE.dto.request.ItemComboRequest;
 import com.project.CineMe_BE.dto.response.ComboResponse;
@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,62 +23,53 @@ import java.util.UUID;
 public class ComboController {
     private final ComboService comboService;
     private final LocalizationUtils localizationUtils;
+
     @GetMapping
-    public ResponseEntity<APIResponse> getAllCombos() {
-
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_ALL_SUCCESS))
-                .data(comboService.getAllCombos())
-                .build());
-
+    public ResponseEntity<CommonResult<List<ComboResponse>>> getAllCombos() {
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_ALL_SUCCESS),
+                comboService.getAllCombos()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<APIResponse> getComboById(@PathVariable UUID id) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_DETAILS))
-                .data(comboService.getComboById(id))
-                .build());
+    public ResponseEntity<CommonResult<ComboResponse>> getComboById(@PathVariable UUID id) {
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.COMBO_GET_DETAILS),
+                comboService.getComboById(id)));
     }
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<APIResponse> createCombo(@Valid @ModelAttribute ComboRequest request) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_CREATE_SUCCESS))
-                .data(comboService.createCombo(request))
-                .build());
+    @PreAuthorize("hasAuthority('combo.create')")
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<CommonResult<Void>> createCombo(@Valid @ModelAttribute ComboRequest request) {
+        comboService.createCombo(request);
+        return ResponseEntity.status(201).body(CommonResult.created(
+                localizationUtils.getLocalizedMessage(MessageKey.COMBO_CREATE_SUCCESS)));
     }
 
+    @PreAuthorize("hasAuthority('combo.update')")
     @PutMapping("/{id}")
-    public ResponseEntity<APIResponse> updateCombo(@PathVariable UUID id,@Valid @ModelAttribute ComboRequest request) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS))
-                .data(comboService.updateCombo(id, request))
-                .build());
+    public ResponseEntity<CommonResult<Void>> updateCombo(@PathVariable UUID id,
+            @Valid @ModelAttribute ComboRequest request) {
+        comboService.updateCombo(id, request);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS)));
     }
 
+    @PreAuthorize("hasAuthority('combo.delete')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<APIResponse> deleteCombo(@PathVariable UUID id) {
+    public ResponseEntity<CommonResult<Void>> deleteCombo(@PathVariable UUID id) {
         comboService.deleteCombo(id);
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_DELETE_SUCCESS))
-                .build());
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.COMBO_DELETE_SUCCESS)));
     }
 
+    @PreAuthorize("hasAuthority('combo.update')")
     @PutMapping("/{id}/items")
-    public ResponseEntity<APIResponse> updateComboItems(
+    public ResponseEntity<CommonResult<Void>> updateComboItems(
             @PathVariable UUID id,
             @Valid @RequestBody List<ItemComboRequest> itemComboRequests) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message(localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS))
-                .data(comboService.updateComboItems(id, itemComboRequests))
-                .build());
+        comboService.updateComboItems(id, itemComboRequests);
+        return ResponseEntity.ok(CommonResult.success(
+                localizationUtils.getLocalizedMessage(MessageKey.COMBO_UPDATE_SUCCESS)));
     }
 }
-

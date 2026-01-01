@@ -16,17 +16,15 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PricingRuleRequest {
-
-    @NotNull(message = "Day of week is required")
-    @Min(value = 1, message = "Day of week must be between 8 (Sunday) and 2 (Monday), Day 1 for testing")
-    @Max(value = 8, message = "Day of week must be between 8 (Sunday) and 2 (Monday), Day 1 for testing")
+    @NotNull(message = "Ngày trong tuần không được để trống")
+    @Min(value = 1, message = "Ngày trong tuần phải từ 1-8")
+    @Max(value = 8, message = "Ngày trong tuần phải từ 1-8")
     private Integer dayOfWeek;
 
-    @NotNull(message = "Seat type ID is required")
+    @NotNull(message = "Vui lòng chọn loại ghế")
     private UUID seatTypeId;
 
-    @NotNull(message = "Price is required")
-    @PositiveOrZero(message = "Price must be positive or zero")
+    @NotNull(message = "Giá không được để trống")
+    @PositiveOrZero(message = "Giá phải lớn hơn hoặc bằng 0")
     private Long price;
 }
-

@@ -1,8 +1,12 @@
 package com.project.CineMe_BE.controller;
 
-import com.project.CineMe_BE.dto.APIResponse;
+import java.util.List;
+import com.project.CineMe_BE.dto.response.PermissionResponse;
+
+import com.project.CineMe_BE.api.CommonResult;
 import com.project.CineMe_BE.dto.request.PermissionRequest;
 import com.project.CineMe_BE.service.PermissionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,30 +16,25 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/permissions")
 public class PermissionController {
     private final PermissionService permissionService;
+
     @GetMapping
-    public ResponseEntity<APIResponse> getAll() {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message("Get all permissions successfully")
-                .data(permissionService.getAll())
-                .build());
+    public ResponseEntity<CommonResult<List<PermissionResponse>>> getAll() {
+        return ResponseEntity.ok(CommonResult.success(
+                "Get all permissions successfully",
+                permissionService.getAll()));
     }
 
     @GetMapping("/{key}")
-    public ResponseEntity<APIResponse> getByKey(@PathVariable("key") String key) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message("Get permission by key successfully")
-                .data(permissionService.getByKey(key))
-                .build());
+    public ResponseEntity<CommonResult<PermissionResponse>> getByKey(@PathVariable("key") String key) {
+        return ResponseEntity.ok(CommonResult.success(
+                "Get permission by key successfully",
+                permissionService.getByKey(key)));
     }
 
     @PostMapping
-    public ResponseEntity<APIResponse> create(@RequestBody PermissionRequest request) {
-        return ResponseEntity.ok(APIResponse.builder()
-                .statusCode(200)
-                .message("Create permission successfully")
-                .data(permissionService.create(request))
-                .build());
+    public ResponseEntity<CommonResult<Void>> create(@Valid @RequestBody PermissionRequest request) {
+        permissionService.create(request);
+        return ResponseEntity.status(201).body(CommonResult.created(
+                "Create permission successfully"));
     }
 }

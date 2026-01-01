@@ -1,8 +1,12 @@
 package com.project.CineMe_BE.dto.request;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
 import java.util.List;
 import java.util.UUID;
-
 
 @Getter
 @Setter
@@ -10,45 +14,34 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class SeatRequest {
-
-    // Total number of columns (e.g., 18)
+    @Min(value = 1, message = "Số cột phải lớn hơn 0")
     private int col;
 
-    // Total number of rows (e.g., 8 for A-H)
+    @Min(value = 1, message = "Số hàng phải lớn hơn 0")
     private int row;
 
-    // A list of specific coordinates that are walkways (no seat)
     private List<Walkway> walkways;
 
-    // UNIFIED LIST: This replaces both specialSeats and MultipleSeats
-    // This list defines all the seat blocks in the room.
+    @Valid
     private List<SeatTypePlacement> seatPlacements;
 
-    /**
-     * Defines a specific (row, col) coordinate for a walkway.
-     */
     @Data
     public static class Walkway {
-        private int columnIndex; // 1-based index
-        private int rowIndex;    // 0-based index (0=A, 1=B, etc.)
+        private int columnIndex;
+        private int rowIndex;
     }
 
-    /**
-     * Defines a horizontal block of seats of a specific type.
-     * Your backend logic will read this and create the individual seats.
-     */
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class SeatTypePlacement {
-
-        // The ID of the SeatType (e.g., VIP, Standard, Couple)
+        @NotNull(message = "Vui lòng chọn loại ghế")
         private UUID seatTypeId;
 
-        // The column where this block STARTS (1-based)
+        @NotNull(message = "Hàng bắt đầu không được để trống")
         private String startRow;
 
-        // The column where this block ENDS (1-based)
+        @NotNull(message = "Hàng kết thúc không được để trống")
         private String endRow;
     }
 }

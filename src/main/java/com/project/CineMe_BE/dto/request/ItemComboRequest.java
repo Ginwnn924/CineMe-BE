@@ -14,11 +14,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemComboRequest {
-    @NotNull(message = "Item ID is required")
+    @NotNull(message = "Vui lòng chọn sản phẩm")
     private UUID itemId;
 
-    @NotNull(message = "Quantity is required")
-    @Positive(message = "Quantity must be positive")
+    @NotNull(message = "Số lượng không được để trống")
+    @Positive(message = "Số lượng phải lớn hơn 0")
     private Integer quantity;
 }
-

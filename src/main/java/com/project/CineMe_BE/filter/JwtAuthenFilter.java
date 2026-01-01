@@ -30,8 +30,7 @@ public class JwtAuthenFilter extends OncePerRequestFilter {
     private final UserDetailsServiceImpl userDetailsServiceImpl;
     private final EmployeeDetailsServiceImpl employeeDetailsServiceImpl;
     private final JwtService jwtService;
-    private final RedisTemplate redisTemplate;
-
+    private final RedisTemplate<String, Object> redisTemplate;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("Pre Filter is working...");
@@ -74,10 +73,10 @@ public class JwtAuthenFilter extends OncePerRequestFilter {
             return;
         }
         catch (Exception e) {
+            log.error("JWT validation failed: {}", e.getMessage(), e);
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("{\"error\": \"Invalid token 456\"}");
-            System.out.println(e.getMessage());
             return;
         }
 

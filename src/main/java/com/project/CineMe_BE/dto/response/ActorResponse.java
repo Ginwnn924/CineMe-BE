@@ -17,5 +17,5 @@ public class ActorResponse implements Serializable {
     private UUID id;
     private String name;
     private String img;
-    private List<MovieResponse> listMovie;
+    private List<MovieDetailsResponse> listMovie;
 }

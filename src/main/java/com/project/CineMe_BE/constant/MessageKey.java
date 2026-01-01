@@ -8,7 +8,6 @@ public class MessageKey {
     public static final String ACTOR_NOT_FOUND = "actor.not_found";
     public static final String ACTOR_GET_ALL_SUCCESS = "actor.get_all_success";
 
-
     // Movie
     public static final String MOVIE_CREATE_SUCCESS = "movie.create_success";
     public static final String MOVIE_NOT_FOUND = "movie.not_found";
@@ -17,6 +16,11 @@ public class MessageKey {
     public static final String MOVIE_GET_ALL_SUCCESS = "movie.get_all_success";
     public static final String MOVIE_GET_DETAILS = "movie.get_details";
     public static final String GET_COMBOBOX_SUCCESS = "movie.getCombobox";
+    public static final String MOVIE_GET_TRENDING_SUCCESS = "movie.get_trending_success";
+    public static final String MOVIE_GET_RECOMMENDED_SUCCESS = "movie.get_recommended_success";
+    public static final String MOVIE_GET_AVAILABLE_SUCCESS = "movie.get_available_success";
+    public static final String MOVIE_GET_COMING_SOON_SUCCESS = "movie.get_coming_soon_success";
+    public static final String MOVIE_GET_REVIEWS_SUCCESS = "movie.get_reviews_success";
 
     // Genre
     public static final String GENRE_CREATE_SUCCESS = "genre.create_success";
@@ -33,7 +37,6 @@ public class MessageKey {
     public static final String FORMAT_NOT_FOUND = "format.not_found";
     public static final String FORMAT_GET_DETAILS = "format.get_details";
     public static final String FORMAT_GET_ALL_SUCCESS = "format.get_all_success";
-
 
     // Limit Age
     public static final String LIMIT_AGE_CREATE_SUCCESS = "limit_age.create_success";
@@ -68,12 +71,9 @@ public class MessageKey {
     public static final String LANGUAGE_GET_DETAILS = "language.get_details";
     public static final String LANGUAGE_GET_ALL_SUCCESS = "language.get_all_success";
 
-
-
     // Theater
     public static final String THEATER_GET_ALL_SUCCESS = "theater.get_all_success";
     public static final String THEATER_NOT_FOUND = "theater.not_found";
-
 
     // Room
 
@@ -123,7 +123,6 @@ public class MessageKey {
     public static final String BOOKING_GET_SUCCESS = "booking.get_success";
     public static final String BOOKING_CREATE_SUCCESS = "booking.create_success";
 
-
     // Product
     public static final String PRODUCT_CREATE_SUCCESS = "product.create_success";
     public static final String PRODUCT_UPDATE_SUCCESS = "product.update_success";
@@ -150,9 +149,13 @@ public class MessageKey {
     public static final String PASSWORD_RESET_SUCCESS = "password.reset_success";
     public static final String PASSWORD_CHANGE_SUCCESS = "password.change_success";
 
-
     // Employee
     public static final String EMPLOYEE_NOT_FOUND = "employee.not_found";
+    public static final String EMPLOYEE_CREATE_SUCCESS = "employee.create_success";
+    public static final String EMPLOYEE_UPDATE_SUCCESS = "employee.update_success";
+    public static final String EMPLOYEE_DELETE_SUCCESS = "employee.delete_success";
+    public static final String EMPLOYEE_GET_DETAILS = "employee.get_details";
+    public static final String EMPLOYEE_GET_ALL_SUCCESS = "employee.get_all_success";
 
     // Rank
     public static final String RANK_NOT_FOUND = "rank.not_found";
